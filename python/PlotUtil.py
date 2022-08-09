@@ -162,8 +162,8 @@ class PlotCanvas:
             
             if self.yRange[1]=='auto':
                 ymax_=histo.GetMaximum()
-                if ymax < ymax_*1.1:
-                    ymax=ymax_*1.1
+                if ymax < ymax_*1.3:
+                    ymax=ymax_*1.3
             if self.yRange[0]=='auto': 
                 ymin_=histo.GetMinimum()
                 if ymin > ymin_*0.8:
@@ -225,7 +225,11 @@ class PlotCanvas:
             selbox[-1].SetTextFont(12)
             selbox[-1].SetTextAlign(13)
             n+=1
+        nCounts=0
         for plot in self.plots:
+            if plot.drawLegend :
+                nCounts+=1
+                
             if(plot.doFit):
                 histo = plot.histo
                 fitP  = getFitParams(histo)
@@ -239,7 +243,8 @@ class PlotCanvas:
                 n+=1
 
         #Line legend
-        legend = ROOT.TLegend(self.legendPosition[0],self.legendPosition[1],self.legendPosition[2],self.legendPosition[3])
+
+        legend = ROOT.TLegend(self.legendPosition[0],self.legendPosition[1],self.legendPosition[2],self.legendPosition[1]+nCounts*0.04)
         legend.SetTextFont(42)
         legend.SetFillColor(0)
 

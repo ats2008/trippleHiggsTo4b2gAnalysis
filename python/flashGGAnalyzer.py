@@ -34,7 +34,13 @@ pTReweitingFile=getValueFromConfigs(cfgTxt,"pTReweitingFile",default="")
 pTReweitingHistName=getValueFromConfigs(cfgTxt,"pTReweitingHistName",default="")
 pTReweitingValFile=getValueFromConfigs(cfgTxt,"pTReweitingValFile",default="")
 pTReweitingHistValName=getValueFromConfigs(cfgTxt,"pTReweitingHistValName",default="")
-
+pTReweitingHistCatagories=getValueFromConfigs(cfgTxt,"pTReweitingHistCatagories",default="")
+pTReweitingHistValName=pTReweitingHistValName.split(',')
+pTReweitingHistCatagories=pTReweitingHistCatagories.split(',')
+reweighter={}
+for i,j in zip(pTReweitingHistCatagories,pTReweitingHistValName):
+    reweighter[i]=j
+    
 
 print("allFnames   :  ",              allFnames)
 print("foutName   :  ",               foutName)
@@ -55,8 +61,9 @@ print("pTReweitingHistValName   :  ", pTReweitingHistValName)
 scaler=mcScaler()
 scalerVal=mcScaler()
 if doPtReWeighting:
-    scaler.setSFHistFromFile(pTReweitingFile,pTReweitingHistName)
-    scalerVal.setSFHistFromFile(pTReweitingValFile,pTReweitingHistValName)
+    scaler.setSFHistFromFile(pTReweitingFile,reweighter)
+#    scalerVal.setSFHistFromFile(pTReweitingValFile,pTReweitingHistValName)
+
 print("")
 
 maxEvents=-1
@@ -116,13 +123,23 @@ for fname in allFnames:
 
         weiVal=wei
         if doPtReWeighting:
+            cat='BB'
+            if abs(eTree.leadingPhoton_eta) < 1.44 and abs(eTree.subleadingPhoton_eta) > 1.567:
+                cat='BE'
+            if abs(eTree.leadingPhoton_eta) > 1.567 and abs(eTree.subleadingPhoton_eta) < 1.44:
+                cat='BE'
+            if abs(eTree.leadingPhoton_eta) > 1.567 and abs(eTree.subleadingPhoton_eta) < 1.567:
+                cat='EE'
             pT=eTree.diphoton_pt
-            scaleFactor=scaler.getSFForX(pT)
+            scaleFactor=scaler.getSFForX(pT,cat)
             wei*=scaleFactor
-            scaleFactor=scalerVal.getSFForX(pT)
-            weiVal*=scaleFactor
+            #print("Setting SF : ",scaleFactor," | for pT : ",pT," , cat : ",cat)
+            #scaleFactor=scalerVal.getSFForX(pT,cat)
+            #weiVal*=scaleFactor
         
         isBTaggedAllLoose = (eTree.h1LeadingJet_DeepFlavour > 0.0490 ) and ( eTree.h1SubleadingJet_DeepFlavour > 0.0490 ) and ( eTree.h2LeadingJet_DeepFlavour > 0.0490 ) and ( eTree.h2SubleadingJet_DeepFlavour > 0.0490 )
+        
+
         #if not isBTaggedAllLoose:
         #    continue
 

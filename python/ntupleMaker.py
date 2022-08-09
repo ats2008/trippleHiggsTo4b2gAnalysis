@@ -74,9 +74,6 @@ if(maxEvtsSuperSeeder > 0):
     maxEvents=maxEvtsSuperSeeder
 print("maxevents : ",maxEvents)
 
-histStore = {}
-
-addCandidateVars(histStore,['allCands' ,'trippleHCands','controlCands','validation_CR','validation_SR'])
 
 nNoHtoGammaGamma=0
 nNoHHto4B=0
@@ -174,19 +171,6 @@ for fname in allFnames:
         tofill['pTh1subleadJ_overMh1'] =  eTree.h1SubleadingJet_pt / eTree.M1jj 
         tofill['pTh2subleadJ_overMh2'] =  eTree.h2SubleadingJet_pt / eTree.M2jj 
 
-#        if( dr < 25.0 ):
-#            if isMasked:
-#                continue
-#            fillCandidateHistograms(histStore["trippleHCands"],eTree,wei)     
-#        elif ( dr < 50.0 ):
-#            fillCandidateHistograms(histStore["controlCands"],eTree,wei)     
-#        
-#        dr = np.sqrt((eTree.M1jj-200.0)**2 + (eTree.M2jj - 200.0)**2)
-#        if( dr < 25.0 ):
-#            fillCandidateHistograms(histStore["validation_SR"],eTree,weiVal)     
-#        elif ( dr < 50.0 ):
-#            fillCandidateHistograms(histStore["validation_CR"],eTree,weiVal)     
-        
         ntuple.Fill(array('f', tofill.values()))
         
     simFile.Close()           
