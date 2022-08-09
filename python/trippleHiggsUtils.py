@@ -13,43 +13,47 @@ class mcScaler:
         self.binEdges=[]
         self.scaleFactors=[]
         self.def_scaleFactor=0
-        self.underflow_x=0.0
-        self.overflow_x=1.0
-        self.underflow_scaleFactor=1.0
-        self.overflow_scaleFactor=1.0
-        self.scaleFactorHist=0
-        self.scaleFactorHistSet=False
+        self.underflow_x={}
+        self.overflow_x={}
+        self.underflow_scaleFactor={}
+        self.overflow_scaleFactor={}
+        self.scaleFactorHist={}
+        self.scaleFactorHistSet={}
         self.File=None
-    def setSFHist(self,hist):
-        self.scaleFactorHist=hist.Clone()
-        self.underflow_x= self.scaleFactorHist.GetBinLowEdge(1)
-        self.overflow_x= self.scaleFactorHist.GetBinLowEdge(self.scaleFactorHist.GetNbinsX())
-        self.underflow_scaleFactor = self.scaleFactorHist.GetBinContent(1)
-        self.overflow_scaleFactor = self.scaleFactorHist.GetBinContent(self.scaleFactorHist.GetNbinsX()-1)
-        print("Scale factors defined for x = [ ",self.underflow_x,self.overflow_x," ]")
-        print("Under flow Scale factor     =  ",self.underflow_scaleFactor)
-        print("Over flow Scale factor      = ",self.overflow_scaleFactor)
-
-        self.scaleFactorHistSet=True
-    def setSFHistFromFile(self,fname,histName):
-        print("Setting SF hist ",histName," from ",fname,)
-        self.File=ROOT.TFile(fname,"READ")
-        hist=self.File.Get(histName)
-        self.setSFHist(hist)
     
-    def getSFForX(self,x):
-        if not self.scaleFactorHistSet:
+    def setSFHist(self,hist,cat='def'):
+        self.scaleFactorHist[cat]=hist.Clone()
+        self.underflow_x[cat]= self.scaleFactorHist[cat].GetBinLowEdge(1)
+        self.overflow_x[cat]= self.scaleFactorHist[cat].GetBinLowEdge(self.scaleFactorHist[cat].GetNbinsX())
+        self.underflow_scaleFactor[cat] = self.scaleFactorHist[cat].GetBinContent(1)
+        self.overflow_scaleFactor[cat] = self.scaleFactorHist[cat].GetBinContent(self.scaleFactorHist[cat].GetNbinsX()-1)
+        print("  Setting scale factor for category " , cat  )
+        print("     Scale factors defined for x = [ ",self.underflow_x[cat],self.overflow_x[cat]," ]")
+        print("     Under flow Scale factor     =  ",self.underflow_scaleFactor[cat])
+        print("     Over flow Scale factor      = ",self.overflow_scaleFactor[cat])
+
+        self.scaleFactorHistSet[cat]=True
+    
+    def setSFHistFromFile(self,fname,histNames={}):
+        self.File=ROOT.TFile(fname,"READ")
+        for cat in histNames:
+            print("CAT : ",cat," || Setting SF hist ",histNames[cat]," from ",fname)
+            hist=self.File.Get(histNames[cat])
+            self.setSFHist(hist,cat)
+    
+    def getSFForX(self,x,cat):
+        if cat not in self.scaleFactorHistSet:
             print("\tWARNING ! : scaleFactor Hist not set , returning -1.0 ")
             return -1.0
-        if x < self.underflow_x:
-            return self.underflow_scaleFactor
-        if x > self.overflow_x:
-            return self.overflow_x
-        bid=self.scaleFactorHist.FindBin(x)
+        if x < self.underflow_x[cat]:
+            return self.underflow_scaleFactor[cat]
+        if x > self.overflow_x[cat]:
+            return self.overflow_x[cat]
+        bid=self.scaleFactorHist[cat].FindBin(x)
         #print("bid = ",bid," for x ",x, " Bin edges --> ",
         #         self.scaleFactorHist.GetBinLowEdge(bid), 
         #         self.scaleFactorHist.GetBinLowEdge(bid)+self.scaleFactorHist.GetBinWidth(bid))
-        return self.scaleFactorHist.GetBinContent(bid)
+        return self.scaleFactorHist[cat].GetBinContent(bid)
         
 def getPtDependentScaleFactor(name="scaleFactor",dataHist=None,mcHists=None,binEdges=None,def_scaleFactor=0.0):
     mcHistSum=mcHists[0].Clone()
@@ -162,9 +166,9 @@ def addFlasggVars(histStore):
     histStore["flashggVars"]['H1bbCosThetaLeadJet'] = ROOT.TH1F("H1bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
     histStore["flashggVars"]['H2bbCosThetaLeadJet'] = ROOT.TH1F("H2bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
     
-    histStore["flashggVars"]['pTgg_overMgg'] = ROOT.TH1F("pTgg_overMgg"  ,"",100,0.0,10.0)
-    histStore["flashggVars"]['pTh1jj_overMh1'] = ROOT.TH1F("pTh1jj_overMh1"  ,"",100,0.0,10.0)
-    histStore["flashggVars"]['pTh2jj_overMh2'] = ROOT.TH1F("pTh2jj_overMh2"  ,"",100,0.0,10.0)
+    histStore["flashggVars"]['pTgg_overMgg'] = ROOT.TH1F("pTgg_overMgg"  ,"",100,0.0,1.0)
+    histStore["flashggVars"]['pTh1jj_overMh1'] = ROOT.TH1F("pTh1jj_overMh1"  ,"",100,0.0,1.0)
+    histStore["flashggVars"]['pTh2jj_overMh2'] = ROOT.TH1F("pTh2jj_overMh2"  ,"",100,0.0,1.0)
     
     histStore["flashggVars"]['pTleadG_overMgg'] = ROOT.TH1F("pTleadG_overMgg"  ,"",100,0.0,10.0)
     histStore["flashggVars"]['pTh1leadJ_overMh1'] = ROOT.TH1F("pTh1leadJ_overMh1"  ,"",100,0.0,10.0)
@@ -213,7 +217,8 @@ def addCandidateVars(histStore,candList):
         histStore[ky]['hhh']['mass']=ROOT.TH1F("mass","",1500,0.0,1500)
         histStore[ky]['hhh']['pT']=ROOT.TH1F("pT","",1000,0.0,1000)
         histStore[ky]['hhh']['eta']=ROOT.TH1F("eta","",60,-3.0,3.0)
-        histStore[ky]['hhh']['phi']=ROOT.TH1F("phi","",62,-3.14,3.14)
+        histStore[ky]['hhh']['phi']=ROOT.TH1F("phi","",64,-3.2,3.2)
+        histStore[ky]['hhh']['sumTheta']=ROOT.TH1F("sumTheta","sumTheta",100,0.0,10.)
 
         for hh in ['h1','h2']:
             histStore[ky][hh]={}
@@ -232,6 +237,10 @@ def addCandidateVars(histStore,candList):
         histStore[ky]['hgg']['pT']=ROOT.TH1F("pT","",500,0.0,500)
         histStore[ky]['hgg']['eta']=ROOT.TH1F("eta","",60,-3.0,3.0)
         histStore[ky]['hgg']['phi']=ROOT.TH1F("phi","",62,-3.14,3.14)
+        histStore[ky]['hgg']['pT_BB']=ROOT.TH1F("pT_BB","",1500,0.0,1500)
+        histStore[ky]['hgg']['pT_BE']=ROOT.TH1F("pT_BE","",1500,0.0,1500)
+        histStore[ky]['hgg']['pT_EB']=ROOT.TH1F("pT_EB","",1500,0.0,1500)
+        histStore[ky]['hgg']['pT_EE']=ROOT.TH1F("pT_EE","",1500,0.0,1500)
         addFlasggVars(histStore[ky])
         addKinematicVars(histStore[ky])
 
@@ -616,13 +625,25 @@ def fillCandidateHistograms(histStore,eTree,wei):
     histStore['massHbb1'].Fill(eTree.M1jj,wei)
     histStore['massHbb2'].Fill(eTree.M2jj,wei)
     histStore['h1MassVsh2Mass'].Fill(eTree.M1jj,eTree.M2jj,wei)
+
     
     histStore['hhh']['pT'].Fill( eTree.triHiggs_pt , wei )
     histStore['hhh']['eta'].Fill( eTree.triHiggs_eta , wei )
     histStore['hhh']['phi'].Fill( eTree.triHiggs_phi , wei )
-    histStore['hhh']['mass'].Fill( eTree.triHiggs_mass , wei )
+
+    LVStore=getLVStore(eTree)
+    sumTheta=LVStore['H1LV'].Angle(LVStore['H2LV'].Vect()) +LVStore['H2LV'].Angle(LVStore['H3LV'].Vect()) +LVStore['H3LV'].Angle(LVStore['H1LV'].Vect())
+    histStore['hhh']['sumTheta'].Fill( sumTheta , wei )
     
-    histStore['hgg']['pT'].Fill( eTree.diphoton_pt , wei )
+    if abs(eTree.leadingPhoton_eta) < 1.44 and abs(eTree.subleadingPhoton_eta) < 1.44:
+        histStore['hgg']['pT_BB'].Fill( eTree.diphoton_pt , wei )
+    if abs(eTree.leadingPhoton_eta) < 1.44 and abs(eTree.subleadingPhoton_eta) > 1.567:
+        histStore['hgg']['pT_BE'].Fill( eTree.diphoton_pt , wei )
+    if abs(eTree.leadingPhoton_eta) > 1.567 and abs(eTree.subleadingPhoton_eta) < 1.44:
+        histStore['hgg']['pT_EB'].Fill( eTree.diphoton_pt , wei )
+    if abs(eTree.leadingPhoton_eta) > 1.567 and abs(eTree.subleadingPhoton_eta) < 1.567:
+        histStore['hgg']['pT_EE'].Fill( eTree.diphoton_pt , wei )
+        
     histStore['hgg']['eta'].Fill( eTree.diphoton_eta , wei )
     histStore['hgg']['phi'].Fill( eTree.diphoton_phi , wei )
     histStore['hgg']['mass'].Fill( eTree.CMS_hgg_mass , wei )

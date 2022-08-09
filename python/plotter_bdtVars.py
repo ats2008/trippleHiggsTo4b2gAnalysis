@@ -2,13 +2,14 @@ from PlotUtil import *
 from Util import *
 import os
 
+col=[ 0,1,2,4,6,ROOT.kOrange,ROOT.kMagenta+2,9,11,12,13,14,15  ]
 
 if __name__ == "__main__":
     candDict={}
     candDict['controlCands'] ='results/plots/analysis/controlRegion/bdtVars'
     candDict['trippleHCands']='results/plots/analysis/signalRegion/bdtVars'
-    candDict['validation_CR']='results/plots/analysis/validationCR/bdtVars'
-    candDict['validation_SR']='results/plots/analysis/validationSR/bdtVars'
+    #candDict['validation_CR']='results/plots/analysis/validationCR/bdtVars'
+    #candDict['validation_SR']='results/plots/analysis/validationSR/bdtVars'
     varList=[
         'HHHCosThetaH1',
         'HHHCosThetaHgg',
@@ -48,6 +49,11 @@ if __name__ == "__main__":
         'phoJetMinDr',
         'otherphoJetMinDr'
        ]
+#    varList=[
+#        'HHHCosThetaH1',
+#        'HHHCosThetaHgg',
+#        'H4bCosThetaLeadJet'
+#        ]
 
     for preReweight in [False]:
         fListDict={
@@ -101,33 +107,36 @@ if __name__ == "__main__":
             if not os.path.exists(pltPrefix):
                 print("Making folder :" ,pltPrefix)
             os.system("mkdir -p "+pltPrefix)    
-        
+
 ############
+
             plots=[]
             cPars=getCanvasParams('Run2MC2017')
             for var in varList:
                 rBin=1
                 sc=1.0
                 plot=getDefaultPlot(prefix=pltPrefix,name=var,cPars=cPars) 
-                plot.legendPosition = (0.6,0.74,0.9,0.90)
+                plot.legendPosition = (0.6,0.8,0.9,0.95)
                 plot.descPosition   = (0.6,0.85)
                 plot.desc =[]
                 plot.yTitle = "# / 2 GeV"  
-                plot.xTitle = "p_{T}^{#gamma#gamma} [GeV]"
-                plot.xRange = (100,180.0) 
-                plot.yRange = (1.0,10000.0) 
+                plot.xTitle = var
+                plot.xRange = ('auto','auto') 
+                plot.yRange = ('auto','auto') 
                 plots.append(plot)
-           
-                for ky in ['siganl','gJets','ggJetsM80']:
-                    hist=histStore[ky][cands]['hgg'][var].Clone()
+                
+                i=1
+                for ky in ['signal','ggJetsM80']:
+                    hist=histStore[ky][cands]['flashggVars'][var].Clone()
                     hist.Rebin(rBin)
                     pparams=getDefaultPlotParams(col=i,marker=3)
                     pparams['Legend']=legendDict[ky]
                     pparams['MarkerColor']= col[i]; pparams['LineColor'] = col[i]
-                    pparams['Options']='HIST '
+                    pparams['Options']='HIST e'
                     aplot = Plot(Name=hist.GetName(), Histo=hist,**pparams)
                     aplot.normalize = True ;aplot.scaleFactor = 1.0
                     plots[-1].addPlot(aplot)
+                    i+=1
 ############
 
             #canvas.SetLogy()
@@ -135,6 +144,7 @@ if __name__ == "__main__":
             canvas = []
             for plot in plots:
                 canvas.append(plot.plot())
+                canvas[-1].Close()
 
-        for tag in fListDict:
-            fileStore[tag].Close()
+  #      for tag in fListDict:
+  #          fileStore[tag].Close()

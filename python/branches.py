@@ -1,7 +1,10 @@
 branches=[
     "weight",
     "CMS_hgg_mass",
+    "M1jj",
+    "M2jj",
     "triHiggs_mass",
+    "triHiggs_pt",
     "sigmaMoM_decorr",
     "h1LeadingJet_DeepFlavour",
     "h1LeadingJet_QGL",

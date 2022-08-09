@@ -124,4 +124,13 @@ def getSumHistDicts(histList):
                     histOut[kk].Add(hDict[kk])
     return histOut
 
+def rebinTheHistogram(hist,n,binEdges=None):
+
+    if binEdges==None:
+        bEdges=0    
+    else:
+        bEdges=np.array(binEdges)
+
+    hout=hist.Rebin(n,hist.GetName()+"_rbinned",bEdges)
+    return hout
 

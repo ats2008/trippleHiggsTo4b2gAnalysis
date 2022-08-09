@@ -46,6 +46,7 @@ class MVATrainer
     string bkgCuts;
 
     string factoryOptions;
+    string eventWeightExpression;
     string mvaMethords;
     std::vector<string> mvaModelsToTrain;
     std::vector<string> mvaTrainVars;
@@ -100,6 +101,7 @@ void MVATrainer::Init(string cfgFileName)
     sigCuts  =  "";
     bkgCuts     =  "";
     factoryOptions="auto";
+    eventWeightExpression="";
     testTrainConfig="nTrain_Signal=0.5:nTrain_Background=0.5:SplitMode=Random" ;
     
     modelFactoryName="aModel";
@@ -118,10 +120,12 @@ void MVATrainer::InitializeTMVAModel()
   outputFile = TFile::Open( (prefix+ofileName).c_str(), "RECREATE" );
   if(factoryOptions=="auto")
     factoryOptions="ROC:V=True:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification";   
-  std::cout<<factoryOptions<<"\n";
+  std::cout<<"Factory  option : "<<factoryOptions<<"\n";
   factory = new TMVA::Factory( modelFactoryName.c_str(), outputFile, factoryOptions.c_str());
   dataloader=new TMVA::DataLoader(modelFactoryName.c_str());
-
+  
+ std::cout<<"Setting Event Weight Expression = "<<eventWeightExpression<<"\n";
+ dataloader->SetWeightExpression(eventWeightExpression.c_str());
 
 }
 
@@ -178,6 +182,11 @@ void MVATrainer::readParameters(string fname)
                  getline(strStream, field);
                  factoryOptions=field;
                  cout<<" setting factoryOptions = "<<factoryOptions<<"\n";
+            }
+            if(field.compare("EventWeightExpression")==0){
+                 getline(strStream, field);
+                 eventWeightExpression=field;
+                 cout<<" setting eventWeightExpression = "<<eventWeightExpression<<"\n";
             }
             if(field.compare("BkgCuts")==0){
                  getline(strStream, field);

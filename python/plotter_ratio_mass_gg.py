@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
             histMC=None
             #for ky in ['ttX','ggJetsM80']:
-            for ky in ['ttX','ggJetsM80','gJets']:
+            for ky in ['ttX','gJets','ggJetsM80']:
                 hist=histStore[ky][cands]['hgg']['mass'].Clone()
                 hist=hist.Rebin(rBin)
                 
