@@ -77,26 +77,7 @@ if(maxEvtsSuperSeeder > 0):
     maxEvents=maxEvtsSuperSeeder
 print("maxevents : ",maxEvents)
 
-histStore = {}
 
-addCandidateVars(histStore,['allCands'])# ,'trippleHCands','controlCands','validation_CR','validation_SR'])
-histStore["hhhTo4b2gamma"]={}
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_tightID"]= histStore["allCands"]["h1MassVsh2Mass"].Clone()
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_tightID"].SetName("h1MassVsh2Mass_tightID")
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_mediumID"]= histStore["allCands"]["h1MassVsh2Mass"].Clone()
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_mediumID"].SetName("h1MassVsh2Mass_mediumID")
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_looseID"]= histStore["allCands"]["h1MassVsh2Mass"].Clone()
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_looseID"].SetName("h1MassVsh2Mass_looseID")
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_looseID"]= histStore["allCands"]["h1MassVsh2Mass"].Clone()
-histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_looseID"].SetName("h1MassVsh2Mass_looseID")
-histStore["h1Tobb"]={}
-histStore["h2Tobb"]={}
-histStore["h1Tobb"]["mass_tightID" ] =ROOT.TH1F("mass_tightID","",2000,0.0,2000)
-histStore["h1Tobb"]["mass_mediumID" ]=ROOT.TH1F("mass_mediumID","",2000,0.0,2000)
-histStore["h1Tobb"]["mass_looseID" ] =ROOT.TH1F("mass_looseID","",2000,0.0,2000)
-histStore["h2Tobb"]["mass_tightID" ] =ROOT.TH1F("mass_tightID","",2000,0.0,2000)
-histStore["h2Tobb"]["mass_mediumID" ]=ROOT.TH1F("mass_mediumID","",2000,0.0,2000)
-histStore["h2Tobb"]["mass_looseID" ] =ROOT.TH1F("mass_looseID","",2000,0.0,2000)
 
 nNoHtoGammaGamma=0
 nNoHHto4B=0
@@ -104,6 +85,12 @@ totalEvents=0
 
 isMC = True
 isMC = False
+
+histStore = {}
+histStore["scalarPts_b"]=ROOT.TH1F("scalarPtSumB","scalarPtSumB",200,0.0,800.0)
+histStore["j1Bvsj2B"]=ROOT.TH1F("j1Bvsj2B","j1Bvsj2B",80,0.0,8.0)
+histStore["j1Bvsk1B"]=ROOT.TH1F("j1Bvsk1B","j1Bvsk1B",80,0.0,8.0)
+histStore["j1Bvsk2B"]=ROOT.TH1F("j1Bvsk2B","j1Bvsk2B",80,0.0,8.0)
 
 for fname in allFnames:
     print("Opening file : ",fname)
@@ -138,6 +125,7 @@ for fname in allFnames:
         elif processID=="DATA":
             pass
 
+        weiVal=wei
         if doPtReWeighting:
             cat='BB'
             if abs(eTree.leadingPhoton_eta) < 1.44 and abs(eTree.subleadingPhoton_eta) > 1.567:
@@ -149,50 +137,29 @@ for fname in allFnames:
             pT=eTree.diphoton_pt
             scaleFactor=scaler.getSFForX(pT,cat)
             wei*=scaleFactor
-        weiVal=wei
+            #print("Setting SF : ",scaleFactor," | for pT : ",pT," , cat : ",cat)
+            #scaleFactor=scalerVal.getSFForX(pT,cat)
+            #weiVal*=scaleFactor
         
         isBTaggedAllLoose = (eTree.h1LeadingJet_DeepFlavour > 0.0490 ) and ( eTree.h1SubleadingJet_DeepFlavour > 0.0490 ) and ( eTree.h2LeadingJet_DeepFlavour > 0.0490 ) and ( eTree.h2SubleadingJet_DeepFlavour > 0.0490 )
         
+
+        #if not isBTaggedAllLoose:
+        #    continue
+
+        ## Control and signal region
         dr = np.sqrt((eTree.M1jj-125.0)**2 + (eTree.M2jj - 125.0)**2)
-        isMasked =  maskSignalMgg and processID=="DATA" and ( eTree.CMS_hgg_mass > 115.0) and (eTree.CMS_hgg_mass < 135.0)
+        isMasked =  (dr < 25.0) and maskSignalMgg and processID=="DATA" and ( eTree.CMS_hgg_mass > 115.0) and (eTree.CMS_hgg_mass < 135.0)
         
-        if not isMasked:
-            fillCandidateHistograms(histStore["allCands"],eTree,wei)
-
-        #if( dr < 25.0 ):
-        #    if isMasked:
-        #        continue
-        #    fillCandidateHistograms(histStore["trippleHCands"],eTree,wei)     
-        #elif ( dr < 50.0 ):
-        #    fillCandidateHistograms(histStore["controlCands"],eTree,wei)     
-        #
-        #dr = np.sqrt((eTree.M1jj-200.0)**2 + (eTree.M2jj - 200.0)**2)
-        #if( dr < 25.0 ):
-        #    fillCandidateHistograms(histStore["validation_SR"],eTree,weiVal)     
-        #elif ( dr < 50.0 ):
-        #    fillCandidateHistograms(histStore["validation_CR"],eTree,weiVal)     
-        #
-        #continue
-
-        if(eTree.h1LeadingJet_DeepFlavour > 0.7100 and eTree.h1SubleadingJet_DeepFlavour > 0.7100 
-            and  eTree.h2LeadingJet_DeepFlavour > 0.7100 and eTree.h2SubleadingJet_DeepFlavour > 0.7100 ):
-            histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_tightID"].Fill(eTree.M1jj , eTree.M2jj )
-            histStore["h1Tobb"]["mass_tightID" ].Fill(eTree.M1jj)
-            histStore["h2Tobb"]["mass_tightID" ].Fill(eTree.M2jj)
-
-        if(eTree.h1LeadingJet_DeepFlavour > 0.2783 and eTree.h1SubleadingJet_DeepFlavour > 0.2783 
-            and  eTree.h2LeadingJet_DeepFlavour > 0.2783 and eTree.h2SubleadingJet_DeepFlavour > 0.2783 ):
-            histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_mediumID"].Fill(eTree.M1jj , eTree.M2jj )
-            histStore["h1Tobb"]["mass_mediumID" ].Fill(eTree.M1jj)
-            histStore["h2Tobb"]["mass_mediumID" ].Fill(eTree.M2jj)
-
+        LVStore = getLVStore(eTree)
+        if( dr < 25.0 ):
+            if isMasked:
+                continue
+            histStore["scalarPts_b"].Fill( LVStore['j1LV'].Pt() + LVStore['j2LV'].Pt() +LVStore['k1LV'].Pt()+LVStore['k2LV'].Pt())
+            histStore["j1Bvsj2B"].Fill(  LVStore['j1LV'].DeltaR( LVStore['j2LV'] )  )
+            histStore["j1Bvsk1B"].Fill(  LVStore['j1LV'].DeltaR( LVStore['k1LV'] )  )
+            histStore["j1Bvsk2B"].Fill(  LVStore['j1LV'].DeltaR( LVStore['k2LV'] )  )
         
-        if(eTree.h1LeadingJet_DeepFlavour > 0.0490 and eTree.h1SubleadingJet_DeepFlavour > 0.0490 
-            and  eTree.h2LeadingJet_DeepFlavour > 0.0490 and eTree.h2SubleadingJet_DeepFlavour > 0.0490 ):
-            histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_looseID"].Fill(eTree.M1jj , eTree.M2jj )
-            histStore["h1Tobb"]["mass_looseID" ].Fill(eTree.M1jj)
-            histStore["h2Tobb"]["mass_looseID" ].Fill(eTree.M2jj)
-
         
     simFile.Close()           
     print("Closing file : ",fname)

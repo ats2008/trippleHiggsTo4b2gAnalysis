@@ -36,6 +36,7 @@ class mcScaler:
     
     def setSFHistFromFile(self,fname,histNames={}):
         self.File=ROOT.TFile(fname,"READ")
+        print(histNames)
         for cat in histNames:
             print("CAT : ",cat," || Setting SF hist ",histNames[cat]," from ",fname)
             hist=self.File.Get(histNames[cat])
@@ -43,7 +44,7 @@ class mcScaler:
     
     def getSFForX(self,x,cat):
         if cat not in self.scaleFactorHistSet:
-            print("\tWARNING ! : scaleFactor Hist not set , returning -1.0 ")
+            print("\tWARNING ! : scaleFactor Hist not set , returning -1.0  [ cat : ",cat," available cats : ",self.scaleFactorHist.keys(),"]")
             return -1.0
         if x < self.underflow_x[cat]:
             return self.underflow_scaleFactor[cat]
@@ -54,7 +55,75 @@ class mcScaler:
         #         self.scaleFactorHist.GetBinLowEdge(bid), 
         #         self.scaleFactorHist.GetBinLowEdge(bid)+self.scaleFactorHist.GetBinWidth(bid))
         return self.scaleFactorHist[cat].GetBinContent(bid)
-        
+
+def btagID( deepJetScore,TYPE='loose' ):
+
+    if TYPE=='tight' and  deepJetScore  > 0.7346:
+        return True;
+    if TYPE=='medium' and  deepJetScore  > 0.3098:
+        return True;
+    if TYPE=='loose' and  deepJetScore  > 0.0594:
+        return True;
+
+    return False    
+
+
+def puJetID(pT,mvaScore,TYPE='loose'):
+    
+    if TYPE=='loose':
+        return puJetIDLoose(pT,mvaScore)
+
+    if TYPE=='tight':
+        return puJetIDTight(pT,mvaScore)
+
+    if TYPE=='medium':
+        return puJetIDMedium(pT,mvaScore)
+
+def	puJetIDLoose(pT,mvaScore):
+	if pT > 50.0:
+		return True
+	if pT < 10.0:
+		return False
+	elif pT < 20.0:
+		return mvaScore > -0.95
+	elif pT < 30.0:
+		return mvaScore > -0.90
+	elif pT < 40.0:
+		return mvaScore > -0.71
+	elif pT < 50.0:
+		return mvaScore > -0.40
+	return True
+
+def	puJetIDMedium(pT,mvaScore):
+	if pT > 50.0:
+		return True
+	if pT < 10.0:
+		return False
+	elif pT < 20.0:
+		return mvaScore > 0.20
+	elif pT < 30.0:
+		return mvaScore > 0.62
+	elif pT < 40.0:
+		return mvaScore > 0.86
+	elif pT < 50.0:
+		return mvaScore > 0.93
+	return True
+
+def	puJetIDTight(pT,mvaScore):
+	if pT > 50.0:
+		return True
+	if pT < 10.0:
+		return False
+	elif pT < 20.0:
+		return mvaScore > 0.71
+	elif pT < 30.0:
+		return mvaScore > 0.87
+	elif pT < 40.0:
+		return mvaScore > 0.94
+	elif pT < 50.0:
+		return mvaScore > 0.97
+	return True
+          
 def getPtDependentScaleFactor(name="scaleFactor",dataHist=None,mcHists=None,binEdges=None,def_scaleFactor=0.0):
     mcHistSum=mcHists[0].Clone()
     mcHistSum.Reset()
@@ -196,7 +265,38 @@ def addFlasggVars(histStore):
     histStore["flashggVars"]['rho'] = ROOT.TH1F("rho","",50,0.0,50.0)
     histStore["flashggVars"]['phoJetMinDr'] = ROOT.TH1F("phoJetMinDr"  ,"",60,0.0,6.0)
     histStore["flashggVars"]['otherphoJetMinDr'] = ROOT.TH1F("otherphoJetMinDr"  ,"",60,0.0,6.0)
+    
+    histStore["flashggVars"]['triHiggs_mass']=ROOT.TH1F("triHiggs_mass","",1500,0.0,1500)
+    histStore["flashggVars"]['dije1CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije1CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
+    histStore["flashggVars"]['dije2CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije2CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
+    """
+    d    PhoJetMinDr                         
+    d    PhoJetOtherDr                       
+    d    absCosTheta_gg                      
+    d    customLeadingPhotonIDMVA            
+    d    customSubLeadingPhotonIDMVA         
+    d    h1LeadingJet_DeepFlavour            
+    d    h1SubleadingJet_DeepFlavour         
+    d    h1bbCosThetaLeadJet                 
+    d    h2LeadingJet_DeepFlavour            
+    d    h2SubleadingJet_DeepFlavour         
+    d    h2bbCosThetaLeadJet                 
+    d    hhhCosThetaH1                       
+    d    leadingPhotonSigOverE               
+    d    pTh1leadJ_overMh1                   
+    d    pTh2leadJ_overMh2                   
+    d    pTleadG_overMgg                     
+    d    rho                                 
+    d    sigmaM1Jets                         
+    d    sigmaM2Jets                         
+    d    sigmaMOverM                         
+    d    subleadingPhotonSigOverE            
+        dije1CandidatePtOverdiHiggsM        
+        dije2CandidatePtOverdiHiggsM        
+        diphotonCandidatePtOverdiHiggsM     
+        triHiggs_mass                       
 
+    """
 def addCandidateVars(histStore,candList):
     for ky in candList :
         histStore[ky]={}
@@ -218,8 +318,13 @@ def addCandidateVars(histStore,candList):
         histStore[ky]['hhh']['pT']=ROOT.TH1F("pT","",1000,0.0,1000)
         histStore[ky]['hhh']['eta']=ROOT.TH1F("eta","",60,-3.0,3.0)
         histStore[ky]['hhh']['phi']=ROOT.TH1F("phi","",64,-3.2,3.2)
-        histStore[ky]['hhh']['sumTheta']=ROOT.TH1F("sumTheta","sumTheta",100,0.0,10.)
-
+        
+        histStore[ky]['misc']={}
+        histStore[ky]['misc']['sumTheta']=ROOT.TH1F("sumTheta","sumTheta",100,0.0,10.)
+        histStore[ky]['misc']["scalarPtSumHHH"]  = ROOT.TH1F("scalarPtSumHHH","",1000,0.0,1000) 
+        histStore[ky]['misc']["scalarPtSum4b"]   = ROOT.TH1F("scalarPtSum4b","",1000,0.0,1000)
+        histStore[ky]['misc']["scalarPtSum4b2g"] = ROOT.TH1F("scalarPtSum4b2g","",1000,0.0,1000)
+        
         for hh in ['h1','h2']:
             histStore[ky][hh]={}
             for bjet in ["lead","sublead"]:
@@ -305,7 +410,6 @@ def addKinematicVars(histStore):
         histStore['kinematicVars'][frame]['sL1sL2sL3_volume']  =   ROOT.TH1F("sL1sL2sL3_volume","",40,0.0,2.0)
     
 def fillKinematicVarsFromLV(LVStore,histStore,wei=1 ):
-
         
     fillKinematicVars(histStore['CMS_RestFrame'],LVStore)    
 
@@ -529,7 +633,7 @@ def getLVStore( eTree ):
     
     LVStore['j1LV'].SetPtEtaPhiM(eTree.h1LeadingJet_pt,eTree.h1LeadingJet_eta,eTree.h1LeadingJet_phi,eTree.h1LeadingJet_mass);
     LVStore['j2LV'].SetPtEtaPhiM(eTree.h1SubleadingJet_pt,eTree.h1SubleadingJet_eta,eTree.h1SubleadingJet_phi,eTree.h1SubleadingJet_mass);
-    LVStore['k1LV'].SetPtEtaPhiM(eTree.h2LeadingJet_pt,eTree.h1LeadingJet_eta,eTree.h1LeadingJet_phi,eTree.h1LeadingJet_mass);
+    LVStore['k1LV'].SetPtEtaPhiM(eTree.h2LeadingJet_pt,eTree.h2LeadingJet_eta,eTree.h2LeadingJet_phi,eTree.h2LeadingJet_mass);
     LVStore['k2LV'].SetPtEtaPhiM(eTree.h2SubleadingJet_pt,eTree.h2SubleadingJet_eta,eTree.h2SubleadingJet_phi,eTree.h2SubleadingJet_mass);
     
     LVStore['HggLV'] =ROOT.TLorentzVector()
@@ -633,8 +737,13 @@ def fillCandidateHistograms(histStore,eTree,wei):
 
     LVStore=getLVStore(eTree)
     sumTheta=LVStore['H1LV'].Angle(LVStore['H2LV'].Vect()) +LVStore['H2LV'].Angle(LVStore['H3LV'].Vect()) +LVStore['H3LV'].Angle(LVStore['H1LV'].Vect())
-    histStore['hhh']['sumTheta'].Fill( sumTheta , wei )
     
+    histStore['misc']['sumTheta'].Fill( sumTheta , wei )
+    
+    histStore['misc']["scalarPtSumHHH"].Fill(   LVStore["H1LV"].Pt()+LVStore["H2LV"].Pt()+LVStore["H3LV"].Pt() )
+    histStore['misc']["scalarPtSum4b"].Fill(    LVStore["j1LV"].Pt() + LVStore["j2LV"].Pt() + LVStore["k1LV"].Pt() + LVStore["k2LV"].Pt() )
+    histStore['misc']["scalarPtSum4b2g"].Fill(  LVStore["j1LV"].Pt() + LVStore["j2LV"].Pt() + LVStore["k1LV"].Pt() + LVStore["k2LV"].Pt()  + LVStore["g1LV"].Pt() + LVStore["g2LV"].Pt() )
+
     if abs(eTree.leadingPhoton_eta) < 1.44 and abs(eTree.subleadingPhoton_eta) < 1.44:
         histStore['hgg']['pT_BB'].Fill( eTree.diphoton_pt , wei )
     if abs(eTree.leadingPhoton_eta) < 1.44 and abs(eTree.subleadingPhoton_eta) > 1.567:
@@ -856,24 +965,28 @@ def getHHHJethistos():
     
     for jet in['h1j1','h1j2','h2j1','h2j2']:
         histStore['jets'][jet] ={}
-        histStore['jets'][jet]['NHF']       = ROOT.TH1F("NHF","",-2.5,2.5,100)
-        histStore['jets'][jet]['NEMF']      = ROOT.TH1F("NEMF","",-2.5,2.5,100)
-        histStore['jets'][jet]['CHF']       = ROOT.TH1F("CHF","",-2.5,2.5,100)
-        histStore['jets'][jet]['MUF']       = ROOT.TH1F("MUF","",-2.5,2.5,100)
-        histStore['jets'][jet]['CEMF']      = ROOT.TH1F("CEMF","",-2.5,2.5,100)
-        histStore['jets'][jet]['NumConst']  = ROOT.TH1F("NumConst","",-0.5,199.5,200)
-        histStore['jets'][jet]['NumNeutralParticles']   = ROOT.TH1F("NumNeutralParticles","",-0.5,199.5,200)
-        histStore['jets'][jet]['CHM']       = ROOT.TH1F("CHM","",-2.5,2.5,100)
-        histStore['jets'][jet]['csvScore']       = ROOT.TH1F("csvScore","",-2.5,2.5,100)
-        histStore['jets'][jet]['deepCSVScore']       = ROOT.TH1F("deepCSVScore","",-2.5,2.5,100)
-        histStore['jets'][jet]['deepJetScore']       = ROOT.TH1F("deepJetScore","",-2.5,2.5,100)
-        histStore['jets'][jet]['flavour']        = ROOT.TH1F("hFlav","",-30.5,29.5,60)
-        histStore['jets'][jet]['pFlavour']       = ROOT.TH1F("pFlav","",-30.5,29.5,60)
-        histStore['jets'][jet]['particleNetAK4_B']       = ROOT.TH1F("particleNetAK4_B","",-2.5,2.5,100)
-        histStore['jets'][jet]['particleNetAK4_CvsL']    = ROOT.TH1F("particleNetAK4_CvsL","",-2.5,2.5,100) 
-        histStore['jets'][jet]['particleNetAK4_CvsB']    = ROOT.TH1F("particleNetAK4_CvsB","",-2.5,2.5,100) 
-        histStore['jets'][jet]['particleNetAK4_QvsG']    = ROOT.TH1F("particleNetAK4_QvsG","",-2.5,2.5,100) 
-        histStore['jets'][jet]['particleNetAK4_puIdDisc']= ROOT.TH1F("particleNetAK4_puIdDisc","",-2.5,2.5,100) 
+        histStore['jets'][jet]['NHF']       = ROOT.TH1F("NHF"  ,"",100,-2.5,2.5)
+        histStore['jets'][jet]['NEMF']      = ROOT.TH1F("NEMF" ,"",100,-2.5,2.5)
+        histStore['jets'][jet]['CHF']       = ROOT.TH1F("CHF"  ,"",100,-2.5,2.5)
+        histStore['jets'][jet]['MUF']       = ROOT.TH1F("MUF"  ,"",100,-2.5,2.5)
+        histStore['jets'][jet]['CEMF']      = ROOT.TH1F("CEMF" ,"",100,-2.5,2.5)
+        histStore['jets'][jet]['NumConst']  = ROOT.TH1F("NumConst","",200,-0.5,199.5)
+        histStore['jets'][jet]['NumNeutralParticles']   = ROOT.TH1F("NumNeutralParticles","",200,-0.5,199.5)
+        histStore['jets'][jet]['CHM']       = ROOT.TH1F("CHM","",100,-2.5,2.5)
+        histStore['jets'][jet]['csvScore']       = ROOT.TH1F("csvScore","",100,-2.5,2.5)
+        histStore['jets'][jet]['deepCSVScore']       = ROOT.TH1F("deepCSVScore","",100,-2.5,2.5)
+        histStore['jets'][jet]['deepJetScore']       = ROOT.TH1F("deepJetScore","",100,-2.5,2.5)
+        histStore['jets'][jet]['flavour']        = ROOT.TH1F("hFlav","",60,-30.5,29.5)
+        histStore['jets'][jet]['pFlavour']       = ROOT.TH1F("pFlav","",60,-30.5,29.5)
+        histStore['jets'][jet]['particleNetAK4_B']       = ROOT.TH1F("particleNetAK4_B"   ,"",100,-2.5,2.5)
+        histStore['jets'][jet]['particleNetAK4_CvsL']    = ROOT.TH1F("particleNetAK4_CvsL","",100,-2.5,2.5) 
+        histStore['jets'][jet]['particleNetAK4_CvsB']    = ROOT.TH1F("particleNetAK4_CvsB","",100,-2.5,2.5) 
+        histStore['jets'][jet]['particleNetAK4_QvsG']    = ROOT.TH1F("particleNetAK4_QvsG","",100,-2.5,2.5) 
+        histStore['jets'][jet]['particleNetAK4_puIdDisc']= ROOT.TH1F("particleNetAK4_puIdDisc","",100,-2.5,2.5) 
+        for tg in ['Loose' , 'Tight' ,'Tight2017']:
+            histStore['jets'][jet]['jetID_'+tg]= ROOT.TH1F("jetID_"+tg,"",5,-2.5,2.5) 
+
+    return histStore
 
 def fillHHHJetHisto(histDict,eTree,idx):
     histDict['NHF'].Fill(eTree.jets_NHF[idx])
@@ -894,5 +1007,52 @@ def fillHHHJetHisto(histDict,eTree,idx):
     histDict['particleNetAK4_CvsB'].Fill(eTree.jets_particleNetAK4_CvsB[idx])
     histDict['particleNetAK4_QvsG'].Fill(eTree.jets_particleNetAK4_QvsG[idx])
     histDict['particleNetAK4_puIdDisc'].Fill(eTree.jets_particleNetAK4_puIdDisc[idx])
+    for tg in ['Loose' , 'Tight' ,'Tight2017']:
+        histDict['jetID_'+tg].Fill(jetID(eTree,idx,tg) )
+
+
+def jetID( eTree , idx, case='Tight2017'  ):
+
+    eta = eTree.jets_eta[idx]
+    
+    NHF = eTree.jets_NHF[idx]
+    NEMF = eTree.jets_NEMF[idx]
+    NumConst = eTree.jets_NumConst[idx]
+    CHF = eTree.jets_CHF[idx]
+    CEMF = eTree.jets_CEMF[idx]
+    CHM = eTree.jets_CHM[idx]
+    NumNeutralParticles = eTree.jets_NumNeutralParticles[idx]
+
+
+
+    jetID_barrel_loose  =  (  NHF<0.99 and NEMF<0.99 and NumConst>1) and ((abs(eta)<=2.4 and CHF>0 and CHM>0 and CEMF<0.99) or abs(eta)>2.4) and abs(eta)<=2.7;
+    jetID_barrel_tight  =  (  NHF<0.90 and NEMF<0.90 and NumConst>1) and ((abs(eta)<=2.4 and CHF>0 and CHM>0 and CEMF<0.99) or abs(eta)>2.4) and abs(eta)<=2.7;
+    jetID_transition    =  (  NEMF>0.01 and NHF<0.98 and NumNeutralParticles>2 and abs(eta)>2.7 and abs(eta)<3.0);
+    jetID_forward       =  (  NEMF<0.90 and NumNeutralParticles >10 and abs(eta)>3.0 );
+
+    jetID_2017_27 = (NHF < 0.9 and NEMF < 0.9 and NumConst > 1);
+    jetID_2017_24 = jetID_2017_27 and (CHF > 0. and CHM > 0 );
+    jetID_2017_30 = (NEMF > 0.02 and NEMF < 0.99 and NumNeutralParticles > 2);
+    jetID_2017_forward = (NEMF < 0.9 and NHF > 0.02 and NumNeutralParticles > 10);
+
+
+    if case=='Loose':
+        if(abs(eta)<=2.7 ):
+            return jetID_barrel_loose;
+        if(abs(eta)<=3.0 ):
+            return jetID_transition;
+        if(abs(eta)> 3.0 ): return jetID_forward;
+    elif case=='Tight':
+        if(abs(eta)<=2.7 ): return jetID_barrel_tight;
+        if(abs(eta)<=3.0 ): return jetID_transition;
+        if(abs(eta)> 3.0 ): return jetID_forward;
+    elif case=='Tight2017':
+        if(abs(eta)<2.4 ): return jetID_2017_24;
+        if(abs(eta)<2.7 ): return jetID_2017_27;
+        if(abs(eta)<3.0 ): return jetID_2017_30;
+        return jetID_2017_forward;
+    else:
+        print("error:: wrong level !!")
+        return -1;
 
 
