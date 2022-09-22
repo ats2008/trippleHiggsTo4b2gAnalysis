@@ -134,3 +134,12 @@ def rebinTheHistogram(hist,n,binEdges=None):
     hout=hist.Rebin(n,hist.GetName()+"_rbinned",bEdges)
     return hout
 
+def getAClonedTree(eTree,name=""):
+    if name=="":
+        name=eTree.GetName()
+    oTree= ROOT.TTree(name)
+    branches=OrderedDict(eTree.__dict__.keys())
+    tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
+    
+    return oTree
+

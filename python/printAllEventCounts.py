@@ -21,8 +21,8 @@ if __name__ == "__main__":
     candDict['allCands'] ='results/plots/analysis/allCands'
     candDict['controlCands'] ='results/plots/analysis/controlRegion'
     candDict['trippleHCands']='results/plots/analysis/signalRegion'
-    candDict['validation_CR']='results/plots/analysis/validationCR'
-    candDict['validation_SR']='results/plots/analysis/validationSR'
+    #candDict['validation_CR']='results/plots/analysis/validationCR'
+    #candDict['validation_SR']='results/plots/analysis/validationSR'
     
     for preReweight in [False]:
         fListDict={
@@ -36,6 +36,14 @@ if __name__ == "__main__":
             'gJet20To40'     : 'results/reweighted/photonInclusive20To40.root',
             'gJet40ToInf'    : 'results/reweighted/photonInclusive40ToInf.root'
         }
+    
+        fListDict["ggZTo2BHHTo2B2G"] = "results/peakingBkgs/ggZTo2BHHTo2B2G.root"
+        fListDict["ttHHTo2B2G"     ] = "results/peakingBkgs/ttHHTo2B2G.root"
+        fListDict["tth"            ] = "results/peakingBkgs/tth.root"
+        fListDict["ttWToQQHTo2G"   ] = "results/peakingBkgs/ttWToQQHTo2G.root"
+        fListDict["WToQQHHTo2B2G"  ] = "results/peakingBkgs/WToQQHHTo2B2G.root"
+        fListDict["ZToBBHHTo2B2G"  ] = "results/peakingBkgs/ZToBBHHTo2B2G.root"
+
         if preReweight:
             fListDict={
                 'data2018'       : 'results/nonReweited/data2018.root',
@@ -57,7 +65,13 @@ if __name__ == "__main__":
             'ggM80Jbox2bjet' :'ggM80Jbox2bjet'  ,
             'ttgJets'        :'ttgJets'         ,
             'ttgg'           :'ttgg'          ,
-            'tGJets'        : 'tGJets'
+            'tGJets'         :'tGJets',
+            "ggZTo2BHHTo2B2G":'ggZ(bb)H(bb)H(#gamma#gamma)',   
+            "ttHHTo2B2G"     :'ttH(bb)H(#gamma#gamma)',
+            "tth"            :'ttH(#gamma#gamma)', 
+            "ttWToQQHTo2G"   :'ttH(bb)H(#gamma#gamma)',
+            "WToQQHHTo2B2G"  :'W(qq)H(bb)H(#gamma#gamma)',
+            "ZToBBHHTo2B2G"  :'Z(qq)H(bb)H(#gamma#gamma)'
         }
         
         histStore={}
