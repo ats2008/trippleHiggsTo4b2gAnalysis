@@ -233,8 +233,12 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
         if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
             continue
         if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
-        #    print("\t\tskipping since ", float(getattr(eTree,'jet_'+str(i)+'_isValid'))," < ",0.25  , float(getattr(eTree,'jet_'+str(i)+'_isValid')) < 0.25)
             continue
+        if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.4 :
+            continue
+        if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.4 :
+            continue
+        
         #else:
         #    print("\t\tadding")
             
@@ -245,7 +249,6 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
     jetPt =np.array(jetPt)
     jetEta=np.array(jetEta)
     jetPhi=np.array(jetPhi)
-    
     allGammas=getHiggsDauP4s(eTree,22)
     allBquarks=getHiggsDauP4s(eTree,5)
     
@@ -266,38 +269,39 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
     allP4s=[]
     hFlavour=[]
     drMaxs=[0.9,0.9,0.9,0.9]
-    for i in range(4):
-        #print(jetEta,jetPhi)
-        drs=deltaR(genEta[i],genPhi[i],jetEta,jetPhi)
-        idxDrsWise=np.argsort(drs)
-        genB=allBquarks[i]
-        #print("gen b ",i,"  : ",genB.Pt(),genB.Eta(),genB.Phi())
-        #for idx in idxDrsWise:
-        #    print("\t",idx," : ",jetPt[idx]," , ",jetEta[idx]," , ",jetPhi[idx])
-        drMins.append(drs[idxDrsWise[0]])
-        jetMassMatch.append(jetMass[ idxDrsWise[0] ])
-        p4=ROOT.TLorentzVector()
-        p4.SetPtEtaPhiM( jetPt[idxDrsWise[0]] , jetEta[idxDrsWise[0]], jetPhi[idxDrsWise[0]],jetMass[idxDrsWise[0]] )
-        allP4s.append(p4)
-        deepJetScores.append(getattr(eTree,'jet_'+str( idxDrsWise[0] )+'_deepCSVScore'))
-        hFlavour.append(getattr(eTree,'jet_'+str( idxDrsWise[0] )+'_flavour'))
-        drMin_=1e9
-        drMax = drMaxs[i]
-        for idx in idxDrsWise :
-            if drs[idx] > drMax : #and abs(jetPt[idx]*jetRegCorr[idx]/genPt[i] - 1.0) < 0.2:
-                break
-            if getattr(eTree,'jet_'+str( idx )+'_flavour') <4.80:
-                continue
-           # print( "mathing flav : ",getattr(eTree,'jet_'+str( idx )+'_flavour')  )
-            if idxs[i] > -1:
-               if drs[idx] > drMin_:
+    if len(jetPt) > 0 :
+        for i in range(4):
+            #print(jetEta,jetPhi)
+            drs=deltaR(genEta[i],genPhi[i],jetEta,jetPhi)
+            idxDrsWise=np.argsort(drs)
+            genB=allBquarks[i]
+            #print("gen b ",i,"  : ",genB.Pt(),genB.Eta(),genB.Phi())
+            #for idx in idxDrsWise:
+            #    print("\t",idx," : ",jetPt[idx]," , ",jetEta[idx]," , ",jetPhi[idx])
+            drMins.append(drs[idxDrsWise[0]])
+            jetMassMatch.append(jetMass[ idxDrsWise[0] ])
+            p4=ROOT.TLorentzVector()
+            p4.SetPtEtaPhiM( jetPt[idxDrsWise[0]] , jetEta[idxDrsWise[0]], jetPhi[idxDrsWise[0]],jetMass[idxDrsWise[0]] )
+            allP4s.append(p4)
+            deepJetScores.append(getattr(eTree,'jet_'+str( idxDrsWise[0] )+'_deepCSVScore'))
+            hFlavour.append(getattr(eTree,'jet_'+str( idxDrsWise[0] )+'_flavour'))
+            drMin_=1e9
+            drMax = drMaxs[i]
+            for idx in idxDrsWise :
+                if drs[idx] > drMax : #and abs(jetPt[idx]*jetRegCorr[idx]/genPt[i] - 1.0) < 0.2:
+                    break
+                if getattr(eTree,'jet_'+str( idx )+'_flavour') <4.80:
                     continue
-            idxs[i]=idx
-            drMin_=drs[idx]
-            hFlavour[-1]=getattr(eTree,'jet_'+str( idx )+'_flavour')
-            deepJetScores[-1]=getattr(eTree,'jet_'+str( idx )+'_deepCSVScore')
-            allP4s[-1].SetPtEtaPhiM( jetPt[idx] , jetEta[idx], jetPhi[idx],jetMass[idx] ) ;allP4s[-1]=p4;
-            jetMassMatch[-1]=jetMass[idx]
+               # print( "mathing flav : ",getattr(eTree,'jet_'+str( idx )+'_flavour')  )
+                if idxs[i] > -1:
+                   if drs[idx] > drMin_:
+                        continue
+                idxs[i]=idx
+                drMin_=drs[idx]
+                hFlavour[-1]=getattr(eTree,'jet_'+str( idx )+'_flavour')
+                deepJetScores[-1]=getattr(eTree,'jet_'+str( idx )+'_deepCSVScore')
+                allP4s[-1].SetPtEtaPhiM( jetPt[idx] , jetEta[idx], jetPhi[idx],jetMass[idx] ) ;allP4s[-1]=p4;
+                jetMassMatch[-1]=jetMass[idx]
 
     idx=copy.deepcopy(idxs)
     if idx[1] >0 :
@@ -364,6 +368,7 @@ def getBestGetMatchesGlobal(eTree):
         #for idx in idxDrsWise:
         #    print("\t",idx," : ",jetPt[idx]," , ",jetEta[idx]," , ",jetPhi[idx])
         drMins.append(drs[idxDrsWise[0]])
+
         for idx in idxDrsWise :
             if drs[idx] < 0.4 : #and abs(jetPt[idx]*jetRegCorr[idx]/genPt[i] - 1.0) < 0.2:
                 idxs[i]=idx
