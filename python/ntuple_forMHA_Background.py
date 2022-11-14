@@ -1,6 +1,6 @@
 from __future__ import print_function
-from collections import OrderedDict
 import ROOT 
+from collections import OrderedDict
 import numpy as np
 from trippleHiggsUtils import *
 from Util  import *
@@ -158,6 +158,7 @@ for i in range(8):
  
 
 ntuple={}
+branches=np.unique(branches)
 ntuple['background'] = ROOT.TNtuple(outTreeName+'_background', outTreeName, ':'.join(branches))
 
 tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
@@ -174,7 +175,6 @@ sumWeights=ROOT.TH1F("sumWeighs","sumWeighs",1,0.0,1.0)
 sumWeights.SetCanExtend(ROOT.TH1.kAllAxes)
 
 th1Store={}
-
 
 LVStore={}
 LVStore['jetLV']=ROOT.TLorentzVector();
@@ -230,6 +230,7 @@ for fname in allFnames:
         tofill['matchedJet_b2']=-1
         tofill['matchedJet_b3']=-1
         tofill['matchedJet_b4']=-1
+        nVld=0
         for i in range(8):
             tofill['label_'+str(i)]=0
             tofill['label_idx_'+str(i)]=0
@@ -238,14 +239,20 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_isValid']=0
             if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
                 tofill['jet_'+str(i)+'_isValid']=0
-            if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.4 :
-                tofill['jet_'+str(i)+'_isValid']=0
-            if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.4 :
-                tofill['jet_'+str(i)+'_isValid']=0
+            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.05 :
+            #    tofill['jet_'+str(i)+'_isValid']=0
+            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.05 :
+            #    tofill['jet_'+str(i)+'_isValid']=0
+            if tofill['jet_'+str(i)+'_isValid'] > 0.5:
+                nVld+=1
+        if nVld < 4:
+            continue
+
 
         LVStore['g1LV'].SetPtEtaPhiM(eTree.leadingPhoton_pt,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi,0.0)
         LVStore['g2LV'].SetPtEtaPhiM(eTree.subleadingPhoton_pt,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi,0.0)
         LVStore['HggLV'].SetPtEtaPhiM( eTree.diphoton_pt , eTree.diphoton_eta , eTree.diphoton_phi , eTree.CMS_hgg_mass )
+
         for i in range(8):
             if  getattr(eTree,'jet_'+str(i)+'_isValid') >0.3:
                 LVStore['jetLV'].SetPtEtaPhiM(  
@@ -269,7 +276,16 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_mass_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).M()
         
-        ntuple['background'].Fill(array('f', tofill.values()))
+        for ky in branches:
+            if ky not in tofill:
+                print(ky)
+        for ky in tofill:
+            if ky not in branches:
+                print(ky)
+        if 'allEvents' in treesToStore:
+            ntuple['allEvents'].Fill(array('f', tofill.values()))
+        elif  'background' in treesToStore:
+            ntuple['background'].Fill(array('f', tofill.values()))
 
     simFile.Close()           
     print("Closing file : ",fname)

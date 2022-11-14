@@ -117,6 +117,11 @@ branches.append('matchedJet_b2')
 branches.append('matchedJet_b3')
 branches.append('matchedJet_b4')
 
+branches.append('event')
+branches.append('eventIdx')
+branches.append('njets_not_recoed')
+branches.append('njets_resolved')
+
 for i in range(8):
     branches.append('label_'+str(i))
 
@@ -136,11 +141,14 @@ for i in range(8):
     branches.append('jet_'+str(i)+'_mass_WithDP')
     branches.append('jet_'+str(i)+'_mass_WithDPLeadG')
     branches.append('jet_'+str(i)+'_mass_WithDPSubleadG')
-    
+
+branches=np.unique(branches)
 ntuple={}
 ntuple['allRecoed'] = ROOT.TNtuple(outTreeName+'_allRecoed', outTreeName, ':'.join(branches))
 ntuple['SingleJetMiss'] = ROOT.TNtuple(outTreeName+'_SingleJetMiss', outTreeName, ':'.join(branches))
-ntuple['MergedJetMiss'] = ROOT.TNtuple(outTreeName+'_MergedJetEvts', outTreeName, ':'.join(branches))
+ntuple['MergedJetMiss'] = ROOT.TNtuple(outTreeName+'_MergedJetMiss', outTreeName, ':'.join(branches))
+ntuple['MultiJetMiss'] = ROOT.TNtuple(outTreeName+'_MultiJetMiss', outTreeName, ':'.join(branches))
+ntuple['allEvents'] = ROOT.TNtuple(outTreeName+'_allEvents', outTreeName, ':'.join(branches))
 
 tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
 
@@ -155,14 +163,28 @@ sumEntries.SetCanExtend(ROOT.TH1.kAllAxes)
 sumWeights=ROOT.TH1F("sumWeighs","sumWeighs",1,0.0,1.0)
 sumWeights.SetCanExtend(ROOT.TH1.kAllAxes)
 
-th1Store={}
+th1Store={} 
+for i in range(4):
+    th1Store['pt_'+str(i)] =ROOT.TH1F('pt_'+str(i),"pt_"+str(i),100,0.0,200.0)
+    th1Store['eta_'+str(i)]=ROOT.TH1F('eta_'+str(i),"eta_"+str(i),60,-3.0,3.0)
+    th1Store['phi_'+str(i)]=ROOT.TH1F('phi_'+str(i),"phi_"+str(i),62,-3.1,3.1)
+    th1Store['mass_'+str(i)]=ROOT.TH1F('mass_'+str(i),"mass_"+str(i),100,0.0,100.0)
+    th1Store['gen_b'+str(i)+'_G1dr' ] = ROOT.TH1F('gen_b'+str(i)+'_G1dr',"phi_"+str(i),50,0.0,5.0)
+    th1Store['gen_b'+str(i)+'_G2dr' ] = ROOT.TH1F('gen_b'+str(i)+'_G2dr',"phi_"+str(i),50,0.0,5.0)
+    th1Store['gen_b'+str(i)+'_pt'  ] = ROOT.TH1F( 'gen_b'+str(i)+'_pt' ,'gen_b'+str(i)+'_pt' , 100,0.0,200.0)
+    th1Store['gen_b'+str(i)+'_eta' ] = ROOT.TH1F( 'gen_b'+str(i)+'_eta','gen_b'+str(i)+'_eta', 60,-3.0,3.0)
+    th1Store['gen_b'+str(i)+'_phi' ] = ROOT.TH1F( 'gen_b'+str(i)+'_phi','gen_b'+str(i)+'_phi', 62,-3.1,3.1)
+    th1Store['genMatched_b'+str(i)+'_pt'  ] = ROOT.TH1F( 'genMatched_b'+str(i)+'_pt' ,'genMatched_b'+str(i)+'_pt' , 100,0.0,200.0)
+    th1Store['genMatched_b'+str(i)+'_eta' ] = ROOT.TH1F( 'genMatched_b'+str(i)+'_eta','genMatched_b'+str(i)+'_eta', 60,-3.0,3.0)
+    th1Store['genMatched_b'+str(i)+'_phi' ] = ROOT.TH1F( 'genMatched_b'+str(i)+'_phi','genMatched_b'+str(i)+'_phi', 62,-3.1,3.1)
+    
 nEvts=0
 nEvtsWithMerged=0
 LVStore={}
 LVStore['jetLV']=ROOT.TLorentzVector();
-LVStore['g1LV']=ROOT.TLorentzVector()
-LVStore['g2LV']=ROOT.TLorentzVector()
-LVStore['HggLV'] =ROOT.TLorentzVector()
+LVStore['g1LV'] =ROOT.TLorentzVector()
+LVStore['g2LV'] =ROOT.TLorentzVector()
+LVStore['HggLV']=ROOT.TLorentzVector()
 
 beg=datetime.datetime.now()
 for fname in allFnames:
@@ -184,7 +206,7 @@ for fname in allFnames:
         wei=eTree.weight
         sumEntries.Fill('total', 1)
         sumWeights.Fill('total', wei)
-        if(i%250==0):
+        if(i%500==0):
             now=datetime.datetime.now()
             timeLeftSec=1.0*(maxEvents_-i)*(now-beg).total_seconds()/( i +1e-3)
             print( "timeLeftSec : ",1.0," * ( ",maxEvents_,"-",i,")/",(now-beg).total_seconds(),"/",maxEvents_  ) 
@@ -197,7 +219,15 @@ for fname in allFnames:
             print("      time left : ",timeLeftMin," min ",timeLeftSec ," s [ time elapsed : ",timeSpendM,"m  ",timeSpendS, " s ]")
             print(" gg mass , h1MassVsh2Mass  : ",eTree.CMS_hgg_mass ,"( ",eTree.M1jj , eTree.M2jj,")" )
             
+        allGammas=getHiggsDauP4s(eTree,22)
+        allBquarks=getHiggsDauP4s(eTree,5)
         
+        for i in range(4):
+            th1Store['gen_b'+str(i)+'_G1dr' ].Fill(allBquarks[i].DeltaR(allGammas[0]))
+            th1Store['gen_b'+str(i)+'_G2dr' ].Fill(allBquarks[i].DeltaR(allGammas[1]))
+            th1Store['gen_b'+str(i)+'_pt' ].Fill(allBquarks[i].Pt())
+            th1Store['gen_b'+str(i)+'_eta' ].Fill(allBquarks[i].Eta())
+            th1Store['gen_b'+str(i)+'_phi' ].Fill(allBquarks[i].Phi())
 
         rslt=getBestGetMatchesGlobalFGG(eTree,drMax,etaMax,pTMin)
         idxs=rslt['idxs']
@@ -217,12 +247,14 @@ for fname in allFnames:
             else:
                 sumEntries.Fill('isRecoed_'+str(i), 1)
                 sumWeights.Fill('isRecoed_'+str(i), wei)
-         
         nout=0
         if not isRecoed['isRecoed_0']:            nout+=1;    
         if not isRecoed['isRecoed_1']:            nout+=1;    
         if not isRecoed['isRecoed_2']:            nout+=1;    
         if not isRecoed['isRecoed_3']:            nout+=1;
+        #print("idxs from gen Match : ",idxs) 
+        #print(" isAllRecoed : ",isAllRecoed) 
+        #print(" nout : ",nout) 
         
         nleadOut=0
         if not isRecoed['isRecoed_0']:            nleadOut+=1;    
@@ -259,9 +291,6 @@ for fname in allFnames:
         sumEntries.Fill("nUnique_"+str(nUniqueJets) ,  1  )
         sumWeights.Fill("nUnique_"+str(nUniqueJets) , wei )
         
-        if nout>1:
-            continue
-
         sumEntries.Fill("nUniqueAfterSel_"+str(nUniqueJets) ,  1  )
         sumWeights.Fill("nUniqueAfterSel_"+str(nUniqueJets) , wei )
         for ky in tofill:
@@ -269,6 +298,8 @@ for fname in allFnames:
                 tofill[ky]=getattr(eTree,ky)
             else:
                 tofill[ky]=0.0
+        tofill["njets_not_recoed"]=-1
+        tofill["njets_resolved"]    =-1
         x=0
         tofill['matchedJet_b1']=idxs[0]
         tofill['matchedJet_b2']=idxs[1]
@@ -279,7 +310,12 @@ for fname in allFnames:
             if i in idxs:
                 tofill['label_'+str(i)]=1
                 tofill['label_idx_'+str(i)]=idxs.index(i)+1
+                iMatch=idxs.index(i)
+                th1Store['genMatched_b'+str(iMatch)+'_pt' ].Fill( allBquarks[iMatch].Pt())
+                th1Store['genMatched_b'+str(iMatch)+'_eta' ].Fill(allBquarks[iMatch].Eta())
+                th1Store['genMatched_b'+str(iMatch)+'_phi' ].Fill(allBquarks[iMatch].Phi())
                 x+=1
+
             else:
                 tofill['label_'+str(i)]=0
                 tofill['label_idx_'+str(i)]=0
@@ -287,7 +323,15 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_isValid']=0
             if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
                 tofill['jet_'+str(i)+'_isValid']=0
-
+            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.4 :
+            #    tofill['jet_'+str(i)+'_isValid']=0
+            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.4 :
+            #    tofill['jet_'+str(i)+'_isValid']=0
+            if i in idxs:
+                th1Store['pt_'+str(idxs.index(i))].Fill(   getattr(eTree,'jet_'+str(i)+'_pt')  )
+                th1Store['eta_'+str(idxs.index(i))].Fill(  getattr(eTree,'jet_'+str(i)+'_eta')  )
+                th1Store['phi_'+str(idxs.index(i))].Fill(  getattr(eTree,'jet_'+str(i)+'_phi')  )
+                th1Store['mass_'+str(idxs.index(i))].Fill( getattr(eTree,'jet_'+str(i)+'_mass')  )
         if x <3:
             nEvtsWithMerged+=1
         
@@ -296,7 +340,7 @@ for fname in allFnames:
         LVStore['HggLV'].SetPtEtaPhiM( eTree.diphoton_pt , eTree.diphoton_eta , eTree.diphoton_phi , eTree.CMS_hgg_mass )
  
         for i in range(8):
-            if getattr(eTree,'jet_'+str(i)+'_pt') > 0.5:
+            if getattr(eTree,'jet_'+str(i)+'_isValid') > 0.5:
                 LVStore['jetLV'].SetPtEtaPhiM(  
                                                 getattr(eTree,'jet_'+str(i)+'_pt'),
                                                 getattr(eTree,'jet_'+str(i)+'_eta'),
@@ -307,24 +351,37 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_drWithDP'] = LVStore['jetLV'].DeltaR( LVStore['HggLV'] )
                 tofill['jet_'+str(i)+'_drWithDP_leadG'] = LVStore['jetLV'].DeltaR( LVStore['g1LV'] )
                 tofill['jet_'+str(i)+'_dr_WithDPSubleadG'] = LVStore['jetLV'].DeltaR( LVStore['g2LV'] )
-                tofill['jet_'+str(i)+'_dEta_WithDP'] = abs( LVStore['jetLV'].Eta() - LVStore['HggLV'].Eta() ) 
-                tofill['jet_'+str(i)+'_dEta_WithDPLeadG'] = abs( LVStore['jetLV'].Eta() - LVStore['g1LV'].Eta() )
-                tofill['jet_'+str(i)+'_dEta_WithDPSubleadG'] = abs( LVStore['jetLV'].Eta() - LVStore['g2LV'].Eta() )
+                tofill['jet_'+str(i)+'_dEta_WithDP'] = ( LVStore['jetLV'].Eta() - LVStore['HggLV'].Eta() ) 
+                tofill['jet_'+str(i)+'_dEta_WithDPLeadG'] = ( LVStore['jetLV'].Eta() - LVStore['g1LV'].Eta() )
+                tofill['jet_'+str(i)+'_dEta_WithDPSubleadG'] = ( LVStore['jetLV'].Eta() - LVStore['g2LV'].Eta() )
                 tofill['jet_'+str(i)+'_dPhi_WithDP'] = LVStore['jetLV'].DeltaPhi( LVStore['HggLV'] )
                 tofill['jet_'+str(i)+'_dPhi_WithDPLeadG'] = LVStore['jetLV'].DeltaPhi( LVStore['g1LV'] )
                 tofill['jet_'+str(i)+'_dPhi_WithDPSubleadG'] = LVStore['jetLV'].DeltaPhi( LVStore['g2LV'] )
                 tofill['jet_'+str(i)+'_mass_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).M()
+        tofill["njets_not_recoed"]=nout
+        tofill["njets_resolved"]    =x
 
-
-        if nout==0 and 'allRecoed' in treesToStore:
+        for ky in branches:
+            if ky not in tofill:
+                print(ky)
+        for ky in tofill:
+            if ky not in branches:
+                print(ky)
+        if nout==0 and x==4 and 'allRecoed' in treesToStore:
             ntuple['allRecoed'].Fill(array('f', tofill.values()))
-        if nout==1 and 'SingleJetMiss' in treesToStore:
+        elif nout==1 and x==3 and 'SingleJetMiss' in treesToStore:
             ntuple['SingleJetMiss'].Fill(array('f', tofill.values()))
-        if x<3 and 'MergedJetMiss' in treesToStore:
-            ntuple['MergedJetMiss'].Fill(array('f', tofill.values()))
+        elif nout<3  and 'MultiJetMiss' in treesToStore:
+            ntuple['MultiJetMiss'].Fill(array('f', tofill.values()))
             
+        if x<4 and x<nout and 'MergedJetMiss' in treesToStore:
+            ntuple['MergedJetMiss'].Fill(array('f', tofill.values()))
+        
+        if 'allEvents' in treesToStore:
+            ntuple['allEvents'].Fill(array('f', tofill.values()))
+
         nEvts+=1
     simFile.Close()           
     print("Closing file : ",fname)
@@ -340,7 +397,6 @@ for ky in th1Store:
     th1Store[ky].Write()
 for ky in ntuple:
     ntuple[ky].Write()
-
+fout.Purge()
 fout.Close()
 print(" File written out  : ",foutName)
-
