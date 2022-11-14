@@ -38,20 +38,23 @@ def triggerSelection(eTree):
     return True
  
 def getHiggsDauP4s(eTree,pdgId):
-    genPt=[1e4 for i in range(4)]
+    genPt =[1e4 for i in range(4)]
     genEta=[1e4 for i in range(4)]
     genPhi=[1e4 for i in range(4)]
-    genE=[1e4 for i in range(4)]
+    genE  =[1e4 for i in range(4)]
+    genHPt=[-1e4 for i in range(4)]
     k=0
     if abs(eTree.gen_H1_dau1_pdgId)==pdgId:
         genPt[k]=eTree.gen_H1_dau1_pt
         genEta[k]=eTree.gen_H1_dau1_eta
+        genPhi[k]=eTree.gen_H1_dau1_phi
         genE[k]=eTree.gen_H1_dau1_e
         k+=1
         genPt[k]=eTree.gen_H1_dau2_pt
         genEta[k]=eTree.gen_H1_dau2_eta
         genPhi[k]=eTree.gen_H1_dau2_phi
         genE[k]=eTree.gen_H1_dau2_e
+        genHPt[k/2]=eTree.gen_H1_pt
         k+=1
     if abs(eTree.gen_H2_dau1_pdgId)==pdgId:
         genPt[k]=eTree.gen_H2_dau1_pt
@@ -63,6 +66,7 @@ def getHiggsDauP4s(eTree,pdgId):
         genEta[k]=eTree.gen_H2_dau2_eta
         genPhi[k]=eTree.gen_H2_dau2_phi
         genE[k]=eTree.gen_H2_dau2_e
+        genHPt[k/2]=eTree.gen_H2_pt
         k+=1
 
     if abs(eTree.gen_H3_dau1_pdgId)==pdgId:
@@ -75,30 +79,27 @@ def getHiggsDauP4s(eTree,pdgId):
         genEta[k]=eTree.gen_H3_dau2_eta
         genPhi[k]=eTree.gen_H3_dau2_phi
         genE[k]=eTree.gen_H3_dau2_e
+        genHPt[k/2]=eTree.gen_H2_pt
         k+=1
     allP4=[]
     for i in range(k):
       lv=ROOT.TLorentzVector()
       lv.SetPtEtaPhiE(genPt[i],genEta[i],genPhi[i],genE[i])
       allP4.append(lv)
+    
     order=[0,1]
-    if allP4[0].Pt() < allP4[1].Pt():
+    if allP4[order[0]].Pt() < allP4[order[1]].Pt():
         order=[1,0]
     if len(allP4) > 2:
-        if (allP4[0]+allP4[1]).Pt() >  (allP4[2]+allP4[3]).Pt() :
-            if allP4[2].Pt() < allP4[3].Pt():
-                order.append(3)
-                order.append(2)
-            else:
-                order.append(2)
-                order.append(3)
+        if genHPt[1] > genHPt[0]:
+            order=[2,3,order[0],order[1]]
         else:
-            if allP4[2].Pt() < allP4[3].Pt():
-                order.insert(0,3)
-                order.insert(1,2)
-            else:
-                order.insert(0,2)
-                order.insert(1,3)
+            order=[order[0],order[1],2,3]
+        if allP4[order[0]].Pt() < allP4[order[1]].Pt():
+            t=order[1] ; order[1]=order[0] ; order[0]=t;
+        if allP4[order[2]].Pt() < allP4[order[3]].Pt():
+            t=order[2] ; order[2]=order[3] ; order[2]=t;
+           
     return [allP4[i] for i in order ]
     
 def checkGenMatches(eTree,jetIndices):
@@ -216,9 +217,6 @@ def checkGenMatches(eTree,jetIndices):
 
 def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
 
-    genEta=[1e4 for i in range(4)]
-    genPhi=[1e4 for i in range(4)]
-    genPt =[1e4 for i in range(4)]
     idxs  =[-1 for i in range(4)]
     
     jetPt=[]
@@ -227,18 +225,17 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
     jetMass=[]
     N_JET_MAX=8
     for i in range(N_JET_MAX):
-        #print("nJet : ",i," isValid : ",getattr(eTree,'jet_'+str(i)+'_isValid'))
+      #  print("stored Jet nJet : ",i," isValid : ",getattr(eTree,'jet_'+str(i)+'_isValid')," | ",getattr(eTree,'jet_'+str(i)+'_eta') ," | ",getattr(eTree,'jet_'+str(i)+'_phi'))
+        if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
+            continue
         if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaCut:
             continue
         if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
             continue
-        if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
-            continue
-        if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.4 :
-            continue
-        if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.4 :
-            continue
-        
+        #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.05 :
+        #    continue
+        #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.05 :
+        #    continue
         #else:
         #    print("\t\tadding")
             
@@ -246,6 +243,7 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
         jetEta.append(getattr(eTree,'jet_'+str(i)+'_eta'))
         jetPhi.append(getattr(eTree,'jet_'+str(i)+'_phi'))
         jetMass.append(getattr(eTree,'jet_'+str(i)+'_mass'))
+
     jetPt =np.array(jetPt)
     jetEta=np.array(jetEta)
     jetPhi=np.array(jetPhi)
@@ -256,9 +254,10 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
     genEta=[]
     genPhi=[]
     for genb in allBquarks:
-        genPt.append( genb.Pt())
+        genPt.append( genb.Pt() )
         genEta.append(genb.Eta())
         genPhi.append(genb.Phi())
+
     genPt =np.array(genPt)
     genEta=np.array(genEta)
     genPhi=np.array(genPhi)
@@ -268,13 +267,18 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
     deepJetScores=[]
     allP4s=[]
     hFlavour=[]
-    drMaxs=[0.9,0.9,0.9,0.9]
+    drMaxs=[drMax for i in range(4)]
+    #print("jet Eta ",np.round(jetEta,3))
+    #print("jet Phi ",np.round(jetPhi,3))
     if len(jetPt) > 0 :
         for i in range(4):
-            #print(jetEta,jetPhi)
             drs=deltaR(genEta[i],genPhi[i],jetEta,jetPhi)
+     #       print()
+     #       print("New Jet @gen ",genEta[i],genPhi[i]," [ ",allBquarks[i].Eta(),allBquarks[i].Phi(),"] ")
+     #       print(np.round(drs,3))
             idxDrsWise=np.argsort(drs)
             genB=allBquarks[i]
+     #       print(idxDrsWise)
             #print("gen b ",i,"  : ",genB.Pt(),genB.Eta(),genB.Phi())
             #for idx in idxDrsWise:
             #    print("\t",idx," : ",jetPt[idx]," , ",jetEta[idx]," , ",jetPhi[idx])
@@ -302,7 +306,7 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
                 deepJetScores[-1]=getattr(eTree,'jet_'+str( idx )+'_deepCSVScore')
                 allP4s[-1].SetPtEtaPhiM( jetPt[idx] , jetEta[idx], jetPhi[idx],jetMass[idx] ) ;allP4s[-1]=p4;
                 jetMassMatch[-1]=jetMass[idx]
-
+    #print("Allocated idxs ",idxs)
     idx=copy.deepcopy(idxs)
     if idx[1] >0 :
         if idx[0] >0 and jetPt[idx[0]] > jetPt[idx[1]]:
