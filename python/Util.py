@@ -3,7 +3,7 @@ import ROOT
 import numpy as np
 
 
-def saveTheDictionary(aCollection,fname=None,folder=None):
+def saveTheDictionary(aCollection,fname=None,folder=None,fileExists=False):
     outfile=folder
     if fname!=None and outfile==None:
         outfile=ROOT.TFile(fname,"RECREATE")
@@ -80,23 +80,6 @@ def getBoolFromConfigs(cfgTxt,tag,default):
         return default
 
 
-
-def saveTheDictionary(aCollection,fname=None,folder=None):
-    outfile=folder
-    if fname!=None and outfile==None:
-        outfile=ROOT.TFile(fname,"RECREATE")
-    outfile.cd()
-    for key in aCollection:
-        if type(aCollection[key])==type({}):
-            inFolder=outfile.mkdir(key)
-            saveTheDictionary(aCollection[key],None,inFolder)
-        else:
-            outfile.cd()
-            aCollection[key].Write()
-    if fname!=None:
-        outfile.Close()
-
-        
 def getTheObjectsFromFile(aFile):
     histStore={}
     for key in aFile.GetListOfKeys():

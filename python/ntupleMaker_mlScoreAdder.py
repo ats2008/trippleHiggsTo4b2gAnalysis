@@ -43,12 +43,14 @@ def insideTheEllipse( x,y,x1,y1,x2,y2,a):
 
 allFnames=getListOfStringsFromConfigs(cfgTxt,"#FNAMES_BEG","#FNAMES_END")
 foutName=getValueFromConfigs(cfgTxt,"OutpuFileName","fggHists.root")
-mlScoreFileName=getValueFromConfigs(cfgTxt,"mlScoreFileName","ats.plk")
-mlScoreTag=getValueFromConfigs(cfgTxt,"mlScoreTag","")
+mlScoreFileNames=getValueFromConfigs(cfgTxt,"mlScoreFileName","ats.plk").split(",")
+mlScoreTags=getValueFromConfigs(cfgTxt,"mlScoreTag","").split(",")
 processID=getValueFromConfigs(cfgTxt,"processID",default="DATA")
 treeName=getValueFromConfigs(cfgTxt,"treeName",default="tagsDumper/trees/Data_13TeV_TrippleHTag_0")
 outTreeName=getValueFromConfigs(cfgTxt,"outTreeName",default="Data_13TeV_TrippleHTag_0")
 eventIdxOffset=int(getValueFromConfigs(cfgTxt,"EventIdxOffset",default=0))
+
+mlScoreFileNameMap={ tagM : val for tagM,val in zip(mlScoreTags,mlScoreFileNames) }
 
 etaMax=2.5
 pTMin=25.0
@@ -58,8 +60,8 @@ print("foutName   :  ",               foutName)
 print("processID   :  ",              processID)
 print("treeName   :  ",               treeName)
 print("eventIdxOffset   :  ", eventIdxOffset)
-print("ML Score file    :  ", mlScoreFileName)
-print("ML Score tag    :  ", mlScoreTag)
+print("ML Score file    :  ", mlScoreFileNames)
+print("ML Score tags    :  ", mlScoreTags)
 
 maxEvents=-1
 tmp_=getValueFromConfigs(cfgTxt,"MaxEvents")
@@ -73,14 +75,16 @@ if(maxEvtsSuperSeeder > 0):
 print("maxevents : ",maxEvents)
 
 
-mlScoreInterface=None
-if os.path.isfile(mlScoreFileName):
-    mlScoreInterface=hhhMLI.mlScoreManger(mlScoreFileName)
-    print("Loaded ML Sores for ",mlScoreInterface.GetEntries()," events ")
-    print()
-#    mlScoreInterface.printAllEventsIn()
-else:
-    print("ML Score file not found !! ",mlScoreInterface)
+mlScoreInterface={}
+for ky in mlScoreFileNameMap:
+    if os.path.isfile(mlScoreFileNameMap[ky]):
+        mlScoreInterface[ky]=hhhMLI.mlScoreManger(mlScoreFileNameMap[ky])
+        print("Loaded ML Sores for ",mlScoreInterface[ky].GetEntries()," events ")
+        print()
+    #    mlScoreInterface.printAllEventsIn()
+    else:
+        print("ML Score file not found !! ",mlScoreFileNameMap[ky])
+        exit(1)
 
 nNoHtoGammaGamma=0
 nNoHHto4B=0
@@ -118,11 +122,16 @@ for i in range(8):
     branchesToFill.append('jet_'+str(i)+'_mass_WithDP')
     branchesToFill.append('jet_'+str(i)+'_mass_WithDPLeadG')
     branchesToFill.append('jet_'+str(i)+'_mass_WithDPSubleadG')
-    branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y0')
-    branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y1')
-    branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y0s')
-    branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y1s')
-    branchesToFill.append('jet_'+str(i)+mlScoreTag+'_score')
+    branchesToFill.append('jet_'+str(i)+'_massRatio_WithDP')
+    branchesToFill.append('jet_'+str(i)+'_ptRatio_WithDP')
+    branchesToFill.append('jet_'+str(i)+'_ptRatio_WithDPLeadG')
+    branchesToFill.append('jet_'+str(i)+'_ptRatio_WithDPSubleadG')
+    for mlScoreTag in mlScoreInterface:
+        branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y0')
+        branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y1')
+        branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y0s')
+        branchesToFill.append('jet_'+str(i)+mlScoreTag+'_y1s')
+        branchesToFill.append('jet_'+str(i)+mlScoreTag+'_score')
 
 branches=np.unique(branchesToFill)
 
@@ -236,32 +245,40 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_mass_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).M()
+                
+                tofill['jet_'+str(i)+'_massRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).M() /  LVStore['HggLV'].M()
+                tofill['jet_'+str(i)+'_ptRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).Pt() / LVStore['HggLV'].Pt()
+                tofill['jet_'+str(i)+'_ptRatio_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).Pt() / LVStore['g1LV'].Pt()
+                tofill['jet_'+str(i)+'_ptRatio_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).Pt() / LVStore['g2LV'].Pt()
         
         eventIdx=eTree.event
-        rslt=mlScoreInterface.getEntry(eventIdx)
-        if rslt['valid']:
-            for i in range(NJETS):
-                tofill['jet_'+str(i)+mlScoreTag+'_y0']=rslt['y0'][i] 
-                tofill['jet_'+str(i)+mlScoreTag+'_y1']=rslt['y1'][i] 
-                tofill['jet_'+str(i)+mlScoreTag+'_y0s']=hhhMLI.sigmoid(rslt['y0'][i] )
-                tofill['jet_'+str(i)+mlScoreTag+'_y1s']=hhhMLI.sigmoid(rslt['y1'][i] )
-                tofill['jet_'+str(i)+mlScoreTag+'_score']=rslt['score'][i] 
-                tofill['label_'+str(i)]=float(rslt['label'][i]  >0.1)
-                tofill['label_idx_'+str(i)]=rslt['label'][i]
-
-                if rslt['label'][i]>0 and rslt['label'][i] <5:
-                    k=int(rslt['label'][i])
-                    tofill['matchedJet_b'+str(k)]=i
-                ## SANITY CHECK 
-                if  tofill['jet_'+str(i)+'_isValid'] != rslt['vldMask'][i]:
-                    x=[]
-                    for kk in range(NJETS):
-                        x.append((tofill['jet_'+str(i)+'_isValid']))
-                    print("FISHY FISY FISHY !! idx ",evt," eventIdx : ",eventIdx," vldMask from Json ",rslt['vldMask']," | from tree ",x)
-            nMatchFound+=1
-        else:
-            nMiss+=1
-            print("Event not found ! " , eventIdx," nvld Jets : ",nVldJets2)
+        for mlScoreTag in mlScoreInterface:
+            rslt=mlScoreInterface[mlScoreTag].getEntry(eventIdx)
+            if rslt['valid']:
+                for i in range(8):
+                    tofill['jet_'+str(i)+mlScoreTag+'_y0']=rslt['y0'][i] 
+                    tofill['jet_'+str(i)+mlScoreTag+'_y1']=rslt['y1'][i] 
+                    tofill['jet_'+str(i)+mlScoreTag+'_y0s']=hhhMLI.sigmoid(rslt['y0'][i] )
+                    tofill['jet_'+str(i)+mlScoreTag+'_y1s']=hhhMLI.sigmoid(rslt['y1'][i] )
+                    tofill['jet_'+str(i)+mlScoreTag+'_score']=rslt['score'][i] 
+                    
+                    for i in range(NJETS):
+                        tofill['label_'+str(i)]=float(rslt['label'][i]  >0.1)
+                        tofill['label_idx_'+str(i)]=rslt['label'][i]
+                        if rslt['label'][i]>0 and rslt['label'][i] <5:
+                            k=int(rslt['label'][i])
+                            tofill['matchedJet_b'+str(k)]=i
+        
+                        ## SANITY CHECK 
+                        if  tofill['jet_'+str(i)+'_isValid'] != rslt['vldMask'][i]:
+                            x=[]
+                            for kk in range(NJETS):
+                                x.append((tofill['jet_'+str(i)+'_isValid']))
+                            print("FISHY FISY FISHY !! idx ",evt," eventIdx : ",eventIdx," vldMask from Json ",rslt['vldMask']," | from tree ",x)
+                nMatchFound+=1
+            else:
+                nMiss+=1
+                print("Event not found ! " , eventIdx," nvld Jets : ",nVldJets2)
 
         for i in outputDataDict:
             outputDataDict[i]=tofill[i]

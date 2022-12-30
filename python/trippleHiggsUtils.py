@@ -619,6 +619,56 @@ def getCosthetaVars(eTree,LVStore):
     
     return x['j1LV'].CosTheta() , x['k1LV'].CosTheta() , x['HggLV'].CosTheta() , drMin , drMin2
 
+
+def getLVStoreFromTreeAndQuad( eTree ,quad):
+    
+    LVStore={}
+    LVStore['j1LV']=ROOT.TLorentzVector();
+    LVStore['j2LV']=ROOT.TLorentzVector();
+    LVStore['k1LV']=ROOT.TLorentzVector();
+    LVStore['k2LV']=ROOT.TLorentzVector();
+    
+    LVStore['g1LV']=ROOT.TLorentzVector()
+    LVStore['g1LV'].SetPtEtaPhiM(eTree.leadingPhoton_pt,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi,0.0)
+
+    LVStore['g2LV']=ROOT.TLorentzVector()
+    LVStore['g2LV'].SetPtEtaPhiM(eTree.subleadingPhoton_pt,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi,0.0)
+    
+    kys=['j1LV','j2LV','k1LV','k2LV']
+    for i in range(4):
+        ix=quad['fgg_idxs'][i]
+        pt = getattr(eTree,'jet_'+str(ix)+'_pt')  
+        eta= getattr(eTree,'jet_'+str(ix)+'_eta') 
+        phi= getattr(eTree,'jet_'+str(ix)+'_phi') 
+        mass= getattr(eTree,'jet_'+str(ix)+'_mass')  
+        LVStore[kys[i]].SetPtEtaPhiM(pt,eta,phi,mass)
+
+    LVStore['HggLV'] =ROOT.TLorentzVector()
+    LVStore['HggLV'].SetPtEtaPhiM( eTree.diphoton_pt , eTree.diphoton_eta , eTree.diphoton_phi , eTree.CMS_hgg_mass )
+    LVStore['H1bbLV']= LVStore['j1LV'] + LVStore['j2LV']
+    LVStore['H2bbLV']= LVStore['k1LV'] + LVStore['k2LV']
+    
+    LVStore['HHHLV']=LVStore['HggLV']+LVStore['H1bbLV']+LVStore['H2bbLV']
+    
+    LVStore['H1LV']=LVStore['HggLV']
+    LVStore['H2LV']=LVStore['HggLV']
+    LVStore['H3LV']=LVStore['HggLV']
+    
+    if LVStore['HggLV'].Pt() < LVStore['H1bbLV'].Pt():
+        LVStore['H1LV']=LVStore['H1bbLV']
+        if LVStore['HggLV'].Pt() < LVStore['H2bbLV'].Pt():
+            LVStore['H2LV']=LVStore['H2bbLV']
+        else:
+            LVStore['H3LV']=LVStore['H2bbLV']
+    else:
+        LVStore['H2LV']=LVStore['H1bbLV']
+        LVStore['H3LV']=LVStore['H2bbLV']
+ 
+    return LVStore
+
+
+
+
 def getLVStore( eTree ):
     
     LVStore={}

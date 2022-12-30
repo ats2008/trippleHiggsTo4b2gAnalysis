@@ -141,6 +141,10 @@ for i in range(8):
     branches.append('jet_'+str(i)+'_mass_WithDP')
     branches.append('jet_'+str(i)+'_mass_WithDPLeadG')
     branches.append('jet_'+str(i)+'_mass_WithDPSubleadG')
+    branches.append('jet_'+str(i)+'_massRatio_WithDP')
+    branches.append('jet_'+str(i)+'_ptRatio_WithDP')
+    branches.append('jet_'+str(i)+'_ptRatio_WithDPLeadG')
+    branches.append('jet_'+str(i)+'_ptRatio_WithDPSubleadG')
 
 branches=np.unique(branches)
 ntuple={}
@@ -360,6 +364,10 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_mass_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).M()
+                tofill['jet_'+str(i)+'_massRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).M() /  LVStore['HggLV'].M()
+                tofill['jet_'+str(i)+'_ptRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).Pt() / LVStore['HggLV'].Pt()
+                tofill['jet_'+str(i)+'_ptRatio_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).Pt() / LVStore['g1LV'].Pt()
+                tofill['jet_'+str(i)+'_ptRatio_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).Pt() / LVStore['g2LV'].Pt()
         tofill["njets_not_recoed"]=nout
         tofill["njets_resolved"]    =x
 

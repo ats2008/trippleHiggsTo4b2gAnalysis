@@ -183,6 +183,7 @@ for fname in allFnames:
     allBranches=[]
     for ky in eTree.GetListOfBranches():
         allBranches.append(ky.GetName())
+
     for i in range(maxEvents_):
         eTree.GetEntry(i)
         if(i%500==0):
@@ -346,4 +347,3 @@ for cat in ntuple:
     ntuple[cat].Write()
 fout.Close()
 print(" File written out  : ",foutName)
-

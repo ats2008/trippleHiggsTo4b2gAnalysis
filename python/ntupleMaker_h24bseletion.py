@@ -6,7 +6,7 @@ from trippleHiggsUtils import *
 from Util  import *
 from branches import *
 from array import array
-from trippleHiggsSelector import *
+import trippleHiggsSelector  as hhhSelector
 from TMVA_Model import *
 
 import os,sys
@@ -174,7 +174,7 @@ def getCMVAScore(x,edges):
 
 sumEntries=ROOT.TH1F("sumEvts","sumEvts",1,0.0,1.0)
 sumEntries.SetCanExtend(ROOT.TH1.kAllAxes)
-sumWeights=ROOT.TH1F("sumWeighs","sumWeighs",1,0.0,1.0)
+sumWeights=ROOT.TH1F("sumWeights","sumWeights",1,0.0,1.0)
 sumWeights.SetCanExtend(ROOT.TH1.kAllAxes)
 
 th1Store={}
@@ -192,6 +192,8 @@ th1Store["recoMatchMass_H1bb"]= ROOT.TH1F("recoMatchMass_H1bb","",600,0.0,300.0)
 th1Store["recoMatchMass_H2bb"]= ROOT.TH1F("recoMatchMass_H2bb","",600,0.0,300.0)
 th1Store["quadRecoMass_H1bb"]= ROOT.TH1F("quadRecoMass_H1bb","",600,0.0,300.0)
 th1Store["quadRecoMass_H2bb"]= ROOT.TH1F("quadRecoMass_H2bb","",600,0.0,300.0)
+th1Store["quadV2RecoMass_H1bb"]= ROOT.TH1F("quadV2RecoMass_H1bb","",600,0.0,300.0)
+th1Store["quadV2RecoMass_H2bb"]= ROOT.TH1F("quadV2RecoMass_H2bb","",600,0.0,300.0)
 th1Store["noGenMatch_H1bb_b0HFlav"]= ROOT.TH1F("noGenMatch_H1bb_b0HFlav","",7,-0.5,6.5)
 th1Store["noGenMatch_H1bb_b1HFlav"]= ROOT.TH1F("noGenMatch_H1bb_b1HFlav","",7,-0.5,6.5)
 th1Store["noGenMatch_H2bb_b2HFlav"]= ROOT.TH1F("noGenMatch_H2bb_b2HFlav","",7,-0.5,6.5)
@@ -204,9 +206,14 @@ th1Store["quadReco_b0HFlav"]= ROOT.TH1F("quadReco_b0HFlav","",7,-0.5,6.5)
 th1Store["quadReco_b1HFlav"]= ROOT.TH1F("quadReco_b1HFlav","",7,-0.5,6.5)
 th1Store["quadReco_b2HFlav"]= ROOT.TH1F("quadReco_b2HFlav","",7,-0.5,6.5)
 th1Store["quadReco_b3HFlav"]= ROOT.TH1F("quadReco_b3HFlav","",7,-0.5,6.5)
+th1Store["quadV2Reco_b0HFlav"]= ROOT.TH1F("quadV2Reco_b0HFlav","",7,-0.5,6.5)
+th1Store["quadV2Reco_b1HFlav"]= ROOT.TH1F("quadV2Reco_b1HFlav","",7,-0.5,6.5)
+th1Store["quadV2Reco_b2HFlav"]= ROOT.TH1F("quadV2Reco_b2HFlav","",7,-0.5,6.5)
+th1Store["quadV2Reco_b3HFlav"]= ROOT.TH1F("quadV2Reco_b3HFlav","",7,-0.5,6.5)
 
 th1Store["recoMatchMass_H1H2"]= ROOT.TH2F("recoMatchMass_H1H2","",150,0.0,300.0,150,0.0,300.0)
 th1Store["quadRecoMass_H1H2"] = ROOT.TH2F("quadRecoMass_H1H2" ,"",150,0.0,300.0,150,0.0,300.0)
+th1Store["quadV2RecoMass_H1H2"] = ROOT.TH2F("quadV2RecoMass_H1H2" ,"",150,0.0,300.0,150,0.0,300.0)
 
 
 th1Store['acceptance2d']=ROOT.TH1F("acceptance2d","acceptance2d",1,0.0,1.0)
@@ -226,11 +233,13 @@ for i in range(4):
     th1Store["recoGenPt_"+str(i)]= ROOT.TH1F("recoGenPt_"+str(i),"",200,0.0,500.0)
     th1Store["recoPt_"+str(i)]= ROOT.TH1F("recoPt_"+str(i),"",200,0.0,500.0)
     th1Store["quadRecoPt_"+str(i)]= ROOT.TH1F("quadRecoPt_"+str(i),"",200,0.0,500.0)
+    th1Store["quadV2RecoPt_"+str(i)]= ROOT.TH1F("quadV2RecoPt_"+str(i),"",200,0.0,500.0)
     
     th1Store["allGenEta_"+str(i)]= ROOT.TH1F("allGenEta_"+str(i),"",100,-5.0,5.0)
     th1Store["recoGenEta_"+str(i)]= ROOT.TH1F("recoGenEta_"+str(i),"",100,-5.0,5.0)
     th1Store["recoEta_"+str(i)]= ROOT.TH1F("recoEta_"+str(i),"",100,-5.0,5.0)
     th1Store["quadRecoEta_"+str(i)]= ROOT.TH1F("quadRecoEta_"+str(i),"",100,-5.0,5.0)
+    th1Store["quadV2RecoEta_"+str(i)]= ROOT.TH1F("quadV2RecoEta_"+str(i),"",100,-5.0,5.0)
 
 
 for fname in allFnames:
@@ -239,7 +248,7 @@ for fname in allFnames:
     eTree=simFile.Get(treeName)
     print(" NEntries = ", eTree.GetEntries())
     if not eTree:
-        eTree=simFile.GehFlavourt('tagsDumper/trees/Data_13TeV_TrippleHTag_0')
+        eTree=simFile.Get('tagsDumper/trees/Data_13TeV_TrippleHTag_0')
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
         maxEvents_= (maxEvents - totalEvents)
@@ -270,10 +279,8 @@ for fname in allFnames:
         #    continue
         #if( (allGammaDaus[0]+allGammaDaus[1]).Pt() < 100 ): continue;
 
-    
         
-
-        rslt=getBestGetMatchesGlobalFGG(eTree,drMax,etaMax,pTMin)
+        rslt=hhhSelector.getBestGetMatchesGlobalFGG(eTree,drMax,etaMax,pTMin)
         idxs=rslt['idxs']
         drMins=rslt['drMins']
         jetMass=rslt['jetMass']
@@ -307,6 +314,7 @@ for fname in allFnames:
                 th1Store["recoGenEta_"+str(i)].Fill( allBDaus[i].Eta() )
                 th1Store["recoPt_"+str(i) ].Fill( getattr(eTree,'jet_'+str(idxs[i])+'_pt')  )
                 th1Store["recoEta_"+str(i)].Fill( getattr(eTree,'jet_'+str(idxs[i])+'_eta') )
+
         th1Store["allGenPt_H1bb"].Fill((allBDaus[0]+allBDaus[1]).Pt() )        
         th1Store["allGenPt_H2bb"].Fill((allBDaus[2]+allBDaus[3]).Pt() )        
         th1Store["allGenEta_H1bb"].Fill((allBDaus[0]+allBDaus[1]).Eta() )        
@@ -359,8 +367,11 @@ for fname in allFnames:
             th1Store["recoMatchMass_H1H2"].Fill( (allJetMatchP4[0] + allJetMatchP4[1]).M() , (allJetMatchP4[2] + allJetMatchP4[3]).M() )
         else:
             pass
-        
-        allQuads=getBJetParisFGG(eTree,etaMax,pTMin)
+
+
+
+        ###   Default selection scheme
+        allQuads=hhhSelector.getBJetParisFGG(eTree,etaMax,pTMin)
         #print("\nRecoed bjets : ",idxs)
         if allQuads['isValid']:
             dr = allQuads['bJetQuad']['r_HH']
@@ -413,11 +424,67 @@ for fname in allFnames:
 
             if hasH2GenMatchedInQuad and hasH1GenMatchedInQuad:
                 sumEntries.Fill("hasEachHMatchedProperly",1)
-
-                    
         else:
             sumEntries.Fill('noQuad', 1)
- 
+        
+
+        ###   ML selection scheme
+        allQuads=hhhSelector.getBJetParisFGG_MHA(eTree,etaMax,pTMin,mlScoreTag='H3SIN61')
+        #print("\nRecoed bjets : ",idxs)
+        if allQuads['isValid']:
+            dr = allQuads['bJetQuad']['r_HH']
+            isSR = dr < 25.0
+            if isSR:
+                sumEntries.Fill('isROI_Q2', 1)
+                sumWeights.Fill('isROI_Q2', wei)
+
+            sumEntries.Fill('hasQuad', 1)
+            #print("selection : ",allQuads['bJetQuad']['fgg_idxs'])
+            th1Store["quadV2RecoMass_H1bb"].Fill(allQuads['bJetQuad']['m1'])
+            th1Store["quadV2RecoMass_H2bb"].Fill(allQuads['bJetQuad']['m2'])
+            th1Store["quadV2RecoMass_H1H2"].Fill(allQuads['bJetQuad']['m1'], allQuads['bJetQuad']['m2'])
+
+            hasAllGenMatchedBJetsInQuad=True
+            for i in range(4):
+                ix=allQuads['bJetQuad']['fgg_idxs'][i]
+                th1Store["quadV2RecoPt_"+str(i)].Fill( getattr(eTree,'jet_'+str(ix)+'_pt')  )
+                th1Store["quadV2RecoEta_"+str(i)].Fill( getattr(eTree,'jet_'+str(ix)+'_eta')  )
+                th1Store["quadV2Reco_b"+str(i)+"HFlav"].Fill( getattr(eTree,'jet_'+str(ix)+'_flavour')  )
+
+                if ix not in idxs:
+                    hasAllGenMatchedBJetsInQuad=False
+            if hasAllGenMatchedBJetsInQuad:
+                sumEntries.Fill("hasAllGenMatchedBJetsInQuadV2",1)
+
+            hasH1GenMatchedInQuad=False
+            if allQuads['bJetQuad']['fgg_idxs'][0] in idxs[0:2] and allQuads['bJetQuad']['fgg_idxs'][1] in  idxs[0:2]:
+                hasH1GenMatchedInQuad=True
+            if allQuads['bJetQuad']['fgg_idxs'][0] in idxs[2:] and allQuads['bJetQuad']['fgg_idxs'][1] in  idxs[2:]:
+                hasH1GenMatchedInQuad=True
+            if hasH1GenMatchedInQuad:
+                sumEntries.Fill("hasH1GenMatchedInQuadV2",1)
+            
+            hasH2GenMatchedInQuad=False
+            if allQuads['bJetQuad']['fgg_idxs'][2] in idxs[0:2] and allQuads['bJetQuad']['fgg_idxs'][3] in  idxs[0:2]:
+                hasH2GenMatchedInQuad=True
+            if allQuads['bJetQuad']['fgg_idxs'][2] in idxs[2:] and allQuads['bJetQuad']['fgg_idxs'][3] in  idxs[2:]:
+                hasH2GenMatchedInQuad=True
+            if hasH2GenMatchedInQuad:
+                sumEntries.Fill("hasH2GenMatchedInQuadV2",1)
+            
+            hasAllJetsMatchedProperly=True
+            for i in range(4):
+                if idxs[i]!=allQuads['bJetQuad']['fgg_idxs'][i]:
+                    hasAllJetsMatchedProperly=False
+                    break
+            if hasAllJetsMatchedProperly:
+                sumEntries.Fill("hasAllJetsMatchedOneToOneProperlyQuadV2",1)
+
+            if hasH2GenMatchedInQuad and hasH1GenMatchedInQuad:
+                sumEntries.Fill("hasEachHMatchedProperlyQuadV2",1)
+        else:
+            sumEntries.Fill('noQuadV2', 1)
+         
     
         if not isAllRecoed:
             continue

@@ -76,6 +76,8 @@ pTReweitingHistCatagories=getValueFromConfigs(cfgTxt,"pTReweitingHistCatagories"
 pTReweitingHistName=pTReweitingHistName.split(',')
 pTReweitingHistCatagories=pTReweitingHistCatagories.split(',')
 
+treesToStore=getValueFromConfigs(cfgTxt,"TreesToStore",default="allRecoed,SingleJetMiss,MergedJetMiss")
+treesToStore=treesToStore.split(',')
 
 reweighter={}
 for i,j in zip(pTReweitingHistCatagories,pTReweitingHistName):
@@ -155,10 +157,15 @@ for i in range(8):
     branches.append('jet_'+str(i)+'_mass_WithDP')
     branches.append('jet_'+str(i)+'_mass_WithDPLeadG')
     branches.append('jet_'+str(i)+'_mass_WithDPSubleadG')
+    branches.append('jet_'+str(i)+'_massRatio_WithDP')
+    branches.append('jet_'+str(i)+'_ptRatio_WithDP')
+    branches.append('jet_'+str(i)+'_ptRatio_WithDPLeadG')
+    branches.append('jet_'+str(i)+'_ptRatio_WithDPSubleadG')
  
 
 ntuple={}
 branches=np.unique(branches)
+ntuple['allEvents']  = ROOT.TNtuple(outTreeName+'_allEvents', outTreeName, ':'.join(branches))
 ntuple['background'] = ROOT.TNtuple(outTreeName+'_background', outTreeName, ':'.join(branches))
 
 tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
@@ -225,7 +232,7 @@ for fname in allFnames:
                 tofill[ky]=getattr(eTree,ky)
             else:
                 tofill[ky]=0.0
-
+        #continue
         tofill['matchedJet_b1']=-1
         tofill['matchedJet_b2']=-1
         tofill['matchedJet_b3']=-1
@@ -245,8 +252,8 @@ for fname in allFnames:
             #    tofill['jet_'+str(i)+'_isValid']=0
             if tofill['jet_'+str(i)+'_isValid'] > 0.5:
                 nVld+=1
-        if nVld < 4:
-            continue
+        #if nVld < 4:
+        #    continue
 
 
         LVStore['g1LV'].SetPtEtaPhiM(eTree.leadingPhoton_pt,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi,0.0)
@@ -275,7 +282,12 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_mass_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).M()
                 tofill['jet_'+str(i)+'_mass_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).M()
-        
+                
+                tofill['jet_'+str(i)+'_massRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).M() /  LVStore['HggLV'].M()
+                tofill['jet_'+str(i)+'_ptRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).Pt() / LVStore['HggLV'].Pt()
+                tofill['jet_'+str(i)+'_ptRatio_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).Pt() / LVStore['g1LV'].Pt()
+                tofill['jet_'+str(i)+'_ptRatio_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).Pt() / LVStore['g2LV'].Pt()
+
         for ky in branches:
             if ky not in tofill:
                 print(ky)
@@ -283,7 +295,9 @@ for fname in allFnames:
             if ky not in branches:
                 print(ky)
         if 'allEvents' in treesToStore:
-            ntuple['allEvents'].Fill(array('f', tofill.values()))
+            arr=array('f', tofill.values())
+            #print(eTree.event , " | ", arr[41], " | ", float(eTree.event) , " | ",arr[42])
+            ntuple['allEvents'].Fill(arr)
         elif  'background' in treesToStore:
             ntuple['background'].Fill(array('f', tofill.values()))
 

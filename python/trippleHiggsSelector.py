@@ -73,13 +73,13 @@ def getHiggsDauP4s(eTree,pdgId):
         genPt[k]=eTree.gen_H3_dau1_pt
         genEta[k]=eTree.gen_H3_dau1_eta
         genPhi[k]=eTree.gen_H3_dau1_phi
-        genE[k]=eTree.gen_H2_dau1_e
+        genE[k]=eTree.gen_H3_dau1_e
         k+=1
         genPt[k]=eTree.gen_H3_dau2_pt
         genEta[k]=eTree.gen_H3_dau2_eta
         genPhi[k]=eTree.gen_H3_dau2_phi
         genE[k]=eTree.gen_H3_dau2_e
-        genHPt[k/2]=eTree.gen_H2_pt
+        genHPt[k/2]=eTree.gen_H3_pt
         k+=1
     allP4=[]
     for i in range(k):
@@ -457,7 +457,7 @@ def getDiPhotons(eTree):
     return result
 
 def getBJetParisFGG(eTree,etaCut=2.5,pTMin=25.0):
-    result={'isValid':False , 'allBJetQuads':[],'bJetQuad':[],'nJetQuads':0}
+    result={'isValid':False , 'allBJetQuads':[],'bJetQuad':[],'nJetQuads':0,'fail':'Pass'}
     X0OverY0=1.05
     jets_pt=[]
     jets_eta=[]
@@ -468,8 +468,8 @@ def getBJetParisFGG(eTree,etaCut=2.5,pTMin=25.0):
     N_JET_MAX=8
     
     for i in range(N_JET_MAX):
-        if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
-            continue
+        #if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
+        #    continue
             
         jets_pt.append(getattr(eTree,'jet_'+str(i)+'_pt'))
         jets_eta.append(getattr(eTree,'jet_'+str(i)+'_eta'))
@@ -485,21 +485,38 @@ def getBJetParisFGG(eTree,etaCut=2.5,pTMin=25.0):
     nJets=len(jets_pt)
     a=X0OverY0
     b=np.sqrt(1.0+X0OverY0*X0OverY0)
-    if(nJets < 4 ) : return result 
+    if(nJets < 4 ) : 
+        result['fail']='nValidJets'
+        return result 
     
-    if(jets_pt[3] < pTMin ) : return result 
+    if(jets_pt[3] < pTMin ) :
+        result['fail']='pTMin'
+        return result 
     
     # Add the masks for jet selection
     jetPts=np.array(jets_pt)
     mask= jetPts>pTMin
+    n=sum(mask)
+    if n<4:
+        result['fail']='nJetsPt'
+        return result
+
     jetEta=np.array(jets_eta)
     mask=np.logical_and(mask , abs(jetEta) < etaCut )
+    n=sum(mask)
+    if n<4:
+        result['fail']='nJetsEta'
+        return result
     
     jetPhi=np.array(jets_phi)
     dR=deltaR(jetEta,jetPhi,photons_eta[0],photons_phi[0])
     mask=np.logical_and(  mask , dR > 0.4 )
     dr=deltaR(jetEta,jetPhi,photons_eta[1],photons_phi[1])
     mask=np.logical_and(  mask , dR > 0.4 )
+    n=sum(mask)
+    if n<4:
+        result['fail']='overlap'
+        return result
     
     jet_deepJetScore=np.array(jets_deepJetScore)
     jet_deepJetScore[np.logical_not(mask)] = -1e3
@@ -513,7 +530,10 @@ def getBJetParisFGG(eTree,etaCut=2.5,pTMin=25.0):
     mask[jetScoreOrder[nMax:]]=False
     
     goodJets=np.where(mask)[0]
-    if(len(goodJets) < 4 ): return result
+    if(len(goodJets) < 4 ): 
+        result['fail']='goodJets'
+        return result
+
     allJetCombinations=itrTools.combinations(goodJets,4)
     jetsIdx=np.arange(0,4,1)
     jetLVs=[]
@@ -607,6 +627,197 @@ def getBJetParisFGG(eTree,etaCut=2.5,pTMin=25.0):
     
     result['bJetQuad']=result['allBJetQuads'][metric_min_idx]
     return result           
+
+def getBJetParisFGG_MHA( eTree, etaCut=2.5, pTMin=25.0, mlScoreTag='', threshold=-1e3,nGoodMLJets=0):
+    result={'isValid':False , 'allBJetQuads':[],'bJetQuad':[],'nJetQuads':0}
+    X0OverY0=1.05
+    jets_pt=[]
+    jets_eta=[]
+    jets_phi=[]
+    jets_mass=[]
+    jets_deepJetScore=[]
+    jets_mlScore=[]
+    jets_fgg_index=[]
+    N_JET_MAX=8
+    
+    for i in range(N_JET_MAX):
+        if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
+            continue
+            
+        jets_pt.append(getattr(eTree,'jet_'+str(i)+'_pt'))
+        jets_eta.append(getattr(eTree,'jet_'+str(i)+'_eta'))
+        jets_phi.append(getattr(eTree,'jet_'+str(i)+'_phi'))
+        jets_mass.append(getattr(eTree,'jet_'+str(i)+'_mass'))
+        jets_deepJetScore.append( getattr(eTree,'jet_'+str( i )+'_deepCSVScore') )
+        jets_mlScore.append(getattr(eTree,'jet_'+str(i)+mlScoreTag+'_score'))
+        jets_fgg_index.append( i  )
+    
+    #jets_pt =np.array(jets_pt)
+    #jets_eta=np.array(jets_eta)
+    #jets_phi=np.array(jets_phi)
+    photons_eta=[ eTree.leadingPhoton_eta ,eTree.subleadingPhoton_eta  ]
+    photons_phi=[ eTree.leadingPhoton_eta ,eTree.subleadingPhoton_phi  ]
+    nJets=len(jets_pt)
+    a=X0OverY0
+    b=np.sqrt(1.0+X0OverY0*X0OverY0)
+    if(nJets < 4 ) : 
+        result['fail']='nValidJets'
+        return result 
+    if(jets_pt[3] < pTMin ) :
+        result['fail']='pTMin'
+        return result 
+    
+    
+    # Add the masks for jet selection
+    jetPts=np.array(jets_pt)
+    mask= jetPts>pTMin
+    n=sum(mask)
+    if n<4:
+        result['fail']='nJetsPt'
+        return result
+    
+    jetEta=np.array(jets_eta)
+    mask=np.logical_and(mask , abs(jetEta) < etaCut )
+    n=sum(mask)
+    if n<4:
+        result['fail']='nJetsEta'
+        return result
+    
+    #jetPhi=np.array(jets_phi)
+    #dR=deltaR(jetEta,jetPhi,photons_eta[0],photons_phi[0])
+    #mask=np.logical_and(  mask , dR > -0.4 )
+    #dr=deltaR(jetEta,jetPhi,photons_eta[1],photons_phi[1])
+    #mask=np.logical_and(  mask , dR > -0.4 )
+    
+    jet_deepJetScore=np.array(jets_deepJetScore)
+    jet_deepJetScore[np.logical_not(mask)] = -1e3
+
+    jets_mlScore=np.array(jets_mlScore)
+    #print()
+    #print("pre mask :",mask)
+    #print("jet scores ",jets_mlScore)
+    #print("post mask :",mask)
+    m=jets_mlScore > threshold
+    n=sum(m)
+    if n<nGoodMLJets:
+        result['fail']='nJetsMLScore'
+        return result
+    
+    jetScoreOrder=np.argsort(jets_mlScore*-1.0)
+
+    #print("\t Score of jets under consideratio n : ",jet_deepJetScore)
+    #print("\t Sorted ordering of jets under consideratio n : ",jetScoreOrder)
+    #print("\t Sorted ordering of jets under consideratio n : ",jet_deepJetScore[jetScoreOrder])
+
+    nMax= 4
+    mask[jetScoreOrder[nMax:]]=False
+    
+    goodJets=np.where(mask)[0]
+    if(len(goodJets) < 3 ): 
+        result['fail']='goodJets'
+        return result
+    allJetCombinations=itrTools.combinations(goodJets,4)
+    jetsIdx=np.arange(0,4,1)
+    jetLVs=[]
+    for i in range(4):
+        jetLVs.append(ROOT.TLorentzVector())
+    possiblilities_=[[0,1,2,3],[0,2,1,3],[0,3,1,2]]
+    
+    jetCobinationScores=[]
+    metric_min=1e9
+    metric_min_idx=-1
+#     print("Good jets  : ",goodJets)
+    for jetCombination in allJetCombinations:
+        # setting 4 jet values
+        mlScore=[-2.0 for ll in range(4)]
+        for j in range(4):
+            ii=jetCombination[j]
+            jetLVs[j].SetPtEtaPhiM(jets_pt[ii],jets_eta[ii],
+                           jets_phi[ii],jets_mass[ii])
+            mlScore[j] = jets_mlScore[ii]
+
+#         print("Doing Jet Combination : ",jetCombination)
+        # scanning combination in 4 jets
+        for combi in possiblilities_:
+            quad_={}
+            quad_['idxs']=[jetCombination[i] for i in combi]
+
+            if jets_pt[quad_['idxs'][0]] < jets_pt[quad_['idxs'][1]]:
+                t=quad_['idxs'][1] ; quad_['idxs'][1]=quad_['idxs'][0] ;quad_['idxs'][0]=t
+                t=combi[1] ; combi[1]=combi[0] ;combi[0]=t
+
+            if jets_pt[quad_['idxs'][2]] < jets_pt[quad_['idxs'][3]]:
+                t=quad_['idxs'][3] ; quad_['idxs'][3]=quad_['idxs'][2] ;quad_['idxs'][2]=t
+                t=combi[3] ; combi[3]=combi[2] ;combi[2]=t
+            quad_['fgg_idxs']  = [ jets_fgg_index[ idx ] for idx in quad_['idxs'] ]         
+            quad_['mlScore'] =np.array([ mlScore[combi[0]] , mlScore[combi[1]] ,mlScore[combi[2]] , mlScore[combi[3]] ])
+            quad_['n_goodJets'] = sum(quad_['mlScore'] > threshold)
+            correctedLV0=getCorrectedJetP4(jetLVs[combi[0]],1.0)
+            correctedLV1=getCorrectedJetP4(jetLVs[combi[1]],1.0)
+            correctedLV2=getCorrectedJetP4(jetLVs[combi[2]],1.0)
+            correctedLV3=getCorrectedJetP4(jetLVs[combi[3]],1.0)
+            
+            p4_h1_preReg=jetLVs[combi[0]]+jetLVs[combi[1]]
+            p4_h2_preReg=jetLVs[combi[2]]+jetLVs[combi[3]]
+            p4_h1=correctedLV0 + correctedLV1
+            p4_h2=correctedLV2 + correctedLV3
+
+            if p4_h2.Pt() > p4_h1.Pt():
+                t=p4_h1_preReg
+                p4_h1_preReg=p4_h2_preReg
+                p4_h2_preReg=t
+
+                t=p4_h1
+                p4_h1=p4_h2
+                p4_h2=t
+
+            quad_['p4_h1_preReg']=p4_h1_preReg
+            quad_['p4_h2_preReg']=p4_h2_preReg
+            quad_['p4_h1']=p4_h1
+            quad_['p4_h2']=p4_h2
+            quad_['m1_preReg']=p4_h1_preReg.M()
+            quad_['m2_preReg']=p4_h2_preReg.M()
+            quad_['m1']=p4_h1.M()
+            quad_['m2']=p4_h2.M()
+            quad_['mass']=(p4_h1+p4_h2).M()
+            quad_['mass_preReg']=(p4_h1_preReg+p4_h2_preReg).M()
+            quad_['pT']=(p4_h1+p4_h2).Pt()
+            quad_['y']=(p4_h1+p4_h2).Rapidity()
+            quad_['eta']=(p4_h1+p4_h2).Eta()
+            quad_['phi']=(p4_h1+p4_h2).Phi()
+            quad_['r_HH']=np.sqrt( (p4_h1.M() - 125.0)*(p4_h1.M() - 125.0) + 
+                                   (p4_h2.M() - 125.0)*(p4_h2.M() - 125.0))
+            quad_['D_HH']=np.abs( p4_h1.M() - a*p4_h2.M() )/b     
+     #      print("!! D_HH for combi : ",combi," : ",quad_['D_HH']," r_HH : ", quad_['r_HH'])
+            #if quad_['r_HH'] < metric_min:
+            if quad_['D_HH'] < metric_min:
+                metric_min_idx=len(result['allBJetQuads'])
+                metric_min=quad_['D_HH']
+            result['allBJetQuads'].append(quad_)
+            result['isValid']=True
+            result['nJetQuads']+=1
+    if True:
+        idx2ndMin=-1
+        metri2ndMin=1e10
+        for idx in range(len(result['allBJetQuads'])):
+            if idx==metric_min_idx:
+                continue
+            if result['allBJetQuads'][idx]['D_HH'] < metri2ndMin:
+                metri2ndMin=result['allBJetQuads'][idx]['D_HH']
+                idx2ndMin=idx
+        if( idx2ndMin < 0 ):
+            print("Problem !! no second quad !! setting idx2ndMin = metric_min_idx")
+            idx2ndMin=metric_min_idx
+        if abs(result['allBJetQuads'][idx2ndMin]['D_HH']-result['allBJetQuads'][metric_min_idx]['D_HH']) <30.0:
+            if result['allBJetQuads'][idx2ndMin]['pT'] > result['allBJetQuads'][metric_min_idx]['pT']:
+                metric_min_idx=idx2ndMin
+    
+    result['bJetQuad']=result['allBJetQuads'][metric_min_idx]
+    return result           
+
+
+
+
 
 
 

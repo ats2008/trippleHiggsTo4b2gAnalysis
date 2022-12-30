@@ -1,7 +1,7 @@
 from __future__ import print_function
 import ROOT 
 import numpy as np
-from trippleHiggsSelector import *
+import trippleHiggsSelector as hhhSelctor
 from Util  import *
 
 import os,sys
@@ -44,7 +44,6 @@ isMC = True
 isMC = False
 
 for fname in allFnames:
-    
     simFile = ROOT.TFile(fname,'READ')
     eTree=simFile.Get('ntuplizer/tree')
     if not eTree:
@@ -204,7 +203,6 @@ for fname in allFnames:
         #hhhTo4b2gamma
         allDauP4 = (quad['p4_h1']+quad['p4_h2']+diPhotons[idx]['p4'])
         allDauP4_preReg = (quad['p4_h1_preReg']+quad['p4_h2_preReg']+diPhotons[idx]['p4'])
-        
 
         histStore["hhhTo4b2gamma"]["mass"].Fill( allDauP4.M() )
         histStore["hhhTo4b2gamma"]["mass_preReg"].Fill( allDauP4_preReg.M()  )

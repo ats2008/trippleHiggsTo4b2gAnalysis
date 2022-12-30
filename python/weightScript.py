@@ -13,5 +13,5 @@ print("expected number of events : " ,sigmaBr," / fb-1" )
 print("expected number of events for 57 /fb: " ,sigmaBr*57 )
 
 print("Weight per event for nTotal : ",nTotal/1e6,"M = ",sigmaBr/nTotal)
-print("Weight per event for nTotal : ",nTotal/1e6,"M in fgg  = ",sigmaBr*1e-3/nTotal)
+print("Weight per event for nTotal : ",nTotal/1e6,"M in fgg  = ",sigmaBr/nTotal)
 
