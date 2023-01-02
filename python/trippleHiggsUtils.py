@@ -3,8 +3,10 @@ import ROOT ,copy
 import numpy as np
 import itertools as itrTools
 from Util import *
+import warnings
 
-
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
 
 class mcScaler:
     def __init__(self):
@@ -230,73 +232,178 @@ def addFlasggVars(histStore):
 
     histStore["flashggVars"]['HHHCosThetaH1']= ROOT.TH1F("HHHCosThetaH1","",60,-0.1,1.1)
     histStore["flashggVars"]['HHHCosThetaHgg']= ROOT.TH1F("HHHCosThetaHgg","",60,-0.1,1.1)
-    histStore["flashggVars"]['H4bCosThetaLeadJet']= ROOT.TH1F("H4bCosThetaLeadJet","",60,-0.1,1.1)
     histStore["flashggVars"]['HggCosThetaLeadGamma']= ROOT.TH1F("HggCosThetaLeadGamma","",60,-0.1,1.1)
-    histStore["flashggVars"]['H1bbCosThetaLeadJet'] = ROOT.TH1F("H1bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
-    histStore["flashggVars"]['H2bbCosThetaLeadJet'] = ROOT.TH1F("H2bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
-    
     histStore["flashggVars"]['pTgg_overMgg'] = ROOT.TH1F("pTgg_overMgg"  ,"",100,0.0,1.0)
-    histStore["flashggVars"]['pTh1jj_overMh1'] = ROOT.TH1F("pTh1jj_overMh1"  ,"",100,0.0,1.0)
-    histStore["flashggVars"]['pTh2jj_overMh2'] = ROOT.TH1F("pTh2jj_overMh2"  ,"",100,0.0,1.0)
-    
     histStore["flashggVars"]['pTleadG_overMgg'] = ROOT.TH1F("pTleadG_overMgg"  ,"",100,0.0,10.0)
-    histStore["flashggVars"]['pTh1leadJ_overMh1'] = ROOT.TH1F("pTh1leadJ_overMh1"  ,"",100,0.0,10.0)
-    histStore["flashggVars"]['pTh2leadJ_overMh2'] = ROOT.TH1F("pTh2leadJ_overMh2"  ,"",100,0.0,10.0)
-
     histStore["flashggVars"]['pTsubleadG_overMgg'] = ROOT.TH1F("pTsubleadG_overMgg"  ,"",100,0.0,10.0)
-    histStore["flashggVars"]['pTh1subleadJ_overMh1'] = ROOT.TH1F("pTh1subleadJ_overMh1"  ,"",100,0.0,10.0)
-    histStore["flashggVars"]['pTh2subleadJ_overMh2'] = ROOT.TH1F("pTh2subleadJ_overMh2"  ,"",100,0.0,10.0)
-
-    histStore["flashggVars"]['h1leadJ_deepjetScore'] = ROOT.TH1F("h1leadJ_deepjetScore"  ,"",12,-0.1,1.1)
-    histStore["flashggVars"]['h1subleadJ_deepjetScore'] = ROOT.TH1F("h1subleadJ_deepjetScore"  ,"",12,-0.1,1.1)
-    histStore["flashggVars"]['h2leadJ_deepjetScore'] = ROOT.TH1F("h2leadJ_deepjetScore"  ,"",12,-0.1,1.1)
-    histStore["flashggVars"]['h2subleadJ_deepjetScore'] = ROOT.TH1F("h2subleadJ_deepjetScore"  ,"",12,-0.1,1.1)
-
-    histStore["flashggVars"]['h1leadG_customMVA'] = ROOT.TH1F("h1leadG_customMVA"  ,"",48,-0.1,1.1)
-    histStore["flashggVars"]['h1subleadG_customMVA'] = ROOT.TH1F("h1subleadG_customMVA"  ,"",48,-0.1,1.1)
-    
+    histStore["flashggVars"]['rho'] = ROOT.TH1F("rho","",50,0.0,50.0)
+    histStore["flashggVars"]['phoJetMinDr'] = ROOT.TH1F("phoJetMinDr"  ,"",60,0.0,6.0)
+    histStore["flashggVars"]['otherphoJetMinDr'] = ROOT.TH1F("otherphoJetMinDr"  ,"",60,0.0,6.0)
     histStore["flashggVars"]['h1leadG_SigOverE'] = ROOT.TH1F("h1leadG_SigOverE"  ,"",50,0.0,0.1)
     histStore["flashggVars"]['h1subleadG_SigOverE'] = ROOT.TH1F("h1subleadG_SigOverE"  ,"",50,0.0,0.1)
     histStore["flashggVars"]['hgg_SigMOverM'] = ROOT.TH1F("hgg_SigMOverM"  ,"",20,0.0,0.1)
     histStore["flashggVars"]['hgg_SigMOverMDecorrelated'] = ROOT.TH1F("hgg_SigMOverMDecorrelated"  ,"",20,0.0,0.1)
-    histStore["flashggVars"]['h1_dijetSigmaMOverM'] = ROOT.TH1F("h1_dijetSigmaMOverM"  ,"",50,0.0,0.5)
-    histStore["flashggVars"]['h2_dijetSigmaMOverM'] = ROOT.TH1F("h2_dijetSigmaMOverM"  ,"",50,0.0,0.5)
+    histStore["flashggVars"]['customLeadingPhotonIDMVA'] = ROOT.TH1F("customLeadingPhotonIDMVA"  ,"",48,-0.1,1.1)
+    histStore["flashggVars"]['customSubLeadingPhotonIDMVA'] = ROOT.TH1F("customSubLeadingPhotonIDMVA"  ,"",48,-0.1,1.1)
     
-    histStore["flashggVars"]['rho'] = ROOT.TH1F("rho","",50,0.0,50.0)
-    histStore["flashggVars"]['phoJetMinDr'] = ROOT.TH1F("phoJetMinDr"  ,"",60,0.0,6.0)
-    histStore["flashggVars"]['otherphoJetMinDr'] = ROOT.TH1F("otherphoJetMinDr"  ,"",60,0.0,6.0)
     
-    histStore["flashggVars"]['triHiggs_mass']=ROOT.TH1F("triHiggs_mass","",1500,0.0,1500)
-    histStore["flashggVars"]['dije1CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije1CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
-    histStore["flashggVars"]['dije2CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije2CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
+    
     """
-    d    PhoJetMinDr                         
-    d    PhoJetOtherDr                       
-    d    absCosTheta_gg                      
-    d    customLeadingPhotonIDMVA            
-    d    customSubLeadingPhotonIDMVA         
-    d    h1LeadingJet_DeepFlavour            
-    d    h1SubleadingJet_DeepFlavour         
-    d    h1bbCosThetaLeadJet                 
-    d    h2LeadingJet_DeepFlavour            
-    d    h2SubleadingJet_DeepFlavour         
-    d    h2bbCosThetaLeadJet                 
-    d    hhhCosThetaH1                       
-    d    leadingPhotonSigOverE               
-    d    pTh1leadJ_overMh1                   
-    d    pTh2leadJ_overMh2                   
-    d    pTleadG_overMgg                     
-    d    rho                                 
-    d    sigmaM1Jets                         
-    d    sigmaM2Jets                         
-    d    sigmaMOverM                         
-    d    subleadingPhotonSigOverE            
-        dije1CandidatePtOverdiHiggsM        
-        dije2CandidatePtOverdiHiggsM        
-        diphotonCandidatePtOverdiHiggsM     
-        triHiggs_mass                       
+        d    PhoJetMinDr                         
+        d    PhoJetOtherDr                       
+        d    absCosTheta_gg                      
+        d    customLeadingPhotonIDMVA            
+        d    customSubLeadingPhotonIDMVA         
+        d    h1LeadingJet_DeepFlavour            
+        d    h1SubleadingJet_DeepFlavour         
+        d    h1bbCosThetaLeadJet                 
+        d    h2LeadingJet_DeepFlavour            
+        d    h2SubleadingJet_DeepFlavour         
+        d    h2bbCosThetaLeadJet                 
+        d    hhhCosThetaH1                       
+        d    leadingPhotonSigOverE               
+        d    pTh1leadJ_overMh1                   
+        d    pTh2leadJ_overMh2                   
+        d    pTleadG_overMgg                     
+        d    rho                                 
+        d    sigmaM1Jets                         
+        d    sigmaM2Jets                         
+        d    sigmaMOverM                         
+        d    subleadingPhotonSigOverE            
+    """
+def addOtherDerivedVariables(histStore):
+    histStore["miscVars"]={}
+    histStore["miscVars"]['H4bCosThetaLeadJet']= ROOT.TH1F("H4bCosThetaLeadJet","",60,-0.1,1.1)
+    histStore["miscVars"]['H1bbCosThetaLeadJet'] = ROOT.TH1F("H1bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]['H2bbCosThetaLeadJet'] = ROOT.TH1F("H2bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]['pTh1jj_overMh1'] = ROOT.TH1F("pTh1jj_overMh1"  ,"",100,0.0,50.0)
+    histStore["miscVars"]['pTh2jj_overMh2'] = ROOT.TH1F("pTh2jj_overMh2"  ,"",100,0.0,50.0)
+    
+    histStore["miscVars"]['pTh1leadJ_overMh1'] = ROOT.TH1F("pTh1leadJ_overMh1"  ,"",100,0.0,10.0)
+    histStore["miscVars"]['pTh2leadJ_overMh2'] = ROOT.TH1F("pTh2leadJ_overMh2"  ,"",100,0.0,10.0)
 
-    """
+    histStore["miscVars"]['pTh1subleadJ_overMh1'] = ROOT.TH1F("pTh1subleadJ_overMh1"  ,"",100,0.0,10.0)
+    histStore["miscVars"]['pTh2subleadJ_overMh2'] = ROOT.TH1F("pTh2subleadJ_overMh2"  ,"",100,0.0,10.0)
+
+    histStore["miscVars"]['h1leadJ_deepjetScore'] = ROOT.TH1F("h1leadJ_deepjetScore"  ,"",12,-0.1,1.1)
+    histStore["miscVars"]['h1subleadJ_deepjetScore'] = ROOT.TH1F("h1subleadJ_deepjetScore"  ,"",12,-0.1,1.1)
+    histStore["miscVars"]['h2leadJ_deepjetScore'] = ROOT.TH1F("h2leadJ_deepjetScore"  ,"",12,-0.1,1.1)
+    histStore["miscVars"]['h2subleadJ_deepjetScore'] = ROOT.TH1F("h2subleadJ_deepjetScore"  ,"",12,-0.1,1.1)
+
+    histStore["miscVars"]['h1_dijetSigmaMOverM'] = ROOT.TH1F("h1_dijetSigmaMOverM"  ,"",50,0.0,0.5)
+    histStore["miscVars"]['h2_dijetSigmaMOverM'] = ROOT.TH1F("h2_dijetSigmaMOverM"  ,"",50,0.0,0.5)
+    
+    histStore["miscVars"]['triHiggs_mass']=ROOT.TH1F("triHiggs_mass","",1500,0.0,1500)
+    histStore["miscVars"]['dije1CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije1CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
+    histStore["miscVars"]['dije2CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije2CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
+    histStore["miscVars"]["absCosThetaH4bHgg"    ]            = ROOT.TH1F("absCosThetaH4bHgg"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]["H1H2JetAbsCosThetaMax"]            = ROOT.TH1F("H1H2JetAbsCosThetaMax"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]["H1H2JetAbsCosThetaMin"]            = ROOT.TH1F("H1H2JetAbsCosThetaMin"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]["LeadJetAbsCosThetaMax"]            = ROOT.TH1F("LeadJetAbsCosThetaMax"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]["LeadJetAbsCosThetaMin"]            = ROOT.TH1F("LeadJetAbsCosThetaMin"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]["HggTo4bAbsCosTheta"]               = ROOT.TH1F("HggTo4bAbsCosTheta"  ,"",60,-0.1,1.1)
+    histStore["miscVars"]["H1bbToH2bbAbsCosTheta"]            = ROOT.TH1F("H1bbToH2bbAbsCosTheta"  ,"",60,-0.1,1.1)        
+    histStore["miscVars"]["LeadJetDrMaxWithOtherJets"]        = ROOT.TH1F("LeadJetDrMaxWithOtherJets","",50,0.0,5.0)
+    histStore["miscVars"]["LeadJetDrMinWithOtherJets"]        = ROOT.TH1F("LeadJetDrMinWithOtherJets","",50,0.0,5.0)
+    histStore["miscVars"]["H1H2JetDrMax"] = ROOT.TH1F("H1H2JetDrMax","",50,0.0,5.0) 
+    histStore["miscVars"]["H1H2JetDrMin"] = ROOT.TH1F("H1H2JetDrMin","",50,0.0,5.0) 
+
+    histStore["miscVars"]["pT_4b"]  =  ROOT.TH1F("pT_4b","",1500,0.0,1500) 
+    histStore["miscVars"]["scalarPtSumHHH"]  = ROOT.TH1F("scalarPtSumHHH","",1500,0.0,1500)
+    histStore["miscVars"]["scalarPtSum4b"]   = ROOT.TH1F("scalarPtSum4b","",1500,0.0,1500)
+    histStore["miscVars"]["scalarPtSum4b2g"] = ROOT.TH1F("scalarPtSum4b2g","",1500,0.0,1500)
+    histStore["miscVars"]["ttH_MET"] = ROOT.TH1F("ttH_MET","",1500,0.0,1500)
+
+def getOtherDerivedVariables(eTree,LVStore,quad):
+    varDict={}
+    varDict['pTh1jj_overMh1']  = LVStore['H1bbLV'].Pt() / LVStore['H1bbLV'].M()
+    varDict['pTh2jj_overMh2']  = LVStore['H2bbLV'].Pt() / LVStore['H2bbLV'].M()
+    varDict['pTh1leadJ_overMh1'] = LVStore['j1LV'].Pt() / LVStore['H1bbLV'].M()
+    varDict['pTh2leadJ_overMh2'] = LVStore['k1LV'].Pt() /LVStore['H2bbLV'].M()
+
+    varDict['pTh1subleadJ_overMh1'] = LVStore['j2LV'].Pt()  / LVStore['H1bbLV'].M()
+    varDict['pTh2subleadJ_overMh2'] = LVStore['k2LV'].Pt()  / LVStore['H2bbLV'].M() 
+    
+    varDict["H4bCosThetaLeadJet"]    =  abs(np.cos( LVStore['HH4bLV'].Angle(LVStore['j1LV'].Vect())))
+    varDict["absCosThetaH4bHgg"]    =  abs(np.cos( (LVStore['H1bbLV'] + LVStore['H2bbLV']).Angle(LVStore['HggLV'].Vect())))
+    
+    vals=[
+        LVStore['j1LV'].Angle( LVStore['j2LV'].Vect()),
+        LVStore['j1LV'].Angle( LVStore['k1LV'].Vect()),
+        LVStore['j1LV'].Angle( LVStore['k2LV'].Vect()),
+    ]
+    vals=abs(np.cos(vals))
+    varDict["LeadJetAbsCosThetaMax"]  = max(vals)
+    varDict["LeadJetAbsCosThetaMin"]  = min(vals)
+   
+    vals=[
+        LVStore['j1LV'].DeltaR( LVStore['j2LV']),
+        LVStore['j1LV'].DeltaR( LVStore['k1LV']),
+        LVStore['j1LV'].DeltaR( LVStore['k2LV']),
+    ]
+    varDict["LeadJetDrMaxWithOtherJets"]  = max(vals)
+    varDict["LeadJetDrMinWithOtherJets"]  = min(vals)
+     
+    vals=[
+        LVStore['j1LV'].Angle( LVStore['k1LV'].Vect()),
+        LVStore['j1LV'].Angle( LVStore['k2LV'].Vect()),
+        LVStore['j2LV'].Angle( LVStore['k1LV'].Vect()),
+        LVStore['j2LV'].Angle( LVStore['k2LV'].Vect()),
+    ]
+
+    vals=abs(np.cos(vals))
+    varDict["H1H2JetAbsCosThetaMax"]  = max(vals)
+    varDict["H1H2JetAbsCosThetaMin"]  = min(vals)         
+    
+    vals=[
+        LVStore['j1LV'].DeltaR( LVStore['k1LV']),
+        LVStore['j1LV'].DeltaR( LVStore['k2LV']),
+        LVStore['j2LV'].DeltaR( LVStore['k1LV']),
+        LVStore['j2LV'].DeltaR( LVStore['k2LV']),
+    ]
+
+    varDict['dije1CandidatePtOverdiHiggsM'] =   LVStore['H1bbLV'].Pt() / 125.0
+    varDict['dije2CandidatePtOverdiHiggsM'] =   LVStore['H2bbLV'].Pt() / 125.0
+    varDict["H1H2JetDrMax"]  = max(vals)
+    varDict["H1H2JetDrMin"]  = min(vals)
+    varDict["H1bbCosThetaLeadJet"] = abs(np.cos(  LVStore['H1bbLV'].Angle( LVStore['j1LV'].Vect())  )  )
+    varDict['H2bbCosThetaLeadJet'] = abs(np.cos(  LVStore['H2bbLV'].Angle( LVStore['k1LV'].Vect())  )  )
+
+    varDict["pT_4b"]  = ( LVStore['H1bbLV'] + LVStore['H2bbLV'] ).Pt()
+    varDict["scalarPtSumHHH"]  = LVStore["H1LV"].Pt()+LVStore["H2LV"].Pt()+LVStore["H3LV"].Pt()
+    varDict["scalarPtSum4b"]   = LVStore["j1LV"].Pt() + LVStore["j2LV"].Pt() + LVStore["k1LV"].Pt() + LVStore["k2LV"].Pt()
+    varDict["scalarPtSum4b2g"] = varDict["scalarPtSum4b"]  + LVStore["g1LV"].Pt() + LVStore["g2LV"].Pt()
+    varDict["HggTo4bAbsCosTheta"]    = abs(np.cos( (LVStore['H1bbLV']+LVStore['H2bbLV']).Angle( LVStore['H1LV'].Vect())  ) )
+    varDict["H1bbToH2bbAbsCosTheta"] = abs(np.cos(  LVStore['H1bbLV'].Angle( LVStore['H2bbLV'].Vect())  )  )
+    
+
+    varDict['h1leadJ_deepjetScore']    =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][0])+'_deepJetScore') 
+    varDict['h1subleadJ_deepjetScore'] =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][1])+'_deepJetScore') 
+    varDict['h2leadJ_deepjetScore']    =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][2])+'_deepJetScore') 
+    varDict['h2subleadJ_deepjetScore'] =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][3])+'_deepJetScore') 
+
+
+    j1_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][0])+'_bJetRegRes') ; 
+    j2_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][1])+'_bJetRegRes') ; 
+    k1_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][2])+'_bJetRegRes') ; 
+    k2_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][3])+'_bJetRegRes') ; 
+    varDict['h1_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['j1LV'],j1_res , LVStore['j2LV'] , j2_res )
+    varDict['h2_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['k1LV'],k1_res , LVStore['k2LV'] , k2_res )
+    
+    varDict['triHiggs_mass']= LVStore['HHHLV'].M()
+    varDict['ttH_MET'] = eTree.ttH_MET
+
+    return varDict
+
+def fillOtherDerivedVariables(histStore,varDict,wei):
+    
+    for ky in varDict:
+        if ky not in histStore["miscVars"]:
+            warnings.warn(ky+" histogram not defined in miscVars ! ",category=UserWarning)
+            continue
+        histStore["miscVars"][ky].Fill( varDict[ky] , wei)
+
+
 def addCandidateVars(histStore,candList):
     for ky in candList :
         histStore[ky]={}
@@ -349,18 +456,18 @@ def addCandidateVars(histStore,candList):
         addFlasggVars(histStore[ky])
         addKinematicVars(histStore[ky])
 
-
-def addKinematicVars(histStore): 
+@ignore_warning(RuntimeWarning)
+def addKinematicVars(histStore,framesToProbe=['CMS_RestFrame','HHH_RestFrame']): 
     histStore['kinematicVars']={}
-    framesToProbe=['CMS_RestFrame',
-                   'HHH_RestFrame',
-                   'H1H2_RestFrame',
-                   'H1H3_RestFrame',
-                   'H2H3_RestFrame',
-                   'Hgg_RestFrame',
-                   'H1bb_RestFrame',
-                   'H2bb_RestFrame',
-                    ]
+#    framesToProbe=['CMS_RestFrame',
+#                   'HHH_RestFrame',
+#                   'H1H2_RestFrame',
+#                   'H1H3_RestFrame',
+#                   'H2H3_RestFrame',
+#                   'Hgg_RestFrame',
+#                   'H1bb_RestFrame',
+#                   'H2bb_RestFrame',
+#                    ]
     
     for frame in framesToProbe:
         histStore['kinematicVars'][frame]={}
@@ -409,48 +516,59 @@ def addKinematicVars(histStore):
         histStore['kinematicVars'][frame]['L1L2L3_volume']  =  ROOT.TH1F("L1L2L3_volume"  ,""  ,40,0.0,2.0)
         histStore['kinematicVars'][frame]['sL1sL2sL3_volume']  =   ROOT.TH1F("sL1sL2sL3_volume","",40,0.0,2.0)
     
-def fillKinematicVarsFromLV(LVStore,histStore,wei=1 ):
+def fillKinematicVarsFromLV(LVStore,histStore,wei=1 ,framesToDo=['CMS_RestFrame','HHH_RestFrame']):
+    
+    if 'CMS_RestFrame' in framesToDo:
+       fillKinematicVars(histStore['CMS_RestFrame'],LVStore)    
+
+    if 'HHH_RestFrame' in framesToDo:
+        boost=-1.0*LVStore['HHHLV'].BoostVector()
+        boostedLV=getBoostedLVs(LVStore,boost)
+        fillKinematicVars(histStore['HHH_RestFrame'],boostedLV , wei )    
+    
+    if 'H1H2_RestFrame' in framesToDo:
+        boost=-1.0*(LVStore['H1LV'] +LVStore['H2LV']).BoostVector()
+        boostedLV=getBoostedLVs(LVStore,boost)
+        fillKinematicVars(histStore['H1H2_RestFrame'],boostedLV , wei )    
+    
+    if 'H1H3_RestFrame' in framesToDo:
+        boost=-1.0*(LVStore['H1LV']+LVStore['H2LV']).BoostVector()
+        boostedLV=getBoostedLVs(LVStore,boost)
+        fillKinematicVars(histStore['H1H3_RestFrame'],boostedLV , wei )    
         
-    fillKinematicVars(histStore['CMS_RestFrame'],LVStore)    
+    if 'H2H3_RestFrame' in framesToDo:
+        boost=-1.0*(LVStore['H2LV']+LVStore['H3LV']).BoostVector()
+        boostedLV=getBoostedLVs(LVStore,boost)
+        fillKinematicVars(histStore['H2H3_RestFrame'],boostedLV , wei )    
+        
+    if 'Hgg_RestFrame' in framesToDo:
+        boost=-1.0*LVStore['HggLV'].BoostVector()
+        boostedLV=getBoostedLVs(LVStore,boost)
+        fillKinematicVars(histStore['Hgg_RestFrame'],boostedLV , wei )    
+        
+    if 'H1bb_RestFrame' in framesToDo:
+        boost=-1.0*LVStore['H1bbLV'].BoostVector()
+        boostedLV=getBoostedLVs(LVStore,boost)
+        fillKinematicVars(histStore['H1bb_RestFrame'],boostedLV , wei )    
 
-    boost=-1.0*LVStore['HHHLV'].BoostVector()
-    boostedLV=getBoostedLVs(LVStore,boost)
-    fillKinematicVars(histStore['HHH_RestFrame'],boostedLV , wei )    
-    
-    boost=-1.0*(LVStore['H1LV'] +LVStore['H2LV']).BoostVector()
-    boostedLV=getBoostedLVs(LVStore,boost)
-    fillKinematicVars(histStore['H1H2_RestFrame'],boostedLV , wei )    
-    
-    boost=-1.0*(LVStore['H1LV']+LVStore['H2LV']).BoostVector()
-    boostedLV=getBoostedLVs(LVStore,boost)
-    fillKinematicVars(histStore['H1H3_RestFrame'],boostedLV , wei )    
-    
-    boost=-1.0*(LVStore['H2LV']+LVStore['H3LV']).BoostVector()
-    boostedLV=getBoostedLVs(LVStore,boost)
-    fillKinematicVars(histStore['H2H3_RestFrame'],boostedLV , wei )    
-    
-    boost=-1.0*LVStore['HggLV'].BoostVector()
-    boostedLV=getBoostedLVs(LVStore,boost)
-    fillKinematicVars(histStore['Hgg_RestFrame'],boostedLV , wei )    
-    
-    boost=-1.0*LVStore['H1bbLV'].BoostVector()
-    boostedLV=getBoostedLVs(LVStore,boost)
-    fillKinematicVars(histStore['H1bb_RestFrame'],boostedLV , wei )    
-
-    
-    boost=-1.0*LVStore['H2bbLV'].BoostVector()
-    boostedLV=getBoostedLVs(LVStore,boost)
-    fillKinematicVars(histStore['H2bb_RestFrame'],boostedLV , wei )    
+    if 'H2bb_RestFrame' in framesToDo:
+        boost=-1.0*LVStore['H2bbLV'].BoostVector()
+        boostedLV=getBoostedLVs(LVStore,boost)
+        fillKinematicVars(histStore['H2bb_RestFrame'],boostedLV , wei )    
 
     return
 
 
-
+@ignore_warning(RuntimeWarning)
 def getRecoHistos():
     histStore={}
     histStore['events']={}
-    histStore['events']['nEvents']=ROOT.TH1F("nEvents","",40,-0.5,39.5)
+    histStore['events']['nEvents']=ROOT.TH1F("nEvents","",1,-0.5,0.5)
     histStore['events']["nEvents"].SetCanExtend(ROOT.TH1.kAllAxes);
+    histStore['events']['allFailIdsEvents']=ROOT.TH1F("allFailedEvents","",1,-0.5,0.5)
+    histStore['events']["allFailIdsEvents"].SetCanExtend(ROOT.TH1.kAllAxes);
+    histStore['events']['allFailIdsWeights']=ROOT.TH1F("allFailedWeights","",1,-0.5,0.5)
+    histStore['events']["allFailIdsWeights"].SetCanExtend(ROOT.TH1.kAllAxes);
     
     histStore['events']['nHiggsMatch']=ROOT.TH1F("nHiggsMatch","",40,-0.5,39.5)
     histStore['events']["nHiggsMatch"].SetCanExtend(ROOT.TH1.kAllAxes);
@@ -564,26 +682,23 @@ def getRecoHistos():
     histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_looseID"]= histStore["hhhTo4b2gamma"]["h1MassVsh2Mass"].Clone()
     histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_looseID"].SetName("h1MassVsh2Mass_looseID")
     
-    histStore["h1Tobb"]["mass_tightID" ] =histStore["h1Tobb"]["mass" ].Clone()
-    histStore["h2Tobb"]["mass_tightID" ] =histStore["h2Tobb"]["mass" ].Clone()
-    histStore["h1Tobb"]["mass_tightID" ].SetName("mass_tightID" )
-    histStore["h2Tobb"]["mass_tightID" ].SetName("mass_tightID" )
-    
-    histStore["h1Tobb"]["mass_mediumID" ] =histStore["h1Tobb"]["mass" ].Clone()
-    histStore["h2Tobb"]["mass_mediumID" ] =histStore["h2Tobb"]["mass" ].Clone()
-    histStore["h1Tobb"]["mass_mediumID" ].SetName("mass_mediumID" )
-    histStore["h2Tobb"]["mass_mediumID" ].SetName("mass_mediumID")
-    
-    histStore["h1Tobb"]["mass_looseID" ] =histStore["h1Tobb"]["mass" ].Clone()
-    histStore["h2Tobb"]["mass_looseID" ] =histStore["h2Tobb"]["mass" ].Clone()
-    histStore["h1Tobb"]["mass_looseID" ].SetName("mass_looseID" )
-    histStore["h2Tobb"]["mass_looseID" ].SetName("mass_looseID" )
+#    histStore["h1Tobb"]["mass_tightID" ] =histStore["h1Tobb"]["mass" ].Clone()
+#    histStore["h2Tobb"]["mass_tightID" ] =histStore["h2Tobb"]["mass" ].Clone()
+#    histStore["h1Tobb"]["mass_tightID" ].SetName("mass_tightID" )
+#    histStore["h2Tobb"]["mass_tightID" ].SetName("mass_tightID" )
+#    
+#    histStore["h1Tobb"]["mass_mediumID" ] =histStore["h1Tobb"]["mass" ].Clone()
+#    histStore["h2Tobb"]["mass_mediumID" ] =histStore["h2Tobb"]["mass" ].Clone()
+#    histStore["h1Tobb"]["mass_mediumID" ].SetName("mass_mediumID" )
+#    histStore["h2Tobb"]["mass_mediumID" ].SetName("mass_mediumID")
+#    
+#    histStore["h1Tobb"]["mass_looseID" ] =histStore["h1Tobb"]["mass" ].Clone()
+#    histStore["h2Tobb"]["mass_looseID" ] =histStore["h2Tobb"]["mass" ].Clone()
+#    histStore["h1Tobb"]["mass_looseID" ].SetName("mass_looseID" )
+#    histStore["h2Tobb"]["mass_looseID" ].SetName("mass_looseID" )
 
 
 
-    for frame in ['vars_v1']:
-        histStore[frame]={}
-   
     addKinematicVars(histStore)
 
     return histStore
@@ -616,6 +731,57 @@ def getCosthetaVars(eTree,LVStore):
     x['HggLV'].Boost(-1.0* x['HHHLV'].BoostVector())
     
     return x['j1LV'].CosTheta() , x['k1LV'].CosTheta() , x['HggLV'].CosTheta() , drMin , drMin2
+
+
+def getLVStoreFromTreeAndQuad( eTree ,quad):
+    
+    LVStore={}
+    LVStore['j1LV']=ROOT.TLorentzVector();
+    LVStore['j2LV']=ROOT.TLorentzVector();
+    LVStore['k1LV']=ROOT.TLorentzVector();
+    LVStore['k2LV']=ROOT.TLorentzVector();
+    
+    LVStore['g1LV']=ROOT.TLorentzVector()
+    LVStore['g1LV'].SetPtEtaPhiM(eTree.leadingPhoton_pt,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi,0.0)
+
+    LVStore['g2LV']=ROOT.TLorentzVector()
+    LVStore['g2LV'].SetPtEtaPhiM(eTree.subleadingPhoton_pt,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi,0.0)
+    
+    kys=['j1LV','j2LV','k1LV','k2LV']
+    for i in range(4):
+        ix=quad['fgg_idxs'][i]
+        pt = getattr(eTree,'jet_'+str(ix)+'_pt')  
+        eta= getattr(eTree,'jet_'+str(ix)+'_eta') 
+        phi= getattr(eTree,'jet_'+str(ix)+'_phi') 
+        mass= getattr(eTree,'jet_'+str(ix)+'_mass')  
+        LVStore[kys[i]].SetPtEtaPhiM(pt,eta,phi,mass)
+
+    LVStore['HggLV'] =ROOT.TLorentzVector()
+    LVStore['HggLV'].SetPtEtaPhiM( eTree.diphoton_pt , eTree.diphoton_eta , eTree.diphoton_phi , eTree.CMS_hgg_mass )
+    LVStore['H1bbLV']= LVStore['j1LV'] + LVStore['j2LV']
+    LVStore['H2bbLV']= LVStore['k1LV'] + LVStore['k2LV']
+    
+    LVStore['HH4bLV'] =LVStore['H1bbLV']+LVStore['H2bbLV']
+    LVStore['HHHLV']  =LVStore['HggLV']+LVStore['H1bbLV']+LVStore['H2bbLV']
+    
+    LVStore['H1LV']=LVStore['HggLV']
+    LVStore['H2LV']=LVStore['HggLV']
+    LVStore['H3LV']=LVStore['HggLV']
+    
+    if LVStore['HggLV'].Pt() < LVStore['H1bbLV'].Pt():
+        LVStore['H1LV']=LVStore['H1bbLV']
+        if LVStore['HggLV'].Pt() < LVStore['H2bbLV'].Pt():
+            LVStore['H2LV']=LVStore['H2bbLV']
+        else:
+            LVStore['H3LV']=LVStore['H2bbLV']
+    else:
+        LVStore['H2LV']=LVStore['H1bbLV']
+        LVStore['H3LV']=LVStore['H2bbLV']
+ 
+    return LVStore
+
+
+
 
 def getLVStore( eTree ):
     
@@ -668,52 +834,30 @@ def getDijetResolutions(eTree , LVStore):
     
     return dijet1SigmaMOverM,diket2SigmaMOverM;
 
-def fillFlashggVars(histStore,eTree,wei):
+def fillFlashggVars(histStore,eTree,LVStore,wei=None):
+    if wei ==None:
+        wei=eTree.weight   
+    histStore["flashggVars"]['HHHCosThetaH1'].Fill( eTree.absCosThetaStar_CS , wei )
     
-    histStore['HHHCosThetaH1'].Fill( eTree.absCosThetaStar_CS , wei )
-    
-    LVStore = getLVStore(eTree)
     a,b,c,d,e=getCosthetaVars(eTree,LVStore)
     
-    histStore['HHHCosThetaHgg'].Fill( c , wei ) #TODO
-    histStore['H4bCosThetaLeadJet'].Fill( eTree.absCosTheta_bb , wei )
+    histStore["flashggVars"]['HHHCosThetaHgg'].Fill( c , wei ) #TODO
+    histStore["flashggVars"]['HggCosThetaLeadGamma'].Fill( eTree.absCosTheta_gg , wei )
     
-    histStore['HggCosThetaLeadGamma'].Fill( eTree.absCosTheta_gg , wei )
-    histStore['H1bbCosThetaLeadJet'].Fill( a , wei ) #TODO
-    histStore['H2bbCosThetaLeadJet'].Fill( b , wei ) #TODO
+    histStore["flashggVars"]['pTgg_overMgg'].Fill( eTree.diphotonCandidatePtOverdiHiggsM , wei )
     
-    histStore['pTgg_overMgg'].Fill( eTree.diphotonCandidatePtOverdiHiggsM , wei )
-    histStore['pTh1jj_overMh1'].Fill( eTree.dije1CandidatePtOverdiHiggsM , wei )
-    histStore['pTh2jj_overMh2'].Fill( eTree.dije2CandidatePtOverdiHiggsM , wei )
-    
-    histStore['pTleadG_overMgg'].Fill( eTree.leadingPhoton_pt / eTree.CMS_hgg_mass , wei )
-    histStore['pTh1leadJ_overMh1'].Fill( eTree.h1LeadingJet_pt / eTree.M1jj , wei )
-    histStore['pTh2leadJ_overMh2'].Fill( eTree.h2LeadingJet_pt / eTree.M2jj , wei )
+    histStore["flashggVars"]['pTleadG_overMgg'].Fill( eTree.leadingPhoton_pt / eTree.CMS_hgg_mass , wei )
 
-    histStore['pTsubleadG_overMgg'].Fill( eTree.subleadingPhoton_pt / eTree.CMS_hgg_mass , wei )
-    histStore['pTh1subleadJ_overMh1'].Fill( eTree.h1SubleadingJet_pt / eTree.M1jj , wei )
-    histStore['pTh2subleadJ_overMh2'].Fill( eTree.h2SubleadingJet_pt / eTree.M2jj , wei )
-
-
-    histStore['h1leadJ_deepjetScore'].Fill( eTree.h1LeadingJet_DeepFlavour , wei )
-    histStore['h2leadJ_deepjetScore'].Fill( eTree.h2LeadingJet_DeepFlavour , wei )
-    histStore['h1subleadJ_deepjetScore'].Fill( eTree.h1SubleadingJet_DeepFlavour , wei )
-    histStore['h2subleadJ_deepjetScore'].Fill( eTree.h2SubleadingJet_DeepFlavour , wei )
-
-    histStore['h1leadG_customMVA'].Fill( eTree.customLeadingPhotonIDMVA , wei )
-    histStore['h1subleadG_customMVA'].Fill( eTree.customSubLeadingPhotonIDMVA , wei )
+    histStore["flashggVars"]['pTsubleadG_overMgg'].Fill( eTree.subleadingPhoton_pt / eTree.CMS_hgg_mass , wei )
+    histStore["flashggVars"]['customLeadingPhotonIDMVA'].Fill( eTree.customLeadingPhotonIDMVA , wei )
+    histStore["flashggVars"]['customSubLeadingPhotonIDMVA'].Fill( eTree.customSubLeadingPhotonIDMVA , wei )
     
-    histStore['h1leadG_SigOverE'].Fill( eTree.leadingPhotonSigOverE , wei )
-    histStore['h1subleadG_SigOverE'].Fill( eTree.subleadingPhotonSigOverE , wei )
-    histStore['hgg_SigMOverM'].Fill( eTree.sigmaMOverM , wei )
-    histStore['hgg_SigMOverMDecorrelated'].Fill( eTree.sigmaMOverMDecorr , wei )
-    #a,b = getDijetResolutions(eTree , LVStore)
-    histStore['h1_dijetSigmaMOverM'].Fill( eTree.sigmaM1Jets , wei ) #TODO
-    histStore['h2_dijetSigmaMOverM'].Fill( eTree.sigmaM2Jets , wei ) #TODO
+    histStore["flashggVars"]['h1leadG_SigOverE'].Fill( eTree.leadingPhotonSigOverE , wei )
+    histStore["flashggVars"]['h1subleadG_SigOverE'].Fill( eTree.subleadingPhotonSigOverE , wei )
+    histStore["flashggVars"]['hgg_SigMOverM'].Fill( eTree.sigmaMOverM , wei )
+    histStore["flashggVars"]['hgg_SigMOverMDecorrelated'].Fill( eTree.sigmaMOverMDecorr , wei )
     
-    histStore['rho'].Fill( eTree.rho , wei )
-    histStore['phoJetMinDr'].Fill( eTree.PhoJetOtherDr , wei )
-    histStore['otherphoJetMinDr'].Fill( e , wei )
+    histStore["flashggVars"]['rho'].Fill( eTree.rho , wei )
 
 
 
@@ -1056,3 +1200,119 @@ def jetID( eTree , idx, case='Tight2017'  ):
         return -1;
 
 
+#float TrippleHTag::getSigmaM1OverMJets() const
+#{
+#    float dijetSigmaMOverM = 1./pow(dijet1().M(),2)*sqrt(
+#                                         pow(h1LeadJet().userFloat("bRegNNResolution"),2)*pow(pow(h1LeadJet().p4().M(),2) + h1LeadJet().p4().Dot(h1SubleadJet().p4()) ,2)  +
+#                                         pow(h1SubleadJet().userFloat("bRegNNResolution"),2)*pow( pow(h1SubleadJet().p4().M(),2) + h1SubleadJet().p4().Dot(h1LeadJet().p4()),2)
+#                                                     );
+#    return dijetSigmaMOverM;
+#}
+
+def getSigmaMOverM( obj1_p4,  obj1_res , obj2_p4, obj2_res ):
+    M=(obj1_p4 +obj2_p4).M()
+    sMoM = np.sqrt( pow(obj1_res,2)*pow(pow(obj1_p4.M(),2) + obj1_p4.Dot(obj2_p4) ,2) + pow( obj2_res, 2 )*pow( pow(obj2_p4.M(),2) + obj2_p4.Dot(obj1_p4) ,2) ) / M**2
+    return sMoM
+
+
+def fillTrippleHRecoVariables(eTree,histStore, LVStore, quad):
+    
+    histStore["diPhotons"]["pT"].Fill(  LVStore['HggLV'].Pt())
+    histStore["diPhotons"]["eta"].Fill( LVStore['HggLV'].Eta())
+    histStore["diPhotons"]["y"].Fill(   LVStore['HggLV'].Rapidity())
+    histStore["diPhotons"]["phi"].Fill( LVStore['HggLV'].Phi())
+    histStore["diPhotons"]["mass"].Fill(  eTree.CMS_hgg_mass)
+    
+    detId=0
+    if(  abs(LVStore['g1LV'].Eta()) < 1.4 and abs(LVStore['g2LV'].Eta()) < 1.4 ): detId=0
+    elif(abs(LVStore['g1LV'].Eta()) < 1.4 and abs(LVStore['g2LV'].Eta()) > 1.4 ) : detId=1
+    elif(abs(LVStore['g1LV'].Eta()) > 1.4 and abs(LVStore['g2LV'].Eta()) < 1.4 ):  detId=2
+    elif(abs(LVStore['g1LV'].Eta()) > 1.4 and abs(LVStore['g2LV'].Eta()) > 1.4 ) : detId=3
+    else:    detId=4
+
+    histStore["diPhotons"]["g1g2_Dr"].Fill( LVStore['g2LV'].DeltaR(LVStore['g1LV']) )
+    histStore["diPhotons"]["detIdx"].Fill(  detId)
+    histStore["diPhotons"]["gamma1_pT"].Fill(  eTree.leadingPhoton_pt)
+    histStore["diPhotons"]["gamma1_eta"].Fill( eTree.leadingPhoton_eta)
+    histStore["diPhotons"]["gamma1_phi"].Fill( eTree.leadingPhoton_phi)
+    histStore["diPhotons"]["gamma2_pT"].Fill(  eTree.subleadingPhoton_pt)
+    histStore["diPhotons"]["gamma2_eta"].Fill( eTree.subleadingPhoton_eta)
+    histStore["diPhotons"]["gamma2_phi"].Fill( eTree.subleadingPhoton_phi)
+
+    i1,i2,i3,i4=quad['fgg_idxs']
+    
+    histStore["h1Tobb"]["mass"].Fill( quad["m1"] )
+    histStore["h1Tobb"]["mass_preReg"].Fill( quad["m1_preReg"] )
+    histStore["h1Tobb"]["pT"].Fill( quad["p4_h1"].Pt() )
+    histStore["h1Tobb"]["eta"].Fill( quad["p4_h1"].Eta() )
+    histStore["h1Tobb"]["y"].Fill( quad["p4_h1"].Rapidity() )
+    histStore["h1Tobb"]["phi"].Fill( quad["p4_h1"].Phi() )
+    
+    histStore["h2Tobb"]["mass"].Fill( quad["m2"] )
+    histStore["h2Tobb"]["mass_preReg"].Fill( quad["m2_preReg"] )
+    histStore["h2Tobb"]["pT"].Fill( quad["p4_h2"].Pt() )
+    histStore["h2Tobb"]["eta"].Fill( quad["p4_h2"].Eta() )
+    histStore["h2Tobb"]["y"].Fill( quad["p4_h2"].Rapidity() )
+    histStore["h2Tobb"]["phi"].Fill( quad["p4_h2"].Phi() )
+
+    for htag,hJets in zip(['1','2'] , [[i1,i2],[i3,i4]]):
+        for jtag, idx in zip(['1','2'] , hJets): 
+            sidx=str(idx)
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_pT_preReg"].Fill( getattr(eTree,'jet_'+sidx+'_pt') )
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_pT"].Fill(        getattr(eTree,'jet_'+sidx+'_pt')*getattr(eTree,'jet_'+sidx+'_bJetRegCorr') )
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_eta"].Fill(       getattr(eTree,'jet_'+sidx+'_eta'))
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_phi"].Fill(       getattr(eTree,'jet_'+sidx+'_phi'))
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_deepCSVScore"].Fill( getattr(eTree,'jet_'+sidx+'_deepCSVScore') );
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_deepJetScore"].Fill( getattr(eTree,'jet_'+sidx+'_deepJetScore') );
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_hFlavour"].Fill( getattr(eTree,'jet_'+sidx+'_flavour' ) );
+            histStore["h"+htag+"Tobb"]["bJet"+jtag+"_pFlavour"].Fill( getattr(eTree,'jet_'+sidx+'_pFlavour') );
+    
+    histStore["h1Tobb"]["b1b2_Dr"].Fill(deltaR( getattr(eTree,'jet_'+str(i1)+'_eta') , getattr(eTree,'jet_'+str(i1)+'_phi') , 
+                                                getattr(eTree,'jet_'+str(i2)+'_eta') , getattr(eTree,'jet_'+str(i2)+'_phi') ) 
+                                                )
+    histStore["h2Tobb"]["b1b2_Dr"].Fill(deltaR( getattr(eTree,'jet_'+str(i3)+'_eta') , getattr(eTree,'jet_'+str(i3)+'_phi') , 
+                                                getattr(eTree,'jet_'+str(i4)+'_eta') , getattr(eTree,'jet_'+str(i4)+'_phi') ) 
+                                                )
+ 
+
+    idxs=[]
+    
+    #hhTo4b
+    histStore["hhTo4b"]["mass"].Fill( quad["mass"] )
+    histStore["hhTo4b"]["mass_preReg"].Fill( quad["mass_preReg"] )
+    histStore["hhTo4b"]["pT"].Fill( quad["pT"] )
+    histStore["hhTo4b"]["eta"].Fill( quad["eta"] )
+    histStore["hhTo4b"]["y"].Fill( quad["y"] )
+    histStore["hhTo4b"]["phi"].Fill( quad["phi"] )
+    
+    #hhhTo4b2gamma
+    allDauP4 = (quad['p4_h1']+quad['p4_h2']+LVStore['HggLV'])
+    allDauP4_preReg = (quad['p4_h1_preReg']+quad['p4_h2_preReg']+LVStore['HggLV'])
+    
+
+    histStore["hhhTo4b2gamma"]["mass"].Fill( allDauP4.M() )
+    histStore["hhhTo4b2gamma"]["mass_preReg"].Fill( allDauP4_preReg.M()  )
+    histStore["hhhTo4b2gamma"]["pT"].Fill( allDauP4.Pt() )
+    histStore["hhhTo4b2gamma"]["eta"].Fill( allDauP4.Eta() )
+    histStore["hhhTo4b2gamma"]["y"].Fill( allDauP4.Rapidity() )
+    histStore["hhhTo4b2gamma"]["phi"].Fill( allDauP4.Phi() )
+    histStore["hhhTo4b2gamma"]["h1MassVsh2Mass"].Fill(quad['m1'],quad['m2'] )
+    histStore["hhhTo4b2gamma"]["h1MassVsh2Mass_preReg"].Fill(quad['m1_preReg'],quad['m2_preReg'] )
+    
+    mx0 =  allDauP4.M() - ( quad['p4_h1'].M()+quad['p4_h2'].M()+LVStore['HggLV'].M() - 375.0 )
+    mx1 = (quad['p4_h1']+quad['p4_h2']).M() - ( quad['p4_h1'].M()+quad['p4_h2'].M() - 250.0 ) 
+    mx2 = (quad['p4_h1']+LVStore['HggLV']).M()-( quad['p4_h1'].M()+LVStore['HggLV'].M() - 250.0 ) 
+    mx3 = (quad['p4_h2']+LVStore['HggLV']).M()-( quad['p4_h2'].M()+LVStore['HggLV'].M() - 250.0 ) 
+
+    histStore["hhhTo4b2gamma"]["massX0"].Fill( mx0 )
+    histStore["hhhTo4b2gamma"]["massX1"].Fill( mx1 )
+    histStore["hhhTo4b2gamma"]["massX2"].Fill( mx2 )
+    histStore["hhhTo4b2gamma"]["massX3"].Fill( mx3 )
+
+    histStore["hhhTo4b2gamma"]["massX0X1"].Fill( mx0,mx1  )
+    histStore["hhhTo4b2gamma"]["massX2X3"].Fill( mx2,mx3  )
+    histStore["hhhTo4b2gamma"]["massX0X2"].Fill( mx0,mx2  )
+    histStore["hhhTo4b2gamma"]["massX1X3"].Fill( mx1,mx3  )
+    histStore["hhhTo4b2gamma"]["massX0X3"].Fill( mx0,mx3  )
+    histStore["hhhTo4b2gamma"]["massX1X2"].Fill( mx1,mx2  )
+    

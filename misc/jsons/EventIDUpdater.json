@@ -1,0 +1,49 @@
+{
+ 
+    "evtIDXUpdaterData": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntupleMaker_eventIDUpdater.py", 
+        "jobType" :"evtIDUpdate",
+        "script": "misc/runPython.tpl.sh", 
+        "cfg": "misc/cfg/ntuplizerDataEvtUpdater.tpl.cfg", 
+        "destn": "results/STORE/eventIDRemade/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "datasets": [  "data_2016PreVFP_2016B" ,
+            "data_2016PreVFP_2016C" ,
+            "data_2016PreVFP_2016D" ,
+            "data_2016PreVFP_2016E" ,
+            "data_2016PreVFP_2016F" ,
+            "data_2016PostVFP_2016F",
+            "data_2016PostVFP_2016G",
+            "data_2016PostVFP_2016H",
+            "data_2017_2017B", 
+            "data_2017_2017C", 
+            "data_2017_2017D",
+            "data_2017_2017E",
+            "data_2017_2017F",
+            "data_2018_2018A",
+            "data_2018_2018B", 
+            "data_2018_2018C", 
+            "data_2018_2018D"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 10000
+    },
+    "evtIDXUpdaterDataTest": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntupleMaker_eventIDUpdater.py", 
+        "jobType" :"evtIDUpdate",
+        "script": "misc/runPython.tpl.sh", 
+        "cfg": "misc/cfg/ntuplizerDataEvtUpdater.tpl.cfg", 
+        "destn": "results/STORE/eventIDRemade/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "datasets": [  "data_2016PreVFP_2016B" ,
+            "data_2016PreVFP_2016C" ,
+            "data_2017_2017F",
+            "data_2018_2018D"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 1000
+    }
+
+}

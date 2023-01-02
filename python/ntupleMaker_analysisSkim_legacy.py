@@ -6,7 +6,7 @@ from trippleHiggsUtils import *
 from Util  import *
 from branches import *
 from array import array
-from trippleHiggsSelector import *
+import trippleHiggsSelector as hhhSelector
 from TMVA_Model import *
 
 import os,sys
@@ -53,6 +53,8 @@ pTReweitingHistName=getValueFromConfigs(cfgTxt,"pTReweitingHistName",default="")
 pTReweitingValFile=getValueFromConfigs(cfgTxt,"pTReweitingValFile",default="")
 pTReweitingHistValName=getValueFromConfigs(cfgTxt,"pTReweitingHistValName",default="")
 resetWeight=float(getValueFromConfigs(cfgTxt,"resetWeight",default=-1e5))
+etaMax=2.5
+pTMin=25.0
 
 print("allFnames   :  ",              allFnames)
 print("foutName   :  ",               foutName)
@@ -160,6 +162,12 @@ edges=np.array([0.03099544, 0.63089365, 0.72614938, 0.77085077, 0.80215021,
        0.98148018, 0.98266215, 0.98377918, 0.98489203, 0.98616692,
        0.98737586, 0.98870801, 0.98988895, 0.99142853, 0.99329859])
 
+histStore={}
+histStore['cutFlow']=ROOT.TH1F("cutFlow","cutFlow",1,0.0,1.0)
+histStore['cutFlow'].SetCanExtend(ROOT.TH1.kAllAxes)
+histStore['cutFlow_weights']=ROOT.TH1F("cutFlow_weights","cutFlow_weights",1,0.0,1.0)
+histStore['cutFlow_weights'].SetCanExtend(ROOT.TH1.kAllAxes)
+
 def getCMVAScore(x,edges):
     if x > edges[-1]:
         return 1.0
@@ -186,31 +194,47 @@ for fname in allFnames:
 
     for i in range(maxEvents_):
         eTree.GetEntry(i)
+        wei=eTree.weight
+        
+        if resetWeight > -1e4:
+            wei=resetWeight
+        if weightScale > -1e4:
+            wei*=weightScale
+        histStore['cutFlow'].Fill('total',1)
+        histStore['cutFlow_weights'].Fill('total',wei)
+        
+        
         if(i%500==0):
             print("   Doing i = ",i," / ",maxEvents_,
                   " n No HiggsCand : ", nNoHtoGammaGamma,
                   " n No 4BCands  : ", nNoHHto4B)
             print(" gg mass , h1MassVsh2Mass  : ",eTree.CMS_hgg_mass ,"( ",eTree.M1jj , eTree.M2jj,")" )
-            
+        
+        allQuads=hhhSelector.getBJetParisFGG(eTree,etaMax,pTMin)
+        if not allQuads['isValid']:
+            histStore['cutFlow'].Fill(allQuads['fail'],1)
+            histStore['cutFlow_weights'].Fill(allQuads['fail'],wei)
+            continue
+        dr=allQuads['bJetQuad']['r_HH']
         dr = np.sqrt((eTree.M1jj-125.0)**2 + (eTree.M2jj - 125.0)**2)
         isMasked =  (dr < 25.0) and maskSignalMgg and processID=="DATA" and ( eTree.CMS_hgg_mass > 115.0) and (eTree.CMS_hgg_mass < 135.0)
-        
-        if not insideTheEllipse( eTree.M1jj  , eTree.M2jj , 70.0  , 70.0 , 150.0 , 150.0 , 141.0):
-            continue
+        #if not insideTheEllipse( eTree.M1jj  , eTree.M2jj , 70.0  , 70.0 , 150.0 , 150.0 , 141.0):
+        #    continue
+
         tag=''
         if isMasked:
             tag='_fitRange'
 
-        wei=eTree.weight
-        if resetWeight > -1e4:
-            wei=resetWeight
         if processID=="MC":
-            wei*=weightScale
             if doBjetCounting:
                 nBs=getNBsFromCand(eTree)
                 if nBs > maxNBjetsFromMC:
+                    histStore['cutFlow'].Fill('doubleCountingT1',1)
+                    histStore['cutFlow_weights'].Fill('doubleCountingT1',wei)
                     continue
                 if nBs < minNBjetsFromMC:
+                    histStore['cutFlow'].Fill('doubleCountingT2',1)
+                    histStore['cutFlow_weights'].Fill('doubleCountingT2',wei)
                     continue
         elif processID=="DATA":
             pass
@@ -230,12 +254,14 @@ for fname in allFnames:
                 tofill[ky]=getattr(eTree,ky)
             else:
                 tofill[ky]=-1.111e3
-        LVStore = getLVStore(eTree)
+        
+        LVStore = getLVStoreFromTreeAndQuad(eTree,allQuads['bJetQuad'])
         j1CosTheta,k1CosTheta,ggCostheta,drMin,drOther=getCosthetaVars(eTree,LVStore)
         
-        tofill['r_HH'] = dr
+        tofill['r_HH']   =  dr
         tofill['weight'] =  wei
         tofill['hhh_pT'] =  LVStore['HHHLV'].Pt() 
+
         tofill['hhhCosThetaH1'] = eTree.absCosThetaStar_CS 
         tofill["hh4CosThetaLeadJet"] = eTree.absCosTheta_bb
         tofill["h1bbCosThetaLeadJet"]= abs(j1CosTheta)
@@ -277,6 +303,7 @@ for fname in allFnames:
             LVStore['j2LV'].Angle( LVStore['k1LV'].Vect()),
             LVStore['j2LV'].Angle( LVStore['k2LV'].Vect()),
         ]
+
         vals=abs(np.cos(vals))
         tofill["H1H2JetAbsCosThetaMax"]  = max(vals)
         tofill["H1H2JetAbsCosThetaMin"]  = min(vals)         
@@ -287,6 +314,7 @@ for fname in allFnames:
             LVStore['j2LV'].DeltaR( LVStore['k1LV']),
             LVStore['j2LV'].DeltaR( LVStore['k2LV']),
         ]
+
         tofill["H1H2JetDrMax"]  = max(vals)
         tofill["H1H2JetDrMin"]  = min(vals)
         tofill["pT_4b"]  = ( LVStore['H1bbLV'] + LVStore['H2bbLV']).Pt()
@@ -312,8 +340,8 @@ for fname in allFnames:
         tofill["peakingMVA_v1"]=v1
         
         mvaAll.Fill(tofill["peakingMVA_v1"])
-        if tofill["peakingMVA_v1"]  < 0.40:
-            continue
+        #if tofill["peakingMVA_v1"]  < 0.40:
+        #    continue
         #print("MVA PRED : ",nonResonantMVA.predict(tofill) ,tthMVA.predict(tofill))
 
         sumWeights.Fill('total', 1)
@@ -325,8 +353,14 @@ for fname in allFnames:
             skimmedDataDict[i]=tofill[i]
         
         cat='cat0'
-        if tofill["nonResonantMVA_v2"] >  0.127:
+        if tofill["nonResonantMVA_v2"] >  0.2855:
+            histStore['cutFlow'].Fill('nonResonantMVA_v2_in',1)
+            histStore['cutFlow_weights'].Fill('nonResonantMVA_v2_in',wei)
             cat = 'cat1'
+        else:
+            histStore['cutFlow'].Fill('nonResonantMVA_v2',1)
+            histStore['cutFlow_weights'].Fill('nonResonantMVA_v2',wei)
+
         sumWeights.Fill('total_'+cat, 1)
         sumWeights.Fill('total_wei'+cat, wei)
         ntuple[cat].Fill(array('f', skimmedDataDict.values()))
@@ -342,8 +376,12 @@ sumWeights.Write()
 m1m2.Write()
 mvaAll.Write()
 mvaPass.Write()
+for ky in histStore:
+    histStore[ky].Write()
+
 
 for cat in ntuple:
     ntuple[cat].Write()
 fout.Close()
+
 print(" File written out  : ",foutName)

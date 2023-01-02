@@ -5,15 +5,29 @@ listOfTags=None
 tag="jetStudy_accEff"
 executable='python/ntupleMaker_h24bseletion.py'
 
-listOfTags=['data2018A','data2018B','data2018C','data2018D','signal']
+tag="ntupleForMLSig"
+executable='python/ntuple_forMHA_Signal.py'
+
+
+tag="ntupleForMLSig"
+executable='python/ntuple_forMHA_Signal.py'
+
+tag="ntupleForMLBkg"
+executable='python/ntuple_forMHA_Background.py'
+
+listOfTags=[]
+
+signalTags=['signal']
+dataTags=['data2018A','data2018B','data2018C','data2018D']
+
 qcdSamples=['ggM80Inc','ggM80Jbox1bjet','ggM80Jbox2bjet','gJet20To40','gJet40ToInf']
 doubleHTags=['gluGluToHH','vbfHH','WToQQHHTo2B2G','ZToBBHHTo2B2G','ggZTo2BHHTo2B2G','ttHHTo2B2G']
 singleHTags=['gluGluToH','vbfH','THQ','ttHJetToGG']
 
-for head in [qcdSamples,singleHTags,doubleHTags]:
+#for head in [signalTags]:
+for head in [dataTags,qcdSamples]:#,singleHTags,doubleHTags]:
     for ky in head:
         listOfTags.append(ky)
-listOfTags=['signal']
 
 doFID=True
 allDataFiles={
@@ -24,7 +38,7 @@ allDataFiles={
     'data2018C'   :   "workarea/data/flashGGNtuples/RunIISummer19/2018v2/EGamma_alesauva-UL2018_0-10_6_4-v0-Run2018C-12Nov2019_UL2018-v2.root",
     'data2018D'   :   "workarea/data/flashGGNtuples/RunIISummer19/2018v2/EGamma_alesauva-UL2018_0-10_6_4-v0-Run2018D-12Nov2019_UL2018-v4.root",
     
-    'ggM80Inc'      : "workarea/data/flashGGNtuples/RunIISummer19/2018v2/DiPhotonJetsBox_MGG-80toInf_13TeV-sherpa_v1.root",
+    'ggM80Inc'      : "workarea/data/flashGGNtuples/RunIISummer19/2018v2/DiPhotonJetsBox_MGG-80toInf_13TeV-sherpa.root",
     'ggM80Jbox1bjet': "workarea/data/flashGGNtuples/RunIISummer19/2018v2/DiPhotonJetsBox1BJet_MGG-80toInf_13TeV-sherpa.root",
     'ggM80Jbox2bjet': "workarea/data/flashGGNtuples/RunIISummer19/2018v2/DiPhotonJetsBox2BJets_MGG-80toInf_13TeV-sherpa.root",
     'gJet20To40'    : "workarea/data/flashGGNtuples/RunIISummer19/2018/GJet_Pt-20to40_DoubleEMEnriched_MGG-80toInf_TuneCP5_13TeV_Pythia8.root",
@@ -105,7 +119,7 @@ analysis_cfgs/mvaHeader.cfg
 
 #PARAMS_BEG
 OutpuFileName=@@OBASE/@@OFNAME
-MaxEvents=-1
+MaxEvents=20000
 WeightScale=@@WeightScale
 treeName=@@TREENAME
 outTreeName=@@OTREE
