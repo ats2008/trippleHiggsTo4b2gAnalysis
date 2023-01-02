@@ -73,10 +73,14 @@ nNoHtoGammaGamma=0
 nNoHHto4B=0
 totalEvents=0
 nMiss=0
-nMatchFound=0
+nProcessed=0
 fname=allFnames[0]
 simFile = ROOT.TFile(fname,'READ')
 eTree=simFile.Get(treeName)
+if not eTree:
+   treeName='tagsDumper/trees/EGamma_13TeV_TrippleHTag_0'
+   print(" Trying tree name  : ",treeName )
+   eTree=simFile.Get(treeName)
 allBranchesFromFile=[]
 for ky in eTree.GetListOfBranches():
     allBranchesFromFile.append(ky.GetName())
@@ -92,9 +96,9 @@ dir_ = fout.mkdir('tagsDumper')
 dir_ = dir_.mkdir('trees')
 
 tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
+outputDataDict=OrderedDict(zip(branches, [np.nan]*len(branches))) 
 
 ntuple={}
-outputDataDict=OrderedDict(zip(branches, [np.nan]*len(branches))) 
 ntuple['all'] = ROOT.TNtuple(outTreeName, outTreeName, ':'.join(branches))
 
 
@@ -102,7 +106,6 @@ kyList = [ ky for ky in tofill ]
 print("len(branches) : " , len(branches))
 
 
-m1m2 = ROOT.TH2F("m1jj_m2jj","H1bb , H2bb mass",300,0.0,300.0,300,0.0,300. )
 
 
 sumWeights=ROOT.TH1F("sumEvts","sumEvts",1,0.0,1.0)
@@ -116,7 +119,9 @@ for fname in allFnames:
     eTree=simFile.Get(treeName)
     print(" NEntries = ", eTree.GetEntries() )
     if not eTree:
-        eTree=simFile.Get('tagsDumper/trees/Data_13TeV_TrippleHTag_0')
+        treeName='tagsDumper/trees/EGamma_13TeV_TrippleHTag_0'
+        print(" Trying tree name  : ",treeName )
+        eTree=simFile.Get(treeName)
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
         maxEvents_= (maxEvents - totalEvents)
@@ -126,11 +131,11 @@ for fname in allFnames:
         allBranches.append(ky.GetName())
     for evt in range(maxEvents_):
         eTree.GetEntry(evt)
-        if(evt%100==0):
-            print("   Doing i = ",evt," / ",maxEvents_,
-                  " n Found : ", nMatchFound,
-                  " n Miss  : ", nMiss)
-            print(" gg mass , h1MassVsh2Mass  : ",eTree.CMS_hgg_mass ,"( ",eTree.M1jj , eTree.M2jj,")" )
+        sumWeights.Fill('Events',1)
+        sumWeights.Fill('weights',eTree.weight)
+        if(evt%1000==0):
+            print("   Doing i = ",evt," / ",maxEvents_," n Found : ", nProcessed)
+            print("     gg mass , h1MassVsh2Mass  : ",eTree.CMS_hgg_mass )
             
         wei=eTree.weight
         for ky in tofill:
@@ -145,19 +150,25 @@ for fname in allFnames:
        
         for i in outputDataDict:
             outputDataDict[i]=tofill[i]
-        if(len(branchesToFill)!=len(outputDataDict)):
-            print("len(branchesToFill)!=len(outputDataDict) !! ")
+        if(len(branches)!=len(outputDataDict)):
+            print("len(branches)!=len(outputDataDict) !! ",len(branches), " != ",len(outputDataDict))
+            for i in branches:
+                if i not in outputDataDict:
+                    print(i,"in branches not in outputDataDict")
+            for i in outputDataDict:
+                if i not in branches:
+                    print(i,"in outputDataDict not in branches")
+            print("EXITING") 
             exit(1)
         cat='cat0'
         ntuple['all'].Fill(array('f', outputDataDict.values()))
-
+        nProcessed+=1
     simFile.Close()           
     print("Closing file : ",fname)
-print("Number of evetsProcess ",nMatchFound)
+print("Number of evets Processed ",nProcessed)
 
 dir_.cd()    
 sumWeights.Write()
-m1m2.Write()
 
 for cat in ntuple:
     ntuple[cat].Write()
