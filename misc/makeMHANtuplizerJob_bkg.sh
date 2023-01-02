@@ -36,4 +36,3 @@ version=6p0
       --tag              diPhoton2BJets_$version \
       --maxMeterialize   250
 
-

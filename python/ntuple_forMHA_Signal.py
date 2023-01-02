@@ -149,6 +149,7 @@ for i in range(8):
 branches=np.unique(branches)
 ntuple={}
 ntuple['allRecoed'] = ROOT.TNtuple(outTreeName+'_allRecoed', outTreeName, ':'.join(branches))
+ntuple['Max1JetMiss'] = ROOT.TNtuple(outTreeName+'_Max1JetMiss', outTreeName, ':'.join(branches))
 ntuple['SingleJetMiss'] = ROOT.TNtuple(outTreeName+'_SingleJetMiss', outTreeName, ':'.join(branches))
 ntuple['MergedJetMiss'] = ROOT.TNtuple(outTreeName+'_MergedJetMiss', outTreeName, ':'.join(branches))
 ntuple['MultiJetMiss'] = ROOT.TNtuple(outTreeName+'_MultiJetMiss', outTreeName, ':'.join(branches))
@@ -212,16 +213,12 @@ for fname in allFnames:
         sumWeights.Fill('total', wei)
         if(i%500==0):
             now=datetime.datetime.now()
-            timeLeftSec=1.0*(maxEvents_-i)*(now-beg).total_seconds()/( i +1e-3)
-            print( "timeLeftSec : ",1.0," * ( ",maxEvents_,"-",i,")/",(now-beg).total_seconds(),"/",maxEvents_  ) 
-            timeLeftMin=int(timeLeftSec/60.0)
-            timeLeftSec=np.round(timeLeftSec - int(timeLeftSec/60.0)*60,2)
-            timeSpendS=np.round( (now-beg).total_seconds()   )
-            timeSpendM=np.round(  timeSpendS/60)
-            timeSpendS=np.round(timeSpendS - int(timeSpendS/60.0)*60.0,2)
+            timeSpendSec=np.round((now-beg).total_seconds() , 2)
+            timeLeftSec =np.round(1.0*(maxEvents_-i)*timeSpendSec/( i +1e-3),2)
             print("   Doing i = ",i," / ",maxEvents_)
-            print("      time left : ",timeLeftMin," min ",timeLeftSec ," s [ time elapsed : ",timeSpendM,"m  ",timeSpendS, " s ]")
-            print(" gg mass , h1MassVsh2Mass  : ",eTree.CMS_hgg_mass ,"( ",eTree.M1jj , eTree.M2jj,")" )
+            print("      time left : ", str(datetime.timedelta(seconds= timeLeftSec)),
+                    " [ time elapsed : ",datetime.timedelta(seconds= timeSpendSec), " s ]")
+            print(" gg mass   : ",eTree.CMS_hgg_mass)
             
         allGammas=getHiggsDauP4s(eTree,22)
         allBquarks=getHiggsDauP4s(eTree,5)
@@ -379,9 +376,12 @@ for fname in allFnames:
                 print(ky)
         if nout==0 and x==4 and 'allRecoed' in treesToStore:
             ntuple['allRecoed'].Fill(array('f', tofill.values()))
-        elif nout==1 and x==3 and 'SingleJetMiss' in treesToStore:
+        if nout==1 and x==3 and 'SingleJetMiss' in treesToStore:
             ntuple['SingleJetMiss'].Fill(array('f', tofill.values()))
-        elif nout<3  and 'MultiJetMiss' in treesToStore:
+        if nout==0 and x==4 and 'Max1JetMiss' in treesToStore:
+            ntuple['allRecoed'].Fill(array('f', tofill.values()))
+        
+        if nout<3  and 'MultiJetMiss' in treesToStore:
             ntuple['MultiJetMiss'].Fill(array('f', tofill.values()))
             
         if x<4 and x<nout and 'MergedJetMiss' in treesToStore:

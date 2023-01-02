@@ -197,7 +197,9 @@ for fname in allFnames:
     eTree=simFile.Get(treeName)
     print(" NEntries = ", eTree.GetEntries())
     if not eTree:
-        eTree=simFile.GehFlavourt('tagsDumper/trees/Data_13TeV_TrippleHTag_0')
+        treeName='tagsDumper/trees/EGamma_13TeV_TrippleHTag_0'
+        print(" Trying tree name  : ",treeName )
+        eTree=simFile.Get(treeName)
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
         maxEvents_= (maxEvents - totalEvents)
@@ -214,19 +216,13 @@ for fname in allFnames:
 
         if(i%250==0):
             now=datetime.datetime.now()
-            timeLeftSec=1.0*(maxEvents_-i)*(now-beg).total_seconds()/( i +1e-3)
-            print( "timeLeftSec : ",1.0," * ( ",maxEvents_,"-",i,")/",(now-beg).total_seconds(),"/",maxEvents_  ) 
-            timeLeftMin=int(timeLeftSec/60.0)
-            timeLeftSec=np.round(timeLeftSec - int(timeLeftSec/60.0)*60,2)
-            timeSpendS=np.round( (now-beg).total_seconds()   )
-            timeSpendM=np.round(  timeSpendS/60)
-            timeSpendS=np.round(timeSpendS - int(timeSpendS/60.0)*60.0,2)
+            timeSpendSec=np.round((now-beg).total_seconds() , 2)
+            timeLeftSec =np.round(1.0*(maxEvents_-i)*timeSpendSec/( i +1e-3),2)
             print("   Doing i = ",i," / ",maxEvents_)
-            print("      time left : ",timeLeftMin," min ",timeLeftSec ," s [ time elapsed : ",timeSpendM,"m  ",timeSpendS, " s ]")
-            print(" gg mass , h1MassVsh2Mass  : ",eTree.CMS_hgg_mass ,"( ",eTree.M1jj , eTree.M2jj,")" )
-         
-
-          
+            print("      time left : ", str(datetime.timedelta(seconds= timeLeftSec)),
+                    " [ time elapsed : ",datetime.timedelta(seconds= timeSpendSec), " s ]")
+            print(" gg mass   : ",eTree.CMS_hgg_mass)
+            
         for ky in tofill:
             if ky in allBranches:
                 tofill[ky]=getattr(eTree,ky)

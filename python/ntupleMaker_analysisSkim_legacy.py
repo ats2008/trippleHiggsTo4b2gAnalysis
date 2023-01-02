@@ -214,7 +214,6 @@ for fname in allFnames:
         if not allQuads['isValid']:
             histStore['cutFlow'].Fill(allQuads['fail'],1)
             histStore['cutFlow_weights'].Fill(allQuads['fail'],wei)
-                       
             continue
         dr=allQuads['bJetQuad']['r_HH']
         dr = np.sqrt((eTree.M1jj-125.0)**2 + (eTree.M2jj - 125.0)**2)

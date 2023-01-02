@@ -250,6 +250,7 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_ptRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).Pt() / LVStore['HggLV'].Pt()
                 tofill['jet_'+str(i)+'_ptRatio_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).Pt() / LVStore['g1LV'].Pt()
                 tofill['jet_'+str(i)+'_ptRatio_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).Pt() / LVStore['g2LV'].Pt()
+
         
         eventIdx=eTree.event
         for mlScoreTag in mlScoreInterface:
@@ -261,6 +262,7 @@ for fname in allFnames:
                     tofill['jet_'+str(i)+mlScoreTag+'_y0s']=hhhMLI.sigmoid(rslt['y0'][i] )
                     tofill['jet_'+str(i)+mlScoreTag+'_y1s']=hhhMLI.sigmoid(rslt['y1'][i] )
                     tofill['jet_'+str(i)+mlScoreTag+'_score']=rslt['score'][i] 
+                    print( rslt['score'][i] )
                     
                     for i in range(NJETS):
                         tofill['label_'+str(i)]=float(rslt['label'][i]  >0.1)
