@@ -41,6 +41,7 @@ parser.add_argument("--jn", help="Max number of Jobs",default='10')
 parser.add_argument("--fn", help="File per Job",default=1)
 parser.add_argument("--maxEvt", help="Mac Events per Job , -1 for all",default=100)
 parser.add_argument("--tag", help="Job Tag",default="")
+parser.add_argument("--jobType", help="Job Type",default='""')
 parser.add_argument("--offsetStep", help="offsetStep for event number re-defenition",default="5000")
 parser.add_argument("--maxMeterialize", help="Executable",default=None)
 
@@ -57,53 +58,25 @@ NEVENTS_PER_JOB=int(args.maxEvt)
 tag=args.tag
 maxMeterialize=int(args.maxMeterialize)
 offsetStep=int(args.offsetStep)
-
-#if len(sys.argv) > 2:
-#    executable=sys.argv[1]
-#    FileSource=sys.argv[2]  
-#    runScriptTemplate=sys.argv[3]  
-#    cfgScriptTemplate=sys.argv[4]  
-#else:
-#    print(useStr)
-#    sys.exit(1)
-#argC=5
-#if len(sys.argv) > argC:
-#    destination=sys.argv[argC]  
-#argC+=1
-#if len(sys.argv) > argC :
-#    NJOBS=int(sys.argv[argC])  
-#argC+=1
-#if len(sys.argv) > argC :
-#    FILES_PER_JOB=int(sys.argv[argC])  
-#argC+=1
-#if len(sys.argv) > argC :
-#    NEVENTS_PER_JOB=int(sys.argv[argC])  
-#argC+=1
-#if len(sys.argv) > argC :
-#    tag=sys.argv[argC]  
-#argC+=1
-#if len(sys.argv) > argC :
-#    maxMeterialize=int(sys.argv[argC])  
-#argC+=1
-#if len(sys.argv) > argC :
-#    offsetStep=int(sys.argv[argC])  
-
+jobType=args.jobType
 if(not os.path.exists(destination)):
     os.system("mkdir -p "+destination)
 
 destination=os.path.abspath(destination)
 
 
-print(" Executable ",executable)
-print("Source file list ",FileSource)
-print("Run Script Template ",runScriptTemplate)
-print("Configuration ",cfgScriptTemplate )
-print("destination : ",destination)
-print("NJOBS : ",NJOBS)
-print("FILES_PER_JOB : ",FILES_PER_JOB)
-print("NEVENTS_PER_JOB : ",NEVENTS_PER_JOB)
-print("maxMeterialize : ",maxMeterialize)
-print("tag : ",tag)
+print("      Executable ",executable)
+print("      Source file list ",FileSource)
+print("      Run Script Template ",runScriptTemplate)
+print("      Configuration ",cfgScriptTemplate )
+print("      destination : ",destination)
+print("      NJOBS : ",NJOBS)
+print("      FILES_PER_JOB : ",FILES_PER_JOB)
+print("      NEVENTS_PER_JOB : ",NEVENTS_PER_JOB)
+print("      maxMeterialize : ",maxMeterialize)
+print("      tag : ",tag)
+print("      jobType : ",jobType)
+print("")
 Fnames=open(FileSource,'r')
 sourceFileList=Fnames.readlines()
 Fnames.close()
@@ -136,7 +109,7 @@ configurationTxt=''.join(configurationTxt)
 #print(configurationTxt)
 
 
-head='Condor/Jobs'+tag
+head='Condor/'+jobType+'/Jobs'+tag
 if not os.path.exists(head ):
     os.system('mkdir -p '+head)
 

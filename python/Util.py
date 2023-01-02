@@ -1,9 +1,11 @@
 import os, sys
 import ROOT
 import numpy as np
+import functools,warnings
 
+    
 
-def saveTheDictionary(aCollection,fname=None,folder=None,fileExists=False):
+def saveTheDictionary(aCollection,fname=None,folder=None,closeFile=True):
     outfile=folder
     if fname!=None and outfile==None:
         outfile=ROOT.TFile(fname,"RECREATE")
@@ -12,11 +14,14 @@ def saveTheDictionary(aCollection,fname=None,folder=None,fileExists=False):
     for key in aCollection:
         if type(aCollection[key])==type({}):
             inFolder=outfile.mkdir(key)
-            saveTheDictionary(aCollection[key],None,inFolder)
+            saveTheDictionary(aCollection[key],None,inFolder,closeFile=closeFile)
         else:
             aCollection[key].Write()
-    if fname!=None:
+    if fname!=None and closeFile:
         outfile.Close()
+
+def saveToFile(aCollection,file):
+    saveTheDictionary(aCollection,fname=None,folder=file,closeFile=False)
 
 def dPhi(phi1,phi2):
     return np.arccos(np.cos(phi2-phi1))
@@ -125,4 +130,28 @@ def getAClonedTree(eTree,name=""):
     tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
     
     return oTree
+
+
+def ignore_warning(warning_):
+    """
+    Ignore a given warning occurring during method execution.
+
+    Args:
+        warning (Warning): warning type to ignore.
+
+    Returns:
+        the inner function
+
+    """
+
+    def inner(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category= warning_)
+                return func(*args, **kwargs)
+
+        return wrapper
+
+    return inner
 

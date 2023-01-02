@@ -18,4 +18,12 @@ Analysis scrpts for trippleH--> 4b2g analysis
     - Adds the ML model score from the `pickle`-ed score values
     - Helper class : `python/trippleHiggsMLInterface.py`
     - misc/makeScoreUpdater_data.sh
-    
+
+- `python/ntuple_forBDT.py`
+    - Makes the Ntuples for BDT Training And testing
+    - misc/makeBDTNtuplizerJob.py
+
+- `python/variableAnalyzer.py`
+    - Make the histograms of all the variables required
+    - Compiled scalbale workflow from `trippleHiggsUtils.py` and `trippleHiggsSelector.py`
+    - `misc/makeVariableDistributions.py`    
