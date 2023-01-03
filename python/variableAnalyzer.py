@@ -185,6 +185,7 @@ print("Number of evets Processed ",nProcessed)
 
 dir_.cd()    
 sumWeights.Write()
+isDataHist.Write()
 utl.saveToFile(histStore,fout)
 fout.Close()
 print(" File written out  : ",foutName)
