@@ -1,35 +1,50 @@
 #!/usr/bin/env python 
+from __future__ import print_function
 import os
-import copy
+import copy,json
+import argparse
 
-version='1p1'
+parser = argparse.ArgumentParser()
+parser.add_argument('-s',"--submit", help="Submit file to condor pool", action='store_true' )
+parser.add_argument('-r',"--resubmit", help="Re-Submit file to condor pool", action='store_true' )
+parser.add_argument('-t',"--test", help="Test Job", action='store_true' )
+parser.add_argument('-p',"--printOnly", help="Only Print the commands", action='store_true' )
+parser.add_argument('-n',"--njobs", help="Number of jobs to make",default='-6000')
+parser.add_argument('-e',"--nevts", help="Number of events per job",default='-1')
+parser.add_argument('-v',"--version", help="Vesion of the specific work",default='1p0')
 
-exe='/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_forBDT.py'
-destn='results/BDT_NTuples/'
-cfgTemplate='misc/ntuplizerForML_Signal.tpl.cfg'
-scriptTemplate='misc/runPython.tpl.sh'
-njobs=1000
+args = parser.parse_args()
+
+version=args.version
+
+njobs=int(args.njobs)
+maxevents=int(args.nevts)
 max_meterialize=250
+jobsToProcess=None
+submit2Condor=args.submit
+resubmit2Condor=args.resubmit
+isTest=args.test
+onlyPrint=args.printOnly
+print(" submit jobs ",submit2Condor)
+print(" resubmit jobs ",resubmit2Condor)
+print(" isTest ",isTest)
+print(" printOnly ",onlyPrint)
+print(" njobs ",njobs)
+print(" maxEvt ",maxevents)
+
+if submit2Condor or resubmit2Condor:
+    choice=raw_input("Do you really want to submit the jobs to condor pool ? ")
+    if 'y' not in choice.lower():
+        print("Exiting ! ")
+        exit(0)
 
 jobDict={}
-jobDict['bdtNtuplizer']={}
-jobDict['bdtNtuplizer']['exe']=exe
-jobDict['bdtNtuplizer']['cfg']='misc/ntuplizer_BDT_sig.tpl.cfg'
-jobDict['bdtNtuplizer']['script']=scriptTemplate
-jobDict['bdtNtuplizer']['destn']=destn
-jobDict['bdtNtuplizer']['njobs']=njobs
-jobDict['bdtNtuplizer']['files_per_job']=1
-jobDict['bdtNtuplizer']['maxevents']=-1
-jobDict['bdtNtuplizer']['max_meterialize']=max_meterialize
-jobDict['bdtNtuplizer']['datasets']={}
-jobDict['bdtNtuplizer']['datasets']['ggHHH2018'] = 'fileList/ntuples/ggHHH_UL2018_mlScoreUpdated.fls'
+with open('misc/jsons/bdtNtuplizer.json') as f:
+    jobDict=json.load(f)
 
-jobDict['bdtNtuplizerBkg']=copy.copy( jobDict['bdtNtuplizer'] )
-jobDict['bdtNtuplizerBkg']['cfg']='misc/ntuplizer_BDT.tpl.cfg'
-jobDict['bdtNtuplizerBkg']['datasets']={}
-jobDict['bdtNtuplizerBkg']['datasets']['ggJBox1B']  = 'fileList/ntuples/DiPhotonJetsBox1BJet_MGG-80toInf_13TeV_mlScoreUpdated.fls'
-jobDict['bdtNtuplizerBkg']['datasets']['ggJBox2B']  = 'fileList/ntuples/DiPhotonJetsBox2BJets_MGG-80toInf_13TeV_mlScoreUpdated.fls'
-jobDict['bdtNtuplizerBkg']['datasets']['ggJBox']    = 'fileList/ntuples/DiPhotonJetsBox_MGG-80toInf_13TeV_mlScoreUpdated.fls'
+fileListDict={}
+with open('misc/jsons/fileListToUse.json') as f:
+    fileListDict=json.load(f)
 
 templateCMD="""
 ./misc/condorJobMakerGeneric.py 
@@ -42,15 +57,29 @@ templateCMD="""
        --fn              @@FILES_PER_JOB 
        --maxEvt          @@MAXEVENTS 
        --tag             @@TAG 
+       --jobType         @@JOB_TYPE
        --maxMeterialize  @@MAX_METERIALIZE
 """
 
+if isTest or onlyPrint :
+    templateCMD= 'echo '+templateCMD 
+
 allCondorSubFiles=[]
-for jobTag in jobDict:
+if jobsToProcess==None:
+    jobsToProcess=list( jobDict.keys() )
+jobsToProcess=['bkg','sig']
+for jobTag in jobsToProcess:
+    print(jobDict[jobTag])
+    if njobs > 0:
+        jobDict[jobTag]['njobs']=njobs
+    if maxevents > 0:
+        jobDict[jobTag]['maxevents']=maxevents
+    print(jobDict[jobTag])
     cmd=templateCMD.replace("@@EXE",jobDict[jobTag]['exe'])
     cmd=cmd.replace("@@CFG_TPL"        ,jobDict[jobTag]['cfg'])
     cmd=cmd.replace("@@SCRIPT_TPL"     ,jobDict[jobTag]['script'])
     cmd=cmd.replace("@@NJOBS"          ,str(jobDict[jobTag]['njobs']))
+    cmd=cmd.replace("@@JOB_TYPE"          ,str(jobDict[jobTag]['jobType']))
     cmd=cmd.replace("@@FILES_PER_JOB"        ,str(jobDict[jobTag]['files_per_job']))
     cmd=cmd.replace("@@MAXEVENTS"        , str(jobDict[jobTag]['maxevents']) )
     cmd=cmd.replace("@@MAX_METERIALIZE"        , str(jobDict[jobTag]['max_meterialize']) )
@@ -59,11 +88,23 @@ for jobTag in jobDict:
             cmd=cmd.replace( key ,jobDict[jobTag][ key ]  )
 
     for dset in jobDict[jobTag]['datasets']:
+        dset=dset.encode('ascii','replace')
+        if dset in fileListDict:
+            flist=fileListDict[dset]
+        else :
+            print("File list for dataset : ",dset," not found ! skipping the datset ")
+            continue
         tag=jobTag+'_'+dset+'_'+version
         cmdD=cmd.replace("@@TAG",tag)
-        cmdD=cmdD.replace("@@FILELIST",jobDict[jobTag]['datasets'][dset])
+        cmdD=cmdD.replace("@@FILELIST",flist)
         destination = jobDict[jobTag]['destn'] +'/'+tag+'/'
         cmdD=cmdD.replace("@@DESTN",destination)
+        
+        head='Condor/'+jobDict[jobTag]['jobType']+'/Jobs'+tag
+        condorScriptName=head+'/job'+tag+'.sub'
+        allCondorSubFiles.append(condorScriptName)
+        if resubmit2Condor:
+            continue
         print("")
         print("")
         print("="*40)
@@ -73,13 +114,14 @@ for jobTag in jobDict:
         print("")
         cmdD=cmdD.replace("\n","")
         os.system( cmdD )
-        head='Condor/Jobs'+tag
-        condorScriptName=head+'/job'+tag+'.sub'
-        allCondorSubFiles.append(condorScriptName)
+        if isTest:
+            break
 print("")
 print("")
 print("All condor submit files to be submitted ")
 for fle in allCondorSubFiles:
-    print('csub '+fle)
+    print('condor_submit '+fle)
+    if submit2Condor or resubmit2Condor:
+        os.system('condor_submit '+fle)
 print("")
 print("")

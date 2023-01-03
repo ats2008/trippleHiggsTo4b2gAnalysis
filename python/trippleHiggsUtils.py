@@ -246,8 +246,6 @@ def addFlasggVars(histStore):
     histStore["flashggVars"]['customLeadingPhotonIDMVA'] = ROOT.TH1F("customLeadingPhotonIDMVA"  ,"",48,-0.1,1.1)
     histStore["flashggVars"]['customSubLeadingPhotonIDMVA'] = ROOT.TH1F("customSubLeadingPhotonIDMVA"  ,"",48,-0.1,1.1)
     
-    
-    
     """
         d    PhoJetMinDr                         
         d    PhoJetOtherDr                       
@@ -273,7 +271,7 @@ def addFlasggVars(histStore):
     """
 def addOtherDerivedVariables(histStore):
     histStore["miscVars"]={}
-    histStore["miscVars"]['H4bCosThetaLeadJet']= ROOT.TH1F("H4bCosThetaLeadJet","",60,-0.1,1.1)
+    histStore["miscVars"]['HH4bCosThetaLeadJet']= ROOT.TH1F("HH4bCosThetaLeadJet","",60,-0.1,1.1)
     histStore["miscVars"]['H1bbCosThetaLeadJet'] = ROOT.TH1F("H1bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
     histStore["miscVars"]['H2bbCosThetaLeadJet'] = ROOT.TH1F("H2bbCosThetaLeadJet"  ,"",60,-0.1,1.1)
     histStore["miscVars"]['pTh1jj_overMh1'] = ROOT.TH1F("pTh1jj_overMh1"  ,"",100,0.0,50.0)
@@ -318,14 +316,38 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict={}
     varDict['pTh1jj_overMh1']  = LVStore['H1bbLV'].Pt() / LVStore['H1bbLV'].M()
     varDict['pTh2jj_overMh2']  = LVStore['H2bbLV'].Pt() / LVStore['H2bbLV'].M()
-    varDict['pTh1leadJ_overMh1'] = LVStore['j1LV'].Pt() / LVStore['H1bbLV'].M()
-    varDict['pTh2leadJ_overMh2'] = LVStore['k1LV'].Pt() /LVStore['H2bbLV'].M()
+    varDict['pThgg_overMgg']   = LVStore['HggLV'].Pt() / LVStore['HggLV'].M()
 
+    varDict['pTleadG_overMgg']    = LVStore['g1LV'].Pt() / LVStore['HggLV'].M()
+    varDict['pTsubleadG_overMgg'] = LVStore['g2LV'].Pt() / LVStore['HggLV'].M()
+    varDict['pTh1leadJ_overMh1'] = LVStore['j1LV'].Pt() / LVStore['H1bbLV'].M()
     varDict['pTh1subleadJ_overMh1'] = LVStore['j2LV'].Pt()  / LVStore['H1bbLV'].M()
+    varDict['pTh2leadJ_overMh2'] = LVStore['k1LV'].Pt() /LVStore['H2bbLV'].M()
     varDict['pTh2subleadJ_overMh2'] = LVStore['k2LV'].Pt()  / LVStore['H2bbLV'].M() 
     
-    varDict["H4bCosThetaLeadJet"]    =  abs(np.cos( LVStore['HH4bLV'].Angle(LVStore['j1LV'].Vect())))
+    varDict["h1bbCosThetaLeadJet"]    =  abs(np.cos( LVStore['H1LV'].Angle(LVStore['j1LV'].Vect())))
+    varDict['h1bb_pt'] = LVStore['H1LV'].Pt() 
+    varDict['h2bb_pt'] = LVStore['H2LV'].Pt() 
+    varDict['h1bb_eta'] = LVStore['H1LV'].Eta() 
+    varDict['h2bb_eta'] = LVStore['H2LV'].Eta() 
+    varDict['h1bb_phi'] = LVStore['H1LV'].Phi() 
+    varDict['h2bb_phi'] = LVStore['H2LV'].Phi() 
+    varDict['h1bb_mass'] = LVStore['H1LV'].M() 
+    varDict['h2bb_mass'] = LVStore['H2LV'].M() 
+    
+
+    varDict["HH4bCosThetaLeadJet"]    =  abs(np.cos( LVStore['HH4bLV'].Angle(LVStore['j1LV'].Vect())))
     varDict["absCosThetaH4bHgg"]    =  abs(np.cos( (LVStore['H1bbLV'] + LVStore['H2bbLV']).Angle(LVStore['HggLV'].Vect())))
+        
+    boost=-1.0*LVStore['HHHLV'].BoostVector()
+    LVStore_hhhFrame=getBoostedLVs(LVStore,boost)
+    varDict["CosThetaH1_hhhF"]    =  abs(LVStore_hhhFrame['H1LV'].CosTheta())
+    varDict["HH4bCosTheta_hhhF"]    =  abs(LVStore_hhhFrame['HH4bLV'].CosTheta())
+    varDict["HggCosTheta_hhhF"]    =  abs(LVStore_hhhFrame['HggLV'].CosTheta())
+    varDict["H1bbCosTheta_hhhF"]    =  abs(LVStore_hhhFrame['H1bbLV'].CosTheta())
+    varDict["H2bbCosTheta_hhhF"]    =  abs(LVStore_hhhFrame['H2bbLV'].CosTheta())
+    varDict["HH4bCosThetaLeadJet_hhhF"]    =  abs(np.cos( LVStore_hhhFrame['HH4bLV'].Angle(LVStore_hhhFrame['j1LV'].Vect())))
+    varDict["absCosThetaH4bHgg_hhhF"]    =  abs(np.cos( (LVStore_hhhFrame['H1bbLV'] + LVStore['H2bbLV']).Angle(LVStore_hhhFrame['HggLV'].Vect())))
     
     vals=[
         LVStore['j1LV'].Angle( LVStore['j2LV'].Vect()),
@@ -361,11 +383,37 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
         LVStore['j2LV'].DeltaR( LVStore['k1LV']),
         LVStore['j2LV'].DeltaR( LVStore['k2LV']),
     ]
-
-    varDict['dije1CandidatePtOverdiHiggsM'] =   LVStore['H1bbLV'].Pt() / 125.0
-    varDict['dije2CandidatePtOverdiHiggsM'] =   LVStore['H2bbLV'].Pt() / 125.0
     varDict["H1H2JetDrMax"]  = max(vals)
     varDict["H1H2JetDrMin"]  = min(vals)
+    
+    vals1=[
+        LVStore['j1LV'].DeltaR( LVStore['g1LV']),
+        LVStore['j2LV'].DeltaR( LVStore['g1LV']),
+        LVStore['k1LV'].DeltaR( LVStore['g1LV']),
+        LVStore['k2LV'].DeltaR( LVStore['g1LV']),
+    ]
+    vals2=[
+        LVStore['j1LV'].DeltaR( LVStore['g2LV']),
+        LVStore['j2LV'].DeltaR( LVStore['g2LV']),
+        LVStore['k1LV'].DeltaR( LVStore['g2LV']),
+        LVStore['k2LV'].DeltaR( LVStore['g2LV']),
+    ]
+    
+    v1=min(min(vals2),min(vals1))
+    v2=max(min(vals2),min(vals1))
+    varDict["PhoJetMinDr"]   =  v1
+    varDict["PhoJetMinDrOther"]  = v2
+    
+    v1=max(max(vals2),max(vals1))
+    v2=min(max(vals2),max(vals1))
+    varDict["PhoJetMaxDr"]   = v1
+    varDict["PhoJetMaxDrOther"]  = v2
+
+
+
+
+    varDict['dije1CandidatePtOverHiggsM'] =   LVStore['H1bbLV'].Pt() / 125.0
+    varDict['dije2CandidatePtOverHiggsM'] =   LVStore['H2bbLV'].Pt() / 125.0
     varDict["H1bbCosThetaLeadJet"] = abs(np.cos(  LVStore['H1bbLV'].Angle( LVStore['j1LV'].Vect())  )  )
     varDict['H2bbCosThetaLeadJet'] = abs(np.cos(  LVStore['H2bbLV'].Angle( LVStore['k1LV'].Vect())  )  )
 
@@ -387,19 +435,21 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     j2_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][1])+'_bJetRegRes') ; 
     k1_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][2])+'_bJetRegRes') ; 
     k2_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][3])+'_bJetRegRes') ; 
+    
     varDict['h1_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['j1LV'],j1_res , LVStore['j2LV'] , j2_res )
     varDict['h2_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['k1LV'],k1_res , LVStore['k2LV'] , k2_res )
     
-    varDict['triHiggs_mass']= LVStore['HHHLV'].M()
+    varDict['trihiggs_mass']= LVStore['HHHLV'].M()
+    varDict['trihiggs_pt']= LVStore['HHHLV'].Pt()
     varDict['ttH_MET'] = eTree.ttH_MET
 
     return varDict
 
 def fillOtherDerivedVariables(histStore,varDict,wei):
     
-    for ky in varDict:
-        if ky not in histStore["miscVars"]:
-            warnings.warn(ky+" histogram not defined in miscVars ! ",category=UserWarning)
+    for ky in histStore["miscVars"]:
+        if ky not in varDict:
+            warnings.warn(ky+" : variable  not defined in varDict ! ",category=UserWarning)
             continue
         histStore["miscVars"][ky].Fill( varDict[ky] , wei)
 

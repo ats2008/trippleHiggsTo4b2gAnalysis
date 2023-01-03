@@ -1,9 +1,10 @@
 from __future__ import print_function
 import ROOT 
+import warnings
 from collections import OrderedDict
 import numpy as np
-from trippleHiggsUtils import *
-from Util  import *
+import trippleHiggsUtils as hhhUtil
+import Util  as utl
 import branches as brList
 from array import array
 import trippleHiggsSelector as hhhSelector
@@ -40,7 +41,7 @@ f=open(cfgFileName,'r')
 cfgTxt=f.readlines()
 f.close()
 
-headers=getListOfStringsFromConfigs(cfgTxt,"#HEADER_BEG","#HEADER_END")
+headers=utl.getListOfStringsFromConfigs(cfgTxt,"#HEADER_BEG","#HEADER_END")
 for header in headers:
     print("Loading cfg file ",header)
     if not os.path.exists(header):
@@ -52,17 +53,24 @@ for header in headers:
     for l in tmp:
         cfgTxt.append(l)
  
-allFnames=getListOfStringsFromConfigs(cfgTxt,"#FNAMES_BEG","#FNAMES_END")
-foutName=getValueFromConfigs(cfgTxt,"OutpuFileName","fggHists.root")
-processID=getValueFromConfigs(cfgTxt,"processID",default="DATA")
-treeName=getValueFromConfigs(cfgTxt,"treeName",default="tagsDumper/trees/Data_13TeV_TrippleHTag_0")
-outTreeName=getValueFromConfigs(cfgTxt,"outTreeName",default="Data_13TeV_TrippleHTag_0")
-weightScale=float(getValueFromConfigs(cfgTxt,"WeightScale",default="1.0"))
-resetWeight=float(getValueFromConfigs(cfgTxt,"resetWeight",default=-1e5))
-doPtReWeighting=getBoolFromConfigs(cfgTxt,"doPtReWeighting",default=False)
-pTReweitingFile=getValueFromConfigs(cfgTxt,"pTReweitingFile",default="")
-pTReweitingHistName=getValueFromConfigs(cfgTxt,"pTReweitingHistName",default="")
-mlScoreTag=getValueFromConfigs(cfgTxt,"mlScoreTag",default="")
+allFnames =utl.getListOfStringsFromConfigs(cfgTxt,"#FNAMES_BEG","#FNAMES_END")
+foutName  =utl.getValueFromConfigs(cfgTxt,"OutpuFileName","fggHists.root")
+processID =utl.getValueFromConfigs(cfgTxt,"processID",default="DATA")
+treeName  =utl.getValueFromConfigs(cfgTxt,"treeName",default="tagsDumper/trees/Data_13TeV_TrippleHTag_0")
+outTreeName=utl.getValueFromConfigs(cfgTxt,"outTreeName",default="Data_13TeV_TrippleHTag_0")
+weightScale=float(utl.getValueFromConfigs(cfgTxt,"WeightScale",default="1.0"))
+resetWeight=float(utl.getValueFromConfigs(cfgTxt,"resetWeight",default=-1e5))
+doWeight=utl.getBoolFromConfigs(cfgTxt,"doWeight",default=False)
+doPtReWeighting=utl.getBoolFromConfigs(cfgTxt,"doPtReWeighting",default=False)
+pTReweitingFile=utl.getValueFromConfigs(cfgTxt,"pTReweitingFile",default="")
+pTReweitingHistName=utl.getValueFromConfigs(cfgTxt,"pTReweitingHistName",default="")
+mlScoreTag=utl.getValueFromConfigs(cfgTxt,"mlScoreTag",default="")
+methord=utl.getValueFromConfigs(cfgTxt,"methord",default="DHH")
+doOverlapRemoval =utl.getValueFromConfigs(cfgTxt,"doOverlapRemoval",default="1") ; doOverlapRemoval = int(doOverlapRemoval) > 0.5
+isData =utl.getValueFromConfigs(cfgTxt,"isData",default="1") ; isData = int(isData) > 0.5
+etaMax =float(utl.getValueFromConfigs(cfgTxt,"etaMax",default="2.5"))
+pTMin =float(utl.getValueFromConfigs(cfgTxt,"pTMin",default="25.0"))
+overlapRemovalDRMax =float(utl.getValueFromConfigs(cfgTxt,"overlapRemovalDRMax",default="0.4"))
 
 print("allFnames   :  ",              allFnames)
 print("foutName   :  ",               foutName)
@@ -76,16 +84,14 @@ print('etaMax   :       ', etaMax)
 print('pTMin    :       ', pTMin)
 print('drMax    :       ', drMax)
 
-scaler=mcScaler()
-scalerVal=mcScaler()
+scaler=hhhUtil.mcScaler()
 if doPtReWeighting:
     scaler.setSFHistFromFile(pTReweitingFile,pTReweitingHistName)
-    scalerVal.setSFHistFromFile(pTReweitingValFile,pTReweitingHistValName)
 print("")
 
 
 maxEvents=-1
-tmp_=getValueFromConfigs(cfgTxt,"MaxEvents")
+tmp_=utl.getValueFromConfigs(cfgTxt,"MaxEvents")
 if tmp_!='':
     maxEvents=int(tmp_)
 
@@ -105,27 +111,37 @@ fout = ROOT.TFile(foutName, filemode)
 dir_ = fout.mkdir('trees')
 
 branches=[
-    'quadjet_0_deepJetScore', 'quadjet_0_mlScore', 'quadjet_0_mlScoreY1s', 'quadjet_0_mlScoreY2s' ,
-    'quadjet_1_deepJetScore', 'quadjet_1_mlScore', 'quadjet_1_mlScoreY1s', 'quadjet_1_mlScoreY2s' ,
-    'quadjet_2_deepJetScore', 'quadjet_2_mlScore', 'quadjet_2_mlScoreY1s', 'quadjet_2_mlScoreY2s' ,
-    'quadjet_3_deepJetScore', 'quadjet_3_mlScore', 'quadjet_3_mlScoreY1s', 'quadjet_3_mlScoreY2s' ,
-    'r_HH', 'weight', 'hhh_pT', 'hhhCosThetaH1', 'hh4CosThetaLeadJet', 'sumScore_4j' ,
-    'h1bbCosThetaLeadJet', 'h2bbCosThetaLeadJet', 'h2bbCosThetaLeadJet', 'sumScore_3j',
-    'PhoJetMinDr', 'PhoJetOtherDr', 'h1bb_mass', 'h2bb_mass', 'h1bb_pt', 'r_HH','D_HH',
-    'h2bb_pt', 'h1bb_eta', 'h2bb_eta', 'h1bb_phi', 'h2bb_phi', 'pTleadG_overMgg', 
-    'pTh1leadJ_overMh1', 'pTh2leadJ_overMh2', 'pTsubleadG_overMgg', 'pTh1subleadJ_overMh1', 
-    'pTh2subleadJ_overMh2', 'absCosThetaH4bHgg', 'LeadJetAbsCosThetaMax', 'LeadJetAbsCosThetaMin', 
-    'LeadJetDrMaxWithOtherJets', 'LeadJetDrMinWithOtherJets', 'H1H2JetAbsCosThetaMax', 
-    'H1H2JetAbsCosThetaMin', 'H1H2JetDrMax', 'H1H2JetDrMin', 'pT_4b', 'scalarPtSumHHH', 
-    'scalarPtSum4b', 'scalarPtSum4b2g', 'HggTo4bAbsCosTheta', 'H1bbToH2bbAbsCosTheta', 'ttH_MET', 
-    'diphotonCandidatePtOverdiHiggsM', 'dije1CandidatePtOverdiHiggsM', 'dije2CandidatePtOverdiHiggsM', 
-    'leadingPhotonSigOverE', 'subleadingPhotonSigOverE', 'sigmaMOverM', 
-    'sigmaM1OverMJets', 'sigmaM2OverMJets', 'CMS_hgg_mass', 'weight',
-    'customLeadingPhotonIDMVA','customSubLeadingPhotonIDMVA'
+     'CMS_hgg_mass', 'D_HH', 'H1H2JetAbsCosThetaMax', 'H1H2JetAbsCosThetaMin',
+     'H1H2JetDrMax', 'H1H2JetDrMin', 'H1bbToH2bbAbsCosTheta',
+     'H1bbToH2bbAbsCosTheta', 'HggTo4bAbsCosTheta',
+     'LeadJetAbsCosThetaMax', 'LeadJetAbsCosThetaMin',
+     'LeadJetAbsCosThetaMin','LeadJetDrMaxWithOtherJets',
+     'LeadJetDrMaxWithOtherJets', 'LeadJetDrMinWithOtherJets', 'PhoJetMinDr','PhoJetMinDrOther','PhoJetMaxDr','PhoJetMaxDrOther',
+     'absCosThetaH4bHgg', 'customLeadingPhotonIDMVA','pThgg_overMgg',
+     'customSubLeadingPhotonIDMVA','h1bb_mass', 'diphotonPtOverDiphotonMass',
+     'H1H2JetDrMax','h1bbCosThetaLeadJet','H2bbCosThetaLeadJet','PhoJetMinDr',
+     'h1bb_mass', 'h1bb_phi', 'h1bb_pt','h2bb_eta' , 'h2bb_mass', 'h1bb_eta', 'h2bb_phi','h2bb_pt', 
+     'HH4bCosThetaLeadJet','leadingPhotonSigOverE', 'pT_4b', 'pTh1leadJ_overMh1',
+     'pTh1subleadJ_overMh1', 'pTh2leadJ_overMh2', 'pTh2subleadJ_overMh2',
+     'pTh2subleadJ_overMh2','absCosThetaH4bHgg', 'pTleadG_overMgg',
+     'pTsubleadG_overMgg', 'quadjet_0_deepJetScore', 'quadjet_1_deepJetScore',
+     'quadjet_2_deepJetScore', 'quadjet_3_deepJetScore', 'r_HH', 'scalarPtSum4b',
+     'scalarPtSum4b2g', 'scalarPtSum4b2g','HggTo4bAbsCosTheta', 'scalarPtSumHHH',
+     'h1_dijetSigmaMOverM', 'h2_dijetSigmaMOverM', 'sigmaMOverM',
+     'subleadingPhotonSigOverE', 'sumScore_3j', 'sumScore_4j', 'trihiggs_mass',
+     'ttH_MET', 'weight','rho','trihiggs_pt',
+     "CosThetaH1_hhhF",  "HH4bCosTheta_hhhF",  "HggCosTheta_hhhF",  "HH4bCosThetaLeadJet_hhhF",  "absCosThetaH4bHgg_hhhF",  
+     'H1bbCosTheta_hhhF','H2bbCosTheta_hhhF'
 ]
+#branches+=['quadjet_0_mlScore', 'quadjet_0_mlScoreY1s', 'quadjet_0_mlScoreY2s' ,
+#    'quadjet_1_mlScore', 'quadjet_1_mlScoreY1s', 'quadjet_1_mlScoreY2s' ,
+#    'quadjet_2_mlScore', 'quadjet_2_mlScoreY1s', 'quadjet_2_mlScoreY2s' ,
+#    'quadjet_3_mlScore', 'quadjet_3_mlScoreY1s', 'quadjet_3_mlScoreY2s' ]
 
 ntuple={}
 branches=np.unique(branches)
+#print(branches)
+
 ntuple['eventTree']  = ROOT.TNtuple(outTreeName, outTreeName, ':'.join(branches))
 
 tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
@@ -139,19 +155,21 @@ sumEntries=ROOT.TH1F("sumEvts","sumEvts",1,0.0,1.0)
 sumEntries.SetCanExtend(ROOT.TH1.kAllAxes)
 sumWeights=ROOT.TH1F("sumWeighs","sumWeighs",1,0.0,1.0)
 sumWeights.SetCanExtend(ROOT.TH1.kAllAxes)
+isDataHist=ROOT.TH1F("isData","isData",1,0.0,1.0)
+isDataHist.SetCanExtend(ROOT.TH1.kAllAxes)
 
 th1Store={}
 
 
 beg=datetime.datetime.now()
-
+has_printed=True
 for fname in allFnames:
     print("Opening file : ",fname)
     simFile = ROOT.TFile(fname,'READ')
     eTree=simFile.Get(treeName)
     print(" NEntries = ", eTree.GetEntries())
     if not eTree:
-        eTree=simFile.Get('tagsDumper/trees/Data_13TeV_TrippleHTag_0')
+        eTree=simFile.Get('tagsDumper/trees/EGamma_13TeV_TrippleHTag_0')
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
         maxEvents_= (maxEvents - totalEvents)
@@ -160,19 +178,27 @@ for fname in allFnames:
     allBranches=[]
     for ky in eTree.GetListOfBranches():
         allBranches.append(ky.GetName())
+    isData_= isData or 'EGamma' in fname.split('/')[-1] 
+    isData_= isData_ or ('DoubleEG' in fname.split('/')[-1])
+    print(" isData : ",isData_)
 
     for i in range(maxEvents_):
         eTree.GetEntry(i)
         
+        isMasked = isData_ and  (eTree.CMS_hgg_mass > 115.0) and (eTree.CMS_hgg_mass < 135.0)
+        if isMasked:
+            continue
+        
         wei=eTree.weight
-        if resetWeight > -1e4:
-            wei=resetWeight
-        if weightScale > -1e4:
-            wei*=weightScale
-        if doPtReWeighting:
-            pT=eTree.diphoton_pt
-            scaleFactor=scaler.getSFForX(pT)
-            wei*=scaleFactor
+        if doWeight:
+            if resetWeight > -1e4:
+                wei=resetWeight
+            if weightScale > -1e4:
+                wei*=weightScale
+            if doPtReWeighting:
+                pT=eTree.diphoton_pt
+                scaleFactor=scaler.getSFForX(pT)
+                wei*=scaleFactor
 
         sumEntries.Fill('total', 1)
         sumWeights.Fill('total', wei)
@@ -186,62 +212,75 @@ for fname in allFnames:
                     " [ time elapsed : ",datetime.timedelta(seconds= timeSpendSec), " s ]")
             print(" gg mass   : ",eTree.CMS_hgg_mass)
          
-
-          
+        _tmp=False
         for ky in tofill:
             if ky in allBranches:
                 tofill[ky]=getattr(eTree,ky)
-            else:
+            elif not has_printed:
+                warnings.warn(ky+" : variable  not avalable in allBranches ! ",category=UserWarning,stacklevel=0)
                 tofill[ky]=0.0
-        
+                _tmp=True
+        if _tmp:
+            has_printed=True
         
         ##   JET PRE-SELECTION
-        nVld=0
-        jetMask=[]
-        for i in range(8):
-            jetMask.append(True)
-            tofill['jet_'+str(i)+'_isValid']=getattr(eTree,'jet_'+str(i)+'_isValid')
-            if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaMax:
-                tofill['jet_'+str(i)+'_isValid']=0
-            if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
-                tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.4 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.4 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
-            if tofill['jet_'+str(i)+'_isValid'] > 0.5:
-                nVld+=1
-            else:
-                jetMask[-1]=False
-
-        jetMask=np.array(jetMask)      
-        if nVld < 4:
+        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionEta',1)
+            sumWeights.Fill('nJetPreselectionEta',wei)
             continue
 
-        allQuads=hhhSelector.getBJetParis_wrapper(eTree, mask= jetMask , methord='mha',mlScoreTag='H3SIN61',threshold=-1e3,doMisclassificationCorrection = False)
- #   def getBJetParisFGG_MHA( eTree, mask=None, mlScoreTag='', threshold=-1e3, doMisclassificationCorrection=True,returnOnlyJets=False):
-        if not allQuads['isValid']:
-            print("anity check failed after the quad finding")
-            exit(1)
+        jetMask=hhhSelector.getSelectedJetCollectionMaskPt(eTree,jetMask=jetMask,pTMin=pTMin)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionPt',1)
+            sumWeights.Fill('nJetPreselectionPt',wei)
             continue
-        sumScore_3j=0
-        sumScore_4j=0
+        if doOverlapRemoval:
+            jetMask=hhhSelector.getSelectedJetCollectionMaskOverLap(eTree,jetMask=jetMask,overlapRemovalDRMax=overlapRemovalDRMax)
+            if sum(jetMask) < 4 :
+                sumEntries.Fill('nJetPreselectionOR',1)
+                sumWeights.Fill('nJetPreselectionOR',wei)
+                continue
+    
+ 
         verbose=False
-        if allQuads['jetsValid']:
+        sumScore_3j=0.0
+        sumScore_4j=0.0
+
+        if methord=='DHH':
+            allQuads=hhhSelector.getBJetParisFGG(eTree,mask=jetMask)
+            quad=allQuads['bJetQuad']
             i=0
-            for idx in allQuads['allJetsSelected']:
-                tofill['quadjet_'+str(i)+'_deepJetScore']   =getattr(eTree,'jet_'+str( idx )+'_deepCSVScore') 
-                tofill['quadjet_'+str(i)+'_mlScore']        =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
-                tofill['quadjet_'+str(i)+'_mlScoreY1s']     =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_y0s')
-                tofill['quadjet_'+str(i)+'_mlScoreY2s']     =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_y1s')
-                if tofill['quadjet_'+str(i)+'_mlScore']   < -1:
-                    verbose=True
-                if i < 3 :
-                    sumScore_3j+=getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
-                if i < 4 :
-                    sumScore_4j+=getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
-                    
+            for idx in quad['fgg_idxs']:
+                val=max(getattr(eTree,'jet_'+str( idx )+'_deepCSVScore'),0.0)
+                tofill['quadjet_'+str(i)+'_deepJetScore']   = val
+                if i< 3:
+                    sumScore_3j+=val
+                sumScore_4j+=val
                 i+=1
+
+        elif methord=='mha':
+            allQuads=hhhSelector.getBJetParis_wrapper(eTree, mask= jetMask , methord='mha',mlScoreTag='H3SIN61',threshold=-1e3,doMisclassificationCorrection = False)
+            if not allQuads['isValid']:
+                print("anity check failed after the quad finding")
+                exit(1)
+                continue
+            if allQuads['jetsValid']:
+                i=0
+                for idx in allQuads['allJetsSelected']:
+                    tofill['quadjet_'+str(i)+'_deepJetScore']   =getattr(eTree,'jet_'+str( idx )+'_deepCSVScore') 
+                    tofill['quadjet_'+str(i)+'_mlScore']        =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
+                    tofill['quadjet_'+str(i)+'_mlScoreY1s']     =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_y0s')
+                    tofill['quadjet_'+str(i)+'_mlScoreY2s']     =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_y1s')
+                    if tofill['quadjet_'+str(i)+'_mlScore']   < -1:
+                        verbose=True
+                    if i < 3 :
+                        sumScore_3j+=getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
+                    if i < 4 :
+                        sumScore_4j+=getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
+                        
+                    i+=1
+
         if verbose:
             sumEntries.Fill('badEvents' , 1)
             sumWeights.Fill('badEvents' , wei)
@@ -269,98 +308,21 @@ for fname in allFnames:
         tofill["sumScore_3j"]=sumScore_3j
 
         quad=allQuads['bJetQuad']
-        LVStore = getLVStoreFromTreeAndQuad(eTree,quad)
-        j1CosTheta,k1CosTheta,ggCostheta,drMin,drOther=getCosthetaVars(eTree,LVStore)
+        LVStore = hhhUtil.getLVStoreFromTreeAndQuad(eTree,quad)
+        j1CosTheta,k1CosTheta,ggCostheta,drMin,drOther=hhhUtil.getCosthetaVars(eTree,LVStore)
         
         tofill['r_HH'] = quad['r_HH']
         tofill['D_HH'] = quad['D_HH']
         tofill['weight'] =  wei
-        tofill['hhh_pT'] =  LVStore['HHHLV'].Pt() 
-        tofill['hhhCosThetaH1'] = eTree.absCosThetaStar_CS 
-        tofill["hh4CosThetaLeadJet"] = eTree.absCosTheta_bb
-        
-        tofill["h1bbCosThetaLeadJet"]= abs(j1CosTheta)
-        tofill["h2bbCosThetaLeadJet"]= abs(k1CosTheta)
-        tofill["h2bbCosThetaLeadJet"]= abs(k1CosTheta)
-        
-        tofill["PhoJetMinDr"]= drMin
-        tofill["PhoJetOtherDr"]= drOther
-        
-        tofill["h1bb_mass"] = LVStore['H1bbLV'].M()
-        tofill["h2bb_mass"] = LVStore['H2bbLV'].M()
 
-        tofill["h1bb_pt"] = LVStore['H1bbLV'].Pt()
-        tofill["h2bb_pt"] = LVStore['H2bbLV'].Pt()
-
-        tofill["h1bb_eta"] = LVStore['H1bbLV'].Eta()
-        tofill["h2bb_eta"] = LVStore['H2bbLV'].Eta()
-
-        tofill["h1bb_phi"] = LVStore['H1bbLV'].Phi()
-        tofill["h2bb_phi"] = LVStore['H2bbLV'].Phi()
-
-        tofill['pTleadG_overMgg'] =  eTree.leadingPhoton_pt  / eTree.CMS_hgg_mass 
-        tofill['pTh1leadJ_overMh1'] =  eTree.h1LeadingJet_pt / LVStore['H1bbLV'].M()
-        tofill['pTh2leadJ_overMh2'] =  eTree.h2LeadingJet_pt / LVStore['H2bbLV'].M()
-
-        tofill['pTsubleadG_overMgg']   =  eTree.subleadingPhoton_pt / eTree.CMS_hgg_mass 
-        tofill['pTh1subleadJ_overMh1'] =  eTree.h1SubleadingJet_pt / LVStore['H1bbLV'].M()
-        tofill['pTh2subleadJ_overMh2'] =  eTree.h2SubleadingJet_pt / LVStore['H1bbLV'].M() 
-
-        tofill["absCosThetaH4bHgg"]    =  np.cos( (LVStore['H1bbLV'] + LVStore['H2bbLV']).Angle(LVStore['HggLV'].Vect()))
-        
-        vals=[
-            LVStore['j1LV'].Angle( LVStore['j2LV'].Vect()),
-            LVStore['j1LV'].Angle( LVStore['k1LV'].Vect()),
-            LVStore['j1LV'].Angle( LVStore['k2LV'].Vect()),
-        ]
-        vals=abs(np.cos(vals))
-        tofill["LeadJetAbsCosThetaMax"]  = max(vals)
-        tofill["LeadJetAbsCosThetaMin"]  = min(vals)
-       
-        vals=[
-            LVStore['j1LV'].DeltaR( LVStore['j2LV']),
-            LVStore['j1LV'].DeltaR( LVStore['k1LV']),
-            LVStore['j1LV'].DeltaR( LVStore['k2LV']),
-        ]
-        tofill["LeadJetDrMaxWithOtherJets"]  = max(vals)
-        tofill["LeadJetDrMinWithOtherJets"]  = min(vals)
-         
-        vals=[
-            LVStore['j1LV'].Angle( LVStore['k1LV'].Vect()),
-            LVStore['j1LV'].Angle( LVStore['k2LV'].Vect()),
-            LVStore['j2LV'].Angle( LVStore['k1LV'].Vect()),
-            LVStore['j2LV'].Angle( LVStore['k2LV'].Vect()),
-        ]
-
-        vals=abs(np.cos(vals))
-        tofill["H1H2JetAbsCosThetaMax"]  = max(vals)
-        tofill["H1H2JetAbsCosThetaMin"]  = min(vals)         
-        
-        vals=[
-            LVStore['j1LV'].DeltaR( LVStore['k1LV']),
-            LVStore['j1LV'].DeltaR( LVStore['k2LV']),
-            LVStore['j2LV'].DeltaR( LVStore['k1LV']),
-            LVStore['j2LV'].DeltaR( LVStore['k2LV']),
-        ]
-
-        tofill['dije1CandidatePtOverdiHiggsM'] =   LVStore['H1bbLV'].Pt() / 125.0
-        tofill['dije2CandidatePtOverdiHiggsM'] =   LVStore['H2bbLV'].Pt() / 125.0
-        tofill["H1H2JetDrMax"]  = max(vals)
-        tofill["H1H2JetDrMin"]  = min(vals)
-        tofill["pT_4b"]  = ( LVStore['H1bbLV'] + LVStore['H2bbLV'] ).Pt()
-        tofill["scalarPtSumHHH"]  = LVStore["H1LV"].Pt()+LVStore["H2LV"].Pt()+LVStore["H3LV"].Pt()
-        tofill["scalarPtSum4b"]   = LVStore["j1LV"].Pt() + LVStore["j2LV"].Pt() + LVStore["k1LV"].Pt() + LVStore["k2LV"].Pt()
-        tofill["scalarPtSum4b2g"] = tofill["scalarPtSum4b"]  + LVStore["g1LV"].Pt() + LVStore["g2LV"].Pt()
-        tofill["HggTo4bAbsCosTheta"]  = np.cos( (LVStore['H1bbLV']+LVStore['H2bbLV']).Angle( LVStore['H1LV'].Vect())  )
-        tofill["H1bbToH2bbAbsCosTheta"]  = np.cos(  LVStore['H1bbLV'].Angle( LVStore['H2bbLV'].Vect())  )         
-        j1_res = getattr(eTree,'jet_'+str(quad['idxs'][0])+'_bJetRegRes') ; 
-        j2_res = getattr(eTree,'jet_'+str(quad['idxs'][1])+'_bJetRegRes') ; 
-        k1_res = getattr(eTree,'jet_'+str(quad['idxs'][2])+'_bJetRegRes') ; 
-        k2_res = getattr(eTree,'jet_'+str(quad['idxs'][3])+'_bJetRegRes') ; 
-        tofill['sigmaM1OverMJets'] = getSigmaMOverM( LVStore['j1LV'],j1_res , LVStore['j2LV'] , j2_res )
-        tofill['sigmaM2OverMJets'] = getSigmaMOverM( LVStore['k1LV'],k1_res , LVStore['k2LV'] , k2_res )
-
+        varDict=hhhUtil.getOtherDerivedVariables(eTree,LVStore,quad)
+        #for ky in tofill:
+        #    if ky not in varDict:
+        #       print("filling default barnch value  for branch",ky)
+        for ky in varDict:
+            tofill[ky]=varDict[ky]
         tofill['ttH_MET'] = eTree.ttH_MET
+
 
         for ky in outputDataDict:
             if ky not in tofill:
@@ -377,7 +339,7 @@ dir_.cd()
 
 sumEntries.Write()
 sumWeights.Write()
-
+isDataHist.Write()
 for ky in th1Store:
     th1Store[ky].Write()
 for ky in ntuple:
