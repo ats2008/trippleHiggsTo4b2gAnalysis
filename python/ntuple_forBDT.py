@@ -3,10 +3,10 @@ import ROOT
 import warnings
 from collections import OrderedDict
 import numpy as np
-import trippleHiggsUtils as hhhUtil
-import Util  as utl
 import branches as brList
 from array import array
+import Util  as utl
+import trippleHiggsUtils as hhhUtil
 import trippleHiggsSelector as hhhSelector
 from TMVA_Model import *
 
