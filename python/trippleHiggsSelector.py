@@ -44,6 +44,7 @@ def getHiggsDauP4s(eTree,pdgId):
     genE  =[1e4 for i in range(4)]
     genHPt=[-1e4 for i in range(4)]
     k=0
+    #print(eTree.gen_H1_dau1_pdgId,eTree.gen_H2_dau1_pdgId,eTree.gen_H3_dau1_pdgId)
     if abs(eTree.gen_H1_dau1_pdgId)==pdgId:
         genPt[k]=eTree.gen_H1_dau1_pt
         genEta[k]=eTree.gen_H1_dau1_eta
@@ -215,8 +216,8 @@ def checkGenMatches(eTree,jetIndices):
     return True,isGenMatch,hA_matched,hB_matched
 
 
-def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
-
+def getBestGetMatchesGlobalFGG(eTree,jetMask=[],drMax=0.4):
+#def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
     idxs  =[-1 for i in range(4)]
     
     jetPt=[]
@@ -224,20 +225,12 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
     jetPhi=[]
     jetMass=[]
     N_JET_MAX=8
+
+    if jetMask==[]:
+        jetMask=[True for i in range(N_JET_MAX) ]
     for i in range(N_JET_MAX):
-      #  print("stored Jet nJet : ",i," isValid : ",getattr(eTree,'jet_'+str(i)+'_isValid')," | ",getattr(eTree,'jet_'+str(i)+'_eta') ," | ",getattr(eTree,'jet_'+str(i)+'_phi'))
-        if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
+        if not jetMask[i]:
             continue
-        if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaCut:
-            continue
-        if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
-            continue
-        #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.05 :
-        #    continue
-        #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.05 :
-        #    continue
-        #else:
-        #    print("\t\tadding")
             
         jetPt.append(getattr(eTree,'jet_'+str(i)+'_pt'))
         jetEta.append(getattr(eTree,'jet_'+str(i)+'_eta'))
@@ -294,7 +287,7 @@ def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
             for idx in idxDrsWise :
                 if drs[idx] > drMax : #and abs(jetPt[idx]*jetRegCorr[idx]/genPt[i] - 1.0) < 0.2:
                     break
-                if getattr(eTree,'jet_'+str( idx )+'_flavour') <4.80:
+                if abs(getattr(eTree,'jet_'+str( idx )+'_flavour')) <4.80:
                     continue
                # print( "mathing flav : ",getattr(eTree,'jet_'+str( idx )+'_flavour')  )
                 if idxs[i] > -1:
@@ -493,7 +486,7 @@ def getBJetParisFGG(eTree,mask=[]):
     b=np.sqrt(1.0+X0OverY0*X0OverY0)
     
     if(nJets < 4 ) : 
-        print(" REQUIRES ATLEAST 4 JETS FOR MAKING CADIDATES ! pairing failed for event id ",eTree.event, "[ :( ]")
+        #print(" REQUIRES ATLEAST 4 JETS FOR MAKING CADIDATES ! pairing failed for event id ",eTree.event, "[ :( ]")
         result['fail']='nValidJets'
         return result 
     
@@ -1184,6 +1177,10 @@ def getSelectedJetCollectionMaskPt(eTree ,jetMask=[],pTMin=25.0):
         for i in range(8):
             jetMask.append(True)
     for i in range(8):
+        if not jetMask[i]:
+            continue
+        if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
+            jetMask[i]=False
         if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
             jetMask[i]=False
     return np.array(jetMask)      
@@ -1193,6 +1190,10 @@ def getSelectedJetCollectionMaskEta(eTree ,jetMask=[],etaMax=2.5):
         for i in range(8):
             jetMask.append(True)
     for i in range(8):
+        if not jetMask[i]:
+            continue
+        if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
+            jetMask[i]=False
         if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaMax:
             jetMask[i]=False
     return np.array(jetMask)      
@@ -1203,6 +1204,10 @@ def getSelectedJetCollectionMaskOverLap(eTree ,jetMask=[] , overlapRemovalDRMax=
         for i in range(8):
             jetMask.append(True)
     for i in range(8):
+        if not jetMask[i]:
+            continue
+        if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
+            jetMask[i]=False
         if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < overlapRemovalDRMax :
             jetMask[i]=False
         if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < overlapRemovalDRMax :

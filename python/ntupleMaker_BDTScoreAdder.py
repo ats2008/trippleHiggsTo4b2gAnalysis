@@ -57,7 +57,7 @@ methord=utl.getValueFromConfigs(cfgTxt,"methord",default="DHH")
 
 
 MVAWeightFile= utl.getValueFromConfigs(cfgTxt,"MVAWeightFile",default= "")
-MVATag= utl.getValueFromConfigs(cfgTxt,"mvaScoreTag","")
+MVATag= utl.getValueFromConfigs(cfgTxt,"MVATag","")
 MVABranches= utl.getListOfStringsFromConfigs(cfgTxt,"#MVAVARLIST_BEG","#MVAVARLIST_END")
 MVASpecBranches= utl.getListOfStringsFromConfigs(cfgTxt,"#SPECTATORLIST_BEG","#SPECTATORLIST_END")
 
@@ -108,14 +108,14 @@ branches=[ 'pTh1jj_overMh1','pTh2jj_overMh2','pThgg_overMgg','pTleadG_overMgg','
 "PhoJetMaxDr","PhoJetMaxDrOther",'dije1CandidatePtOverHiggsM','dije2CandidatePtOverHiggsM',"H1bbCosThetaLeadJet",
 'H2bbCosThetaLeadJet',"pT_4b","scalarPtSumHHH","scalarPtSum4b","scalarPtSum4b2g","HggTo4bAbsCosTheta",
 "H1bbToH2bbAbsCosTheta",'h1leadJ_deepjetScore','h1subleadJ_deepjetScore','h2leadJ_deepjetScore','h2subleadJ_deepjetScore',
-'h1_dijetSigmaMOverM','h2_dijetSigmaMOverM','trihiggs_mass','trihiggs_pt','ttH_MET']
-
-for br in branches:
-    branchesToFill.append(br)
+'h1_dijetSigmaMOverM','h2_dijetSigmaMOverM','trihiggs_mass','trihiggs_pt','ttH_MET','sumScore_4j','sumScore_3j','sumScore_2j','sumScore_1j',
+'quadjet_0_deepJetScore','quadjet_1_deepJetScore','quadjet_2_deepJetScore','quadjet_3_deepJetScore']
 
 branches+=['isBadEvent']
 branches+=['MVA_'+MVATag]
 
+for br in branches:
+    branchesToFill.append(br)
 
 filemode="RECREATE"
 fout = ROOT.TFile(foutName, filemode)
@@ -210,6 +210,8 @@ for fname in allFnames:
 
  
         verbose=False
+        sumScore_1j=0.0
+        sumScore_2j=0.0
         sumScore_3j=0.0
         sumScore_4j=0.0
 
@@ -221,9 +223,14 @@ for fname in allFnames:
                 for idx in quad['fgg_idxs']:
                     val=max(getattr(eTree,'jet_'+str( idx )+'_deepCSVScore'),0.0)
                     tofill['quadjet_'+str(i)+'_deepJetScore']   = val
+                    if i< 1:
+                        sumScore_1j+=val
+                    if i< 2:
+                        sumScore_2j+=val
                     if i< 3:
                         sumScore_3j+=val
-                    sumScore_4j+=val
+                    if i< 4:
+                        sumScore_4j+=val
                     i+=1
             else:
                 isBadEvents=True
@@ -241,12 +248,17 @@ for fname in allFnames:
                     tofill['quadjet_'+str(i)+'_mlScore']        =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
                     tofill['quadjet_'+str(i)+'_mlScoreY1s']     =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_y0s')
                     tofill['quadjet_'+str(i)+'_mlScoreY2s']     =getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_y1s')
+                    val=getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
                     if tofill['quadjet_'+str(i)+'_mlScore']   < -1:
                         verbose=True
+                    if i< 1:
+                        sumScore_1j+=val
+                    if i< 2:
+                        sumScore_2j+=val
                     if i < 3 :
-                        sumScore_3j+=getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
+                        sumScore_3j+=val
                     if i < 4 :
-                        sumScore_4j+=getattr(eTree,'jet_'+str( idx )+mlScoreTag+'_score')
+                        sumScore_4j+=val
                         
                     i+=1
 
@@ -273,6 +285,8 @@ for fname in allFnames:
             #    print(tofill['quadjet_'+str(i)+'_mlScoreY2s']  )
             #    i+=1
             
+        tofill["sumScore_1j"]=sumScore_1j
+        tofill["sumScore_2j"]=sumScore_2j
         tofill["sumScore_4j"]=sumScore_4j
         tofill["sumScore_3j"]=sumScore_3j
         if not isBadEvents:

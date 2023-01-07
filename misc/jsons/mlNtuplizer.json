@@ -1,0 +1,83 @@
+{
+    "sig": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_forMHA_Signal.py ", 
+        "jobType" :"mlNtuplizer",
+        "script": "misc/runPython.tpl.sh", 
+        "cfg": "misc/cfg/mlNtuplizer_sig.tpl.cfg", 
+        "destn": "results/mlNtuplizer/", 
+        "files_per_job": 1, 
+        "maxevents": -1, 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 10000
+    },
+    "bkg": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_forMHA_Background.py", 
+        "jobType" :"mlNtuplizer",
+        "script": "misc/runPython.tpl.sh", 
+        "cfg": "misc/cfg/mlNtuplizer_bkg.tpl.cfg", 
+        "destn": "results/mlNtuplizer/", 
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PostVFP_ggBox1Bjet",
+            "mc_2016PostVFP_ggBox2Bjet",
+            "mc_2016PostVFP_ggBox",
+            "mc_2016PreVFP_ggBox1Bjet",
+            "mc_2016PreVFP_ggBox2Bjet",
+            "mc_2016PreVFP_ggBox",
+            "mc_2017_ggBox1Bjet",
+            "mc_2017_ggBox2Bjet",
+            "mc_2017_ggBox",
+            "mc_2018_ggBox1Bjet",
+            "mc_2018_ggBox2Bjet",
+            "mc_2018_ggBox",
+            "mc_2016PostVFP_gJet20To40",
+            "mc_2016PostVFP_gJet40ToInf",
+            "mc_2016PreVFP_gJet20To40",
+            "mc_2016PreVFP_gJet40ToInf",
+            "mc_2017_gJet20To40",
+            "mc_2017_gJet40ToInf",
+            "mc_2018_gJet20To40",
+            "mc_2018_gJet40ToInf"
+          ], 
+        "max_meterialize": 250, 
+        "njobs": 10000
+    },
+    "data": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_forMHA_Background.py", 
+        "jobType" :"mlNtuplizer",
+        "script": "misc/runPython.tpl.sh", 
+        "cfg": "misc/cfg/mlNtuplizer_data.tpl.cfg", 
+        "destn": "results/mlNtuplizer/", 
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+                "data_2016PreVFP_2016B",
+                "data_2016PreVFP_2016C",
+                "data_2016PreVFP_2016D",
+                "data_2016PreVFP_2016E",
+                "data_2016PreVFP_2016F",
+                "data_2016PostVFP_2016F",
+                "data_2016PostVFP_2016G",
+                "data_2016PostVFP_2016H",
+                "data_2017_2017B",
+                "data_2017_2017C",
+                "data_2017_2017D",
+                "data_2017_2017E",
+                "data_2017_2017F",
+                "data_2018_2018A",
+                "data_2018_2018B",
+                "data_2018_2018C",
+                "data_2018_2018D"
+          ], 
+        "max_meterialize": 250, 
+        "njobs": 10000
+    }
+
+}

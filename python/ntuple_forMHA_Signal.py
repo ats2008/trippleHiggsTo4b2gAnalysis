@@ -2,12 +2,11 @@ from __future__ import print_function
 from collections import OrderedDict
 import ROOT 
 import numpy as np
-from trippleHiggsUtils import *
-from Util  import *
+import trippleHiggsUtils as hhhUtil
+import Util as utl
 import branches as brList
 from array import array
-from trippleHiggsSelector import *
-from TMVA_Model import *
+import trippleHiggsSelector as hhhSelector
 
 import datetime
 import os,sys
@@ -39,7 +38,7 @@ f=open(cfgFileName,'r')
 cfgTxt=f.readlines()
 f.close()
 
-headers=getListOfStringsFromConfigs(cfgTxt,"#HEADER_BEG","#HEADER_END")
+headers=utl.getListOfStringsFromConfigs(cfgTxt,"#HEADER_BEG","#HEADER_END")
 for header in headers:
     print("Loading cfg file ",header)
     if not os.path.exists(header):
@@ -54,25 +53,31 @@ for header in headers:
 def insideTheEllipse( x,y,x1,y1,x2,y2,a):
     return np.sqrt( (x1-x)*(x1-x)+(y1-y)*(y1-y) ) + np.sqrt( (x2-x)*(x2-x)+(y2-y)*(y2-y) ) < a    
 
-allFnames=getListOfStringsFromConfigs(cfgTxt,"#FNAMES_BEG","#FNAMES_END")
-foutName=getValueFromConfigs(cfgTxt,"OutpuFileName","fggHists.root")
-processID=getValueFromConfigs(cfgTxt,"processID",default="DATA")
-treeName=getValueFromConfigs(cfgTxt,"treeName",default="tagsDumper/trees/Data_13TeV_TrippleHTag_0")
-outTreeName=getValueFromConfigs(cfgTxt,"outTreeName",default="Data_13TeV_TrippleHTag_0")
-maskSignalMgg=getBoolFromConfigs(cfgTxt,"maskSignalMgg",default=True)
-doBjetCounting=getBoolFromConfigs(cfgTxt,"doBjetCounting",default=False)
-minNBjetsFromMC=int(getValueFromConfigs(cfgTxt,"minNBjetsFromMC",default="0"))
-maxNBjetsFromMC=int(getValueFromConfigs(cfgTxt,"maxNBjetsFromMC",default="1000"))
-weightScale=float(getValueFromConfigs(cfgTxt,"WeightScale",default="1.0"))
-doPtReWeighting=getBoolFromConfigs(cfgTxt,"doPtReWeighting",default=False)
-pTReweitingFile=getValueFromConfigs(cfgTxt,"pTReweitingFile",default="")
-pTReweitingHistName=getValueFromConfigs(cfgTxt,"pTReweitingHistName",default="")
-pTReweitingValFile=getValueFromConfigs(cfgTxt,"pTReweitingValFile",default="")
-pTReweitingHistValName=getValueFromConfigs(cfgTxt,"pTReweitingHistValName",default="")
-resetWeight=float(getValueFromConfigs(cfgTxt,"resetWeight",default=-1e5))
-doSR=getBoolFromConfigs(cfgTxt,"doSR",default=False)
-treesToStore=getValueFromConfigs(cfgTxt,"TreesToStore",default="allRecoed,SingleJetMiss,MergedJetMiss")
+allFnames=utl.getListOfStringsFromConfigs(cfgTxt,"#FNAMES_BEG","#FNAMES_END")
+foutName=utl.getValueFromConfigs(cfgTxt,"OutpuFileName","fggHists.root")
+processID=utl.getValueFromConfigs(cfgTxt,"processID",default="DATA")
+treeName=utl.getValueFromConfigs(cfgTxt,"treeName",default="tagsDumper/trees/Data_13TeV_TrippleHTag_0")
+outTreeName=utl.getValueFromConfigs(cfgTxt,"outTreeName",default="Data_13TeV_TrippleHTag_0")
+maskSignalMgg=utl.getBoolFromConfigs(cfgTxt,"maskSignalMgg",default=True)
+doBjetCounting=utl.getBoolFromConfigs(cfgTxt,"doBjetCounting",default=False)
+minNBjetsFromMC=int(utl.getValueFromConfigs(cfgTxt,"minNBjetsFromMC",default="0"))
+maxNBjetsFromMC=int(utl.getValueFromConfigs(cfgTxt,"maxNBjetsFromMC",default="1000"))
+weightScale=float(utl.getValueFromConfigs(cfgTxt,"WeightScale",default="1.0"))
+doPtReWeighting=utl.getBoolFromConfigs(cfgTxt,"doPtReWeighting",default=False)
+pTReweitingFile=utl.getValueFromConfigs(cfgTxt,"pTReweitingFile",default="")
+pTReweitingHistName=utl.getValueFromConfigs(cfgTxt,"pTReweitingHistName",default="")
+pTReweitingValFile=utl.getValueFromConfigs(cfgTxt,"pTReweitingValFile",default="")
+pTReweitingHistValName=utl.getValueFromConfigs(cfgTxt,"pTReweitingHistValName",default="")
+resetWeight=float(utl.getValueFromConfigs(cfgTxt,"resetWeight",default=-1e5))
+doSR=utl.getBoolFromConfigs(cfgTxt,"doSR",default=False)
+treesToStore=utl.getValueFromConfigs(cfgTxt,"TreesToStore",default="allRecoed")
 treesToStore=treesToStore.split(',')
+doOverlapRemoval =utl.getValueFromConfigs(cfgTxt,"doOverlapRemoval",default="1") ; doOverlapRemoval = int(doOverlapRemoval) > 0.5
+isData =utl.getValueFromConfigs(cfgTxt,"isData",default="1") ; isData = int(isData) > 0.5
+etaMax =float(utl.getValueFromConfigs(cfgTxt,"etaMax",default="2.5"))
+pTMin =float(utl.getValueFromConfigs(cfgTxt,"pTMin",default="25.0"))
+overlapRemovalDRMax =float(utl.getValueFromConfigs(cfgTxt,"overlapRemovalDRMax",default="0.4"))
+
 print("allFnames   :  ",              allFnames)
 print("foutName   :  ",               foutName)
 print("processID   :  ",              processID)
@@ -91,8 +96,9 @@ print("doSR     :       ", doSR)
 print('etaMax   :       ', etaMax)
 print('pTMin    :       ', pTMin)
 print('drMax    :       ', drMax)
+print('treesToStore    :       ', treesToStore)
 maxEvents=-1
-tmp_=getValueFromConfigs(cfgTxt,"MaxEvents")
+tmp_=utl.getValueFromConfigs(cfgTxt,"MaxEvents")
 if tmp_!='':
     maxEvents=int(tmp_)
 
@@ -186,11 +192,11 @@ for i in range(4):
 nEvts=0
 nEvtsWithMerged=0
 LVStore={}
-LVStore['jetLV']=ROOT.TLorentzVector();
+LVStore['jetLV']=ROOT.TLorentzVector()
 LVStore['g1LV'] =ROOT.TLorentzVector()
 LVStore['g2LV'] =ROOT.TLorentzVector()
 LVStore['HggLV']=ROOT.TLorentzVector()
-
+skipBad= 'allEvents' not in treesToStore
 beg=datetime.datetime.now()
 for fname in allFnames:
     print("Opening file : ",fname)
@@ -198,7 +204,7 @@ for fname in allFnames:
     eTree=simFile.Get(treeName)
     print(" NEntries = ", eTree.GetEntries())
     if not eTree:
-        eTree=simFile.GehFlavourt('tagsDumper/trees/Data_13TeV_TrippleHTag_0')
+        eTree=simFile.Get('tagsDumper/trees/EGamma_13TeV_TrippleHTag_0')
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
         maxEvents_= (maxEvents - totalEvents)
@@ -219,9 +225,9 @@ for fname in allFnames:
             print("      time left : ", str(datetime.timedelta(seconds= timeLeftSec)),
                     " [ time elapsed : ",datetime.timedelta(seconds= timeSpendSec), " s ]")
             print(" gg mass   : ",eTree.CMS_hgg_mass)
-            
-        allGammas=getHiggsDauP4s(eTree,22)
-        allBquarks=getHiggsDauP4s(eTree,5)
+        
+        allGammas=hhhSelector.getHiggsDauP4s(eTree,22)
+        allBquarks=hhhSelector.getHiggsDauP4s(eTree,5)
         
         for i in range(4):
             th1Store['gen_b'+str(i)+'_G1dr' ].Fill(allBquarks[i].DeltaR(allGammas[0]))
@@ -229,8 +235,28 @@ for fname in allFnames:
             th1Store['gen_b'+str(i)+'_pt' ].Fill(allBquarks[i].Pt())
             th1Store['gen_b'+str(i)+'_eta' ].Fill(allBquarks[i].Eta())
             th1Store['gen_b'+str(i)+'_phi' ].Fill(allBquarks[i].Phi())
+     
+        
+        ##   JET PRE-SELECTION
+        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionEta',1)
+            sumWeights.Fill('nJetPreselectionEta',wei)
+            if skipBad: continue
 
-        rslt=getBestGetMatchesGlobalFGG(eTree,drMax,etaMax,pTMin)
+        jetMask=hhhSelector.getSelectedJetCollectionMaskPt(eTree,jetMask=jetMask,pTMin=pTMin)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionPt',1)
+            sumWeights.Fill('nJetPreselectionPt',wei)
+            if skipBad: continue
+        if doOverlapRemoval:
+            jetMask=hhhSelector.getSelectedJetCollectionMaskOverLap(eTree,jetMask=jetMask,overlapRemovalDRMax=overlapRemovalDRMax)
+            if sum(jetMask) < 4 :
+                sumEntries.Fill('nJetPreselectionOR',1)
+                sumWeights.Fill('nJetPreselectionOR',wei)
+                if skipBad: continue
+       
+        rslt=hhhSelector.getBestGetMatchesGlobalFGG(eTree,jetMask=jetMask)
         idxs=rslt['idxs']
         drMins=rslt['drMins']
         jetMass=rslt['jetMass']
@@ -239,6 +265,7 @@ for fname in allFnames:
         hFlavour=rslt['hFlavour']
         isAllRecoed=True
         isRecoed={}
+        
         for i in range(4):
             isRecoed['isRecoed_'+str(i)]=True
         for i in range(4):
@@ -299,7 +326,7 @@ for fname in allFnames:
                 tofill[ky]=getattr(eTree,ky)
             else:
                 tofill[ky]=0.0
-        tofill["njets_not_recoed"]=-1
+        tofill["njets_not_recoed"]  =-1
         tofill["njets_resolved"]    =-1
         x=0
         tofill['matchedJet_b1']=idxs[0]
@@ -324,10 +351,6 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_isValid']=0
             if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
                 tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.4 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.4 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
             if i in idxs:
                 th1Store['pt_'+str(idxs.index(i))].Fill(   getattr(eTree,'jet_'+str(i)+'_pt')  )
                 th1Store['eta_'+str(idxs.index(i))].Fill(  getattr(eTree,'jet_'+str(i)+'_eta')  )
@@ -365,8 +388,8 @@ for fname in allFnames:
                 tofill['jet_'+str(i)+'_ptRatio_WithDP'] = ( LVStore['jetLV'] + LVStore['HggLV'] ).Pt() / LVStore['HggLV'].Pt()
                 tofill['jet_'+str(i)+'_ptRatio_WithDPLeadG'] = ( LVStore['jetLV'] + LVStore['g1LV'] ).Pt() / LVStore['g1LV'].Pt()
                 tofill['jet_'+str(i)+'_ptRatio_WithDPSubleadG'] = ( LVStore['jetLV'] + LVStore['g2LV'] ).Pt() / LVStore['g2LV'].Pt()
-        tofill["njets_not_recoed"]=nout
-        tofill["njets_resolved"]    =x
+        tofill["njets_not_recoed"] = nout
+        tofill["njets_resolved"]   = x
 
         for ky in branches:
             if ky not in tofill:
@@ -378,8 +401,8 @@ for fname in allFnames:
             ntuple['allRecoed'].Fill(array('f', tofill.values()))
         if nout==1 and x==3 and 'SingleJetMiss' in treesToStore:
             ntuple['SingleJetMiss'].Fill(array('f', tofill.values()))
-        if nout==0 and x==4 and 'Max1JetMiss' in treesToStore:
-            ntuple['allRecoed'].Fill(array('f', tofill.values()))
+        if nout<=1 and x>=3 and 'Max1JetMiss' in treesToStore:
+            ntuple['Max1JetMiss'].Fill(array('f', tofill.values()))
         
         if nout<3  and 'MultiJetMiss' in treesToStore:
             ntuple['MultiJetMiss'].Fill(array('f', tofill.values()))
@@ -389,8 +412,8 @@ for fname in allFnames:
         
         if 'allEvents' in treesToStore:
             ntuple['allEvents'].Fill(array('f', tofill.values()))
-
         nEvts+=1
+
     simFile.Close()           
     print("Closing file : ",fname)
 print("Got A total of : ",nEvts)

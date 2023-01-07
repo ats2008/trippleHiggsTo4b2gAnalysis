@@ -2,11 +2,11 @@ from __future__ import print_function
 import ROOT 
 from collections import OrderedDict
 import numpy as np
-from trippleHiggsUtils import *
+import trippleHiggsUtils as hhhUtil
 from Util  import *
 import branches as brList
 from array import array
-from trippleHiggsSelector import *
+import trippleHiggsSelector as hhhSelector
 from TMVA_Model import *
 
 import datetime
@@ -67,6 +67,11 @@ maxNBjetsFromMC=int(getValueFromConfigs(cfgTxt,"maxNBjetsFromMC",default="1000")
 weightScale=float(getValueFromConfigs(cfgTxt,"WeightScale",default="1.0"))
 resetWeight=float(getValueFromConfigs(cfgTxt,"resetWeight",default=-1e5))
 doSR=getBoolFromConfigs(cfgTxt,"doSR",default=False)
+doOverlapRemoval =getValueFromConfigs(cfgTxt,"doOverlapRemoval",default="1") ; doOverlapRemoval = int(doOverlapRemoval) > 0.5
+isData =getValueFromConfigs(cfgTxt,"isData",default="1") ; isData = int(isData) > 0.5
+etaMax =float(getValueFromConfigs(cfgTxt,"etaMax",default="2.5"))
+pTMin =float(getValueFromConfigs(cfgTxt,"pTMin",default="25.0"))
+overlapRemovalDRMax =float(getValueFromConfigs(cfgTxt,"overlapRemovalDRMax",default="0.4"))
 
 doPtReWeighting=getBoolFromConfigs(cfgTxt,"doPtReWeighting",default=False)
 pTReweitingFile=getValueFromConfigs(cfgTxt,"pTReweitingFile",default="")
@@ -76,7 +81,7 @@ pTReweitingHistCatagories=getValueFromConfigs(cfgTxt,"pTReweitingHistCatagories"
 pTReweitingHistName=pTReweitingHistName.split(',')
 pTReweitingHistCatagories=pTReweitingHistCatagories.split(',')
 
-treesToStore=getValueFromConfigs(cfgTxt,"TreesToStore",default="allRecoed,SingleJetMiss,MergedJetMiss")
+treesToStore=getValueFromConfigs(cfgTxt,"TreesToStore",default="background")
 treesToStore=treesToStore.split(',')
 
 reweighter={}
@@ -103,8 +108,7 @@ print('etaMax   :       ', etaMax)
 print('pTMin    :       ', pTMin)
 print('drMax    :       ', drMax)
 
-scaler=mcScaler()
-scalerVal=mcScaler()
+scaler=hhhUtil.mcScaler()
 if doPtReWeighting:
     print(reweighter)
     scaler.setSFHistFromFile(pTReweitingFile,reweighter)
@@ -112,6 +116,7 @@ if doPtReWeighting:
 print("")
 
 
+skipBad= 'allEvents' not in treesToStore
 
 
 maxEvents=-1
@@ -233,24 +238,34 @@ for fname in allFnames:
         tofill['matchedJet_b2']=-1
         tofill['matchedJet_b3']=-1
         tofill['matchedJet_b4']=-1
+        
+        ##   JET PRE-SELECTION
+        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionEta',1)
+            sumWeights.Fill('nJetPreselectionEta',wei)
+            if skipBad: continue
+
+        jetMask=hhhSelector.getSelectedJetCollectionMaskPt(eTree,jetMask=jetMask,pTMin=pTMin)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionPt',1)
+            sumWeights.Fill('nJetPreselectionPt',wei)
+            if skipBad: continue
+        if doOverlapRemoval:
+            jetMask=hhhSelector.getSelectedJetCollectionMaskOverLap(eTree,jetMask=jetMask,overlapRemovalDRMax=overlapRemovalDRMax)
+            if sum(jetMask) < 4 :
+                sumEntries.Fill('nJetPreselectionOR',1)
+                sumWeights.Fill('nJetPreselectionOR',wei)
+                if skipBad: continue
+    
         nVld=0
         for i in range(8):
             tofill['label_'+str(i)]=0
             tofill['label_idx_'+str(i)]=0
-            
-            if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaMax:
+            if not jetMask[i]:
                 tofill['jet_'+str(i)+'_isValid']=0
-            if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
-                tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.05 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.05 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
             if tofill['jet_'+str(i)+'_isValid'] > 0.5:
                 nVld+=1
-        #if nVld < 4:
-        #    continue
-
 
         LVStore['g1LV'].SetPtEtaPhiM(eTree.leadingPhoton_pt,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi,0.0)
         LVStore['g2LV'].SetPtEtaPhiM(eTree.subleadingPhoton_pt,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi,0.0)
@@ -292,7 +307,6 @@ for fname in allFnames:
                 print(ky)
         if 'allEvents' in treesToStore:
             arr=array('f', tofill.values())
-            #print(eTree.event , " | ", arr[41], " | ", float(eTree.event) , " | ",arr[42])
             ntuple['allEvents'].Fill(arr)
         elif  'background' in treesToStore:
             ntuple['background'].Fill(array('f', tofill.values()))
