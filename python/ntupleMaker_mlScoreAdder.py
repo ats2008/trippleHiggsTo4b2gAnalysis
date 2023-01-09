@@ -6,7 +6,7 @@ from trippleHiggsUtils import *
 from Util  import *
 from branches import *
 from array import array
-from trippleHiggsSelector import *
+import trippleHiggsSelector as hhhSelector
 from TMVA_Model import *
 
 import  trippleHiggsMLInterface as hhhMLI
@@ -49,7 +49,12 @@ processID=getValueFromConfigs(cfgTxt,"processID",default="DATA")
 treeName=getValueFromConfigs(cfgTxt,"treeName",default="tagsDumper/trees/Data_13TeV_TrippleHTag_0")
 outTreeName=getValueFromConfigs(cfgTxt,"outTreeName",default="Data_13TeV_TrippleHTag_0")
 eventIdxOffset=int(getValueFromConfigs(cfgTxt,"EventIdxOffset",default=0))
-
+doOverlapRemoval =getValueFromConfigs(cfgTxt,"doOverlapRemoval",default="1") ; doOverlapRemoval = int(doOverlapRemoval) > 0.5
+isData =getValueFromConfigs(cfgTxt,"isData",default="1") ; isData = int(isData) > 0.5
+etaMax =float(getValueFromConfigs(cfgTxt,"etaMax",default="2.5"))
+pTMin =float(getValueFromConfigs(cfgTxt,"pTMin",default="25.0"))
+overlapRemovalDRMax =float(getValueFromConfigs(cfgTxt,"overlapRemovalDRMax",default="0.4"))
+skipBad=getValueFromConfigs(cfgTxt,"skipBad",default="0") ; skipBad = int(skipBad) > 0.5
 mlScoreFileNameMap={ tagM : val for tagM,val in zip(mlScoreTags,mlScoreFileNames) }
 
 etaMax=2.5
@@ -104,6 +109,11 @@ branchesToFill.append('matchedJet_b1')
 branchesToFill.append('matchedJet_b2')
 branchesToFill.append('matchedJet_b3')
 branchesToFill.append('matchedJet_b4')
+
+branchesToFill.append('preselectedAt15GeV')
+branchesToFill.append('preselectedAt20GeV')
+branchesToFill.append('preselectedAtOLR')
+
 for i in range(8):
     branchesToFill.append('label_'+str(i))
 for i in range(8):
@@ -154,7 +164,9 @@ print("len(branches) : " , len(branches))
 m1m2 = ROOT.TH2F("m1jj_m2jj","H1bb , H2bb mass",300,0.0,300.0,300,0.0,300. )
 
 
-sumWeights=ROOT.TH1F("sumEvts","sumEvts",1,0.0,1.0)
+sumEntries=ROOT.TH1F("sumEvts","sumEvts",1,0.0,1.0)
+sumEntries.SetCanExtend(ROOT.TH1.kAllAxes)
+sumWeights=ROOT.TH1F("sumWeighs","sumWeighs",1,0.0,1.0)
 sumWeights.SetCanExtend(ROOT.TH1.kAllAxes)
 th1Store={}
 
@@ -171,7 +183,7 @@ for fname in allFnames:
     eTree=simFile.Get(treeName)
     print(" NEntries = ", eTree.GetEntries() )
     if not eTree:
-        eTree=simFile.Get('tagsDumper/trees/Data_13TeV_TrippleHTag_0')
+        eTree=simFile.Get('tagsDumper/trees/EGamma_13TeV_TrippleHTag_0')
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
         maxEvents_= (maxEvents - totalEvents)
@@ -200,21 +212,46 @@ for fname in allFnames:
         tofill['matchedJet_b4']=-1
         nVldJets=0
         nVldJets2=0
+        
+        ##   JET PRE-SELECTION
+        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
+
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionEta',1)
+            sumWeights.Fill('nJetPreselectionEta',wei)
+            if skipBad: continue
+
+        tofill['preselectedAt20GeV']=1.0
+        jetMask=hhhSelector.getSelectedJetCollectionMaskPt(eTree,jetMask=jetMask,pTMin=20)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionPt',1)
+            sumWeights.Fill('nJetPreselectionPt',wei)
+            tofill['preselectedAt20GeV']=0.0
+            if skipBad: continue
+
+        tofill['preselectedAt15GeV']=1.0
+        jetMask=hhhSelector.getSelectedJetCollectionMaskPt(eTree,jetMask=jetMask,pTMin=15)
+        if sum(jetMask) < 4 :
+            sumEntries.Fill('nJetPreselectionPt',1)
+            sumWeights.Fill('nJetPreselectionPt',wei)
+            tofill['preselectedAt15GeV']=0.0
+            if skipBad: continue
+
+        tofill['preselectedAtOLR']=1.0
+        if doOverlapRemoval:
+            jetMask=hhhSelector.getSelectedJetCollectionMaskOverLap(eTree,jetMask=jetMask,overlapRemovalDRMax=overlapRemovalDRMax)
+            if sum(jetMask) < 4 :
+                sumEntries.Fill('nJetPreselectionOR',1)
+                sumWeights.Fill('nJetPreselectionOR',wei)
+                tofill['preselectedAtOLR']=0.0
+                if skipBad: continue
+
         for i in range(8):
             tofill['label_'+str(i)]=0
             tofill['label_idx_'+str(i)]=0
-            
-            if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaMax:
-                tofill['jet_'+str(i)+'_isValid']=0
-            if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
-                tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < 0.05 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
-            #if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < 0.05 :
-            #    tofill['jet_'+str(i)+'_isValid']=0
-            nVldJets+=1
             if tofill['jet_'+str(i)+'_isValid'] > 0.5:
-                nVldJets2+=1
+                nVldJets+=1
+           
 
         tofill['nVldJets']=nVldJets
        
@@ -262,7 +299,7 @@ for fname in allFnames:
                     tofill['jet_'+str(i)+mlScoreTag+'_y0s']=hhhMLI.sigmoid(rslt['y0'][i] )
                     tofill['jet_'+str(i)+mlScoreTag+'_y1s']=hhhMLI.sigmoid(rslt['y1'][i] )
                     tofill['jet_'+str(i)+mlScoreTag+'_score']=rslt['score'][i] 
-                    print( rslt['score'][i] )
+                    #print(mlScoreTag," i ",i," ", rslt['score'][i] )
                     
                     for i in range(NJETS):
                         tofill['label_'+str(i)]=float(rslt['label'][i]  >0.1)
@@ -272,15 +309,15 @@ for fname in allFnames:
                             tofill['matchedJet_b'+str(k)]=i
         
                         ## SANITY CHECK 
-                        if  tofill['jet_'+str(i)+'_isValid'] != rslt['vldMask'][i]:
-                            x=[]
-                            for kk in range(NJETS):
-                                x.append((tofill['jet_'+str(i)+'_isValid']))
-                            print("FISHY FISY FISHY !! idx ",evt," eventIdx : ",eventIdx," vldMask from Json ",rslt['vldMask']," | from tree ",x)
+                        #if  tofill['jet_'+str(i)+'_isValid'] != rslt['vldMask'][i]:
+                        #    x=[]
+                        #    for kk in range(NJETS):
+                        #        x.append((tofill['jet_'+str(i)+'_isValid']))
+                        #    print("FISHY FISY FISHY !! idx ",evt," eventIdx : ",eventIdx," vldMask from Json ",rslt['vldMask']," | from tree ",x)
                 nMatchFound+=1
             else:
                 nMiss+=1
-                print("Event not found ! " , eventIdx," nvld Jets : ",nVldJets2)
+                print("Event not found ! " , eventIdx," nvld Jets : ",nVldJets)
 
         for i in outputDataDict:
             outputDataDict[i]=tofill[i]

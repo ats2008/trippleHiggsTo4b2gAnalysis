@@ -44,6 +44,7 @@ parser.add_argument("--tag", help="Job Tag",default="")
 parser.add_argument("--jobType", help="Job Type",default='""')
 parser.add_argument("--offsetStep", help="offsetStep for event number re-defenition",default="5000")
 parser.add_argument("--maxMeterialize", help="Executable",default=None)
+parser.add_argument("--cfgExtras", help="Other replacements in cfg File",default="")
 
 args = parser.parse_args()
 
@@ -63,6 +64,11 @@ if(not os.path.exists(destination)):
     os.system("mkdir -p "+destination)
 
 destination=os.path.abspath(destination)
+cfgExtraTxt=args.cfgExtras.split("|")
+cfgExtraDict={}
+for item in cfgExtraTxt:
+    it=item.split(":")
+    cfgExtraDict[it[0]]=it[1]
 
 
 print("      Executable ",executable)
@@ -123,6 +129,8 @@ if n < NJOBS:
 print("Making ",NJOBS," Jobs ")
 
 njobs=0
+
+print("CFG DICT : ",cfgExtraDict)
 for ii in range(NJOBS):
     i=ii+ZERO_OFFSET
     
@@ -153,6 +161,8 @@ for ii in range(NJOBS):
     tmp=tmp.replace("@@IDX",str(i))
     tmp=tmp.replace("@@OFFSET_IDX",str(i*offsetStep))
     tmp=tmp.replace("@@MAXEVENTS",str(NEVENTS_PER_JOB))
+    for ky in cfgExtraDict:
+        tmp=tmp.replace(ky,cfgExtraDict[ky])
     cfgFile.write(tmp)
     cfgFile.close()   
     
