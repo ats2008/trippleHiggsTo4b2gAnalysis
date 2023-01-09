@@ -1176,41 +1176,60 @@ def getSelectedJetCollectionMaskPt(eTree ,jetMask=[],pTMin=25.0):
     if jetMask==[]:
         for i in range(8):
             jetMask.append(True)
+    print("Incoming JetMask for PtSelection ",jetMask)        
     for i in range(8):
         if not jetMask[i]:
             continue
         if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
             jetMask[i]=False
         if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
+            print("Setting mask value 0 for jet ",i, "since ",getattr(eTree,'jet_'+str(i)+'_pt') ," < ",pTMin)
             jetMask[i]=False
-    return np.array(jetMask)      
+    print("Outgoing JetMask for PtSelection ",jetMask)        
+    return jetMask
 
 def getSelectedJetCollectionMaskEta(eTree ,jetMask=[],etaMax=2.5):
     if jetMask==[]:
         for i in range(8):
             jetMask.append(True)
+    print("Incoming JetMask for EtaSelection ",jetMask)        
     for i in range(8):
         if not jetMask[i]:
             continue
         if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
             jetMask[i]=False
         if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaMax:
+            print("Setting mask value 0 for jet ",i, "since ",abs(getattr(eTree,'jet_'+str(i)+'_eta')) ," > ",etaMax)
             jetMask[i]=False
-    return np.array(jetMask)      
+    print("Outgoing JetMask for EtaSelection ",jetMask)        
+    return jetMask
 
 
 def getSelectedJetCollectionMaskOverLap(eTree ,jetMask=[] , overlapRemovalDRMax=0.4) :
+    print("Incoming JetMask for OLR ",jetMask)        
     if jetMask==[]:
         for i in range(8):
             jetMask.append(True)
+    print("  g1 --> ",np.round(eTree.leadingPhoton_pt   ,2),np.round(eTree.leadingPhoton_eta   ,2),np.round(eTree.leadingPhoton_phi,2),
+          " g2--> ",np.round(eTree.subleadingPhoton_pt,2),np.round(eTree.subleadingPhoton_eta,2),np.round(eTree.subleadingPhoton_phi,2))
     for i in range(8):
-        if not jetMask[i]:
-            continue
+        #if not jetMask[i]:
+        #    continue
         if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
             jetMask[i]=False
-        if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi ) < overlapRemovalDRMax :
+        dr1 =  deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi )
+        dr2 =  deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi )
+        if dr1  < overlapRemovalDRMax :
             jetMask[i]=False
-        if deltaR(getattr(eTree,'jet_'+str(i)+'_eta') , getattr(eTree,'jet_'+str(i)+'_phi') ,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi ) < overlapRemovalDRMax :
+        if dr2 < overlapRemovalDRMax :
             jetMask[i]=False
+        print("\t",i," | ",getattr(eTree,'jet_'+str(i)+'_isValid')," | \tpt::eta::phi",
+                np.round(getattr(eTree,'jet_'+str(i)+'_pt') ,3) ,
+                np.round(getattr(eTree,'jet_'+str(i)+'_eta'),3) , 
+                np.round(getattr(eTree,'jet_'+str(i)+'_phi'),3) ,
+                " --> dr1, dr2 :: " ,np.round(dr1,3),np.round(dr2,3),
+                "  result : ", jetMask[i]
+              )
+    print("Outgoing JetMask for OLR ",jetMask)        
     return np.array(jetMask)      
 
