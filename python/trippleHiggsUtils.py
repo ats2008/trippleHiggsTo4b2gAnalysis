@@ -296,8 +296,8 @@ def addOtherDerivedVariables(histStore):
     histStore["miscVars"]['h2_dijetSigmaMOverM'] = ROOT.TH1F("h2_dijetSigmaMOverM"  ,"",50,0.0,0.5)
     
     histStore["miscVars"]['triHiggs_mass']=ROOT.TH1F("triHiggs_mass","",1500,0.0,1500)
-    histStore["miscVars"]['dije1CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije1CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
-    histStore["miscVars"]['dije2CandidatePtOverdiHiggsM'] = ROOT.TH1F("dije2CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
+    histStore["miscVars"]['dijet1CandidatePtOverdiHiggsM'] = ROOT.TH1F("dijet1CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
+    histStore["miscVars"]['dijet2CandidatePtOverdiHiggsM'] = ROOT.TH1F("dijet2CandidatePtOverdiHiggsM"  ,"",100,0.0,50.0)
     histStore["miscVars"]["absCosThetaH4bHgg"    ]            = ROOT.TH1F("absCosThetaH4bHgg"  ,"",60,-0.1,1.1)
     histStore["miscVars"]["H1H2JetAbsCosThetaMax"]            = ROOT.TH1F("H1H2JetAbsCosThetaMax"  ,"",60,-0.1,1.1)
     histStore["miscVars"]["H1H2JetAbsCosThetaMin"]            = ROOT.TH1F("H1H2JetAbsCosThetaMin"  ,"",60,-0.1,1.1)
@@ -413,11 +413,8 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict["PhoJetMaxDr"]   = v1
     varDict["PhoJetMaxDrOther"]  = v2
 
-
-
-
-    varDict['dije1CandidatePtOverHiggsM'] =   LVStore['H1bbLV'].Pt() / 125.0
-    varDict['dije2CandidatePtOverHiggsM'] =   LVStore['H2bbLV'].Pt() / 125.0
+    varDict['dijet1CandidatePtOverdiHiggsM'] =   LVStore['H1bbLV'].Pt() / LVStore['H1bbLV'].M()
+    varDict['dijet2CandidatePtOverdiHiggsM'] =   LVStore['H2bbLV'].Pt() / LVStore['H2bbLV'].M()
     varDict["H1bbCosThetaLeadJet"] = abs(np.cos(  LVStore['H1bbLV'].Angle( LVStore['j1LV'].Vect())  )  )
     varDict['H2bbCosThetaLeadJet'] = abs(np.cos(  LVStore['H2bbLV'].Angle( LVStore['k1LV'].Vect())  )  )
 
@@ -428,11 +425,16 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict["HggTo4bAbsCosTheta"]    = abs(np.cos( (LVStore['H1bbLV']+LVStore['H2bbLV']).Angle( LVStore['H1LV'].Vect())  ) )
     varDict["H1bbToH2bbAbsCosTheta"] = abs(np.cos(  LVStore['H1bbLV'].Angle( LVStore['H2bbLV'].Vect())  )  )
     
-
-    varDict['h1leadJ_deepjetScore']    =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][0])+'_deepJetScore') 
-    varDict['h1subleadJ_deepjetScore'] =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][1])+'_deepJetScore') 
-    varDict['h2leadJ_deepjetScore']    =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][2])+'_deepJetScore') 
-    varDict['h2subleadJ_deepjetScore'] =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][3])+'_deepJetScore') 
+    if eTree:
+        varDict['h1leadJ_deepjetScore']    =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][0])+'_deepJetScore') 
+        varDict['h1subleadJ_deepjetScore'] =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][1])+'_deepJetScore') 
+        varDict['h2leadJ_deepjetScore']    =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][2])+'_deepJetScore') 
+        varDict['h2subleadJ_deepjetScore'] =  getattr(eTree,'jet_'+str(quad['fgg_idxs'][3])+'_deepJetScore') 
+    else:    
+        varDict['h1leadJ_deepjetScore']    =  -0.2
+        varDict['h1subleadJ_deepjetScore'] =  -0.2
+        varDict['h2leadJ_deepjetScore']    =  -0.2
+        varDict['h2subleadJ_deepjetScore'] =  -0.2
 
     if quad:
         j1_res = getattr(eTree,'jet_'+str(quad['fgg_idxs'][0])+'_bJetRegRes') ; 
@@ -448,7 +450,7 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict['h1_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['j1LV'],j1_res , LVStore['j2LV'] , j2_res )
     varDict['h2_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['k1LV'],k1_res , LVStore['k2LV'] , k2_res )
     
-    varDict['trihiggs_mass']= LVStore['HHHLV'].M()
+    varDict['triHiggs_mass']= LVStore['HHHLV'].M()
     varDict['trihiggs_pt']= LVStore['HHHLV'].Pt()
     if hasattr(eTree,'ttH_MET'):
         varDict['ttH_MET'] = eTree.ttH_MET
@@ -505,6 +507,7 @@ def addCandidateVars(histStore,candList):
                 histStore[ky][hh][bjet]['deepJetScore']=ROOT.TH1F("deepJetScore","",40,-0.5,1.5)
                 histStore[ky][hh][bjet]['puJetIdMVA']=ROOT.TH1F("puJetIdMVA","",60,-1.5,1.5)
                 histStore[ky][hh][bjet]['QGL']=ROOT.TH1F("QGL","",40,-0.5,1.5)
+        
         histStore[ky]['hgg']={}
         histStore[ky]['hgg']['mass']=ROOT.TH1F("mass","",1000,0.0,500)
         histStore[ky]['hgg']['pT']=ROOT.TH1F("pT","",500,0.0,500)
@@ -543,7 +546,7 @@ def fillObjectDeltaRValuesFromLVStore(histStore,LVStore ,wei=1):
     
     
 @ignore_warning(RuntimeWarning)
-def addKinematicVars(histStore,framesToProbe=['CMS_RestFrame','HHH_RestFrame']): 
+def addKinematicVars(histStore,framesToProbe=['CMS_RestFrame','HHH_RestFrame','Hgg_RestFrame']): 
     histStore['kinematicVars']={}
 #    framesToProbe=['CMS_RestFrame',
 #                   'HHH_RestFrame',
@@ -601,8 +604,10 @@ def addKinematicVars(histStore,framesToProbe=['CMS_RestFrame','HHH_RestFrame']):
         histStore['kinematicVars'][frame]['H1H2H3_volume']  =  ROOT.TH1F("H1H2H3_volume"  ,""  ,40,0.0,2.0)
         histStore['kinematicVars'][frame]['L1L2L3_volume']  =  ROOT.TH1F("L1L2L3_volume"  ,""  ,40,0.0,2.0)
         histStore['kinematicVars'][frame]['sL1sL2sL3_volume']  =   ROOT.TH1F("sL1sL2sL3_volume","",40,0.0,2.0)
+        
+        addOtherDerivedVariables(histStore['kinematicVars'][frame])
     
-def fillKinematicVarsFromLV(LVStore,histStore,wei=1 ,framesToDo=['CMS_RestFrame','HHH_RestFrame']):
+def fillKinematicVarsFromLV(LVStore,histStore,wei=1 ,framesToDo=['CMS_RestFrame','HHH_RestFrame','Hgg_RestFrame']):
     
     if 'CMS_RestFrame' in framesToDo:
        fillKinematicVars(histStore['CMS_RestFrame'],LVStore)    
@@ -1082,7 +1087,8 @@ def fillKinematicVars( histCollection , LVStore , wei=1):
     histCollection['H1H2H3_volume'].Fill( LVStore['H1LV'].Vect().Dot(LVStore['H2LV'].Vect().Cross(LVStore['H3LV'].Vect()))/125.0/125.0/125.0 , wei )
     histCollection['L1L2L3_volume'].Fill( LVStore['g1LV'].Vect().Dot(LVStore['j1LV'].Vect().Cross(LVStore['k1LV'].Vect()))/125.0/125.0/125.0 , wei )
     histCollection['sL1sL2sL3_volume'].Fill( LVStore['g2LV'].Vect().Dot(LVStore['j2LV'].Vect().Cross(LVStore['k2LV'].Vect()))/125.0/125.0/125.0 , wei )
-
+    varDict=getOtherDerivedVariables(eTree=None,LVStore=LVStore,quad=None)
+    fillOtherDerivedVariables(histCollection,varDict,wei)
 
 def getHHHJethistos():
 

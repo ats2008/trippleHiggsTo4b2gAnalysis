@@ -147,6 +147,7 @@ def getLVStoreFromGen(eTree):
     LVStore['HggLV'] = LVStore['g1LV'] + LVStore['g2LV']
     LVStore['H1bbLV']= LVStore['j1LV'] + LVStore['j2LV']
     LVStore['H2bbLV']= LVStore['k1LV'] + LVStore['k2LV']
+    LVStore['HH4bLV']= LVStore['H2bbLV'] + LVStore['H1bbLV']
     
     LVStore['H1LV']=LVStore['HggLV']
     LVStore['H2LV']=LVStore['HggLV']

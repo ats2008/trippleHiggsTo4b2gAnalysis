@@ -99,6 +99,7 @@ histStore = hhhUtil.getRecoHistos()
 hhhUtil.addKinematicVars(histStore)
 hhhUtil.addFlasggVars(histStore)
 hhhUtil.addOtherDerivedVariables(histStore)
+hhhUtil.addObjectDeltaRValues(histStore)
 beg=datetime.datetime.now()
 
 for fname in allFnames:
@@ -176,6 +177,7 @@ for fname in allFnames:
         hhhUtil.fillFlashggVars(histStore,eTree,LVStore=LVStore,wei=wei)    
         varDict=hhhUtil.getOtherDerivedVariables(eTree,LVStore,quad)
         hhhUtil.fillOtherDerivedVariables(histStore,varDict,wei)
+        hhhUtil.fillObjectDeltaRValuesFromLVStore(histStore, LVStore)
 
         nProcessed+=1
         histStore["events"]['nEvents' ].Fill('finalCount',1)

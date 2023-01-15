@@ -2,6 +2,8 @@ from __future__ import print_function
 import ROOT 
 import numpy as np
 from trippleHiggsGenAnlayzer import *
+import trippleHiggsUtils as hhhUtil
+
 from Util  import *
 
 import os,sys
@@ -36,6 +38,10 @@ print("maxevents : ",maxEvents)
 
 histStore = getGenHistos()
 
+print(histStore.keys())
+print(histStore['kinematicVars'].keys())
+hhhUtil.addObjectDeltaRValues(histStore)
+
 nNoHtoGammaGamma=0
 nNoHHto4B=0
 totalEvents=0
@@ -67,12 +73,12 @@ for fname in allFnames:
         gammaIdx=0        
         
         if(i%100==0):
-            print("Doing i = ",i," / ",maxEvents)
+            print("Doing i = ",i," / ",maxEvents_)
         
 
-        bDaus=getHiggsDauP4s(eTree,5)       
+        bDaus=hhhUtil.getHiggsDauP4s(eTree,5)       
+        gammaDaus=hhhUtil.getHiggsDauP4s(eTree,22)       
         bIdx=len(bDaus)
-        gammaDaus=getHiggsDauP4s(eTree,22)       
         gammaIdx=len(gammaDaus)
         
         bLV=bDaus
@@ -157,7 +163,10 @@ for fname in allFnames:
 
         for ii in range(2):
             histStore['vars']["gamma"+str(ii+1)+"Pt"].Fill(gammaDaus[ii].Pt())
-        fillTrippleHGenVariables(eTree,histStore,bLV,gammaLV)
+        
+        LVStore=getLVStoreFromGen(eTree)
+        fillTrippleHGenVariablesFromLVStore(histStore,LVStore)
+        hhhUtil.fillObjectDeltaRValuesFromLVStore(histStore, LVStore)
 
     simFile.Close()           
 
