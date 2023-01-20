@@ -12,18 +12,30 @@ Analysis scrpts for trippleH--> 4b2g analysis
 
 - `python/ntupleMaker_eventIDUpdater.py`
     - Modifies `event` number of the events .. old `event` moved to a new `eventIdx` branch
-    - misc/makeEventIDUpdater_data.sh
+    - `misc/makeEventIDUpdater_data.sh`
 
 - `python/ntupleMaker_mlScoreAdder.py`
     - Adds the ML model score from the `pickle`-ed score values
     - Helper class : `python/trippleHiggsMLInterface.py`
-    - misc/makeScoreUpdater_data.sh
+    - _depricated_ : misc/makeScoreUpdater_data.sh
+    - `misc/addMLScoreToDset.py`
 
 - `python/ntuple_forBDT.py`
     - Makes the Ntuples for BDT Training And testing
-    - misc/makeBDTNtuplizerJob.py
+    - `misc/makeBDTNtuplizerJob.py`
 
 - `python/variableAnalyzer.py`
     - Make the histograms of all the variables required
     - Compiled scalbale workflow from `trippleHiggsUtils.py` and `trippleHiggsSelector.py`
-    - `misc/makeVariableDistributions.py`    
+    - `misc/makeVariableDistributions.py`
+
+- `python/genAnalyzer.py`
+    - Makes the kinematic as well as other plots from gen Only information
+    - Works on the files made using `genNtuplizer`
+    - Template cfg : `misc/cfg/genAnalyzer.cfg`
+
+- `python/deriveScaleFactors.py`
+    - Derives the Scale factors , makes basic check-me plots 
+    - Stores the results in the destination
+    - Based on local wflow
+    - Uses mplhep, rootdataframes
