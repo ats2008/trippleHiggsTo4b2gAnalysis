@@ -240,20 +240,20 @@ for fname in allFnames:
         tofill['matchedJet_b4']=-1
         
         ##   JET PRE-SELECTION
-        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
-        if sum(jetMask) < 4 :
+        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,jetMask=[],etaMax=etaMax)
+        if sum(jetMask) < 3 :
             sumEntries.Fill('nJetPreselectionEta',1)
             sumWeights.Fill('nJetPreselectionEta',wei)
             if skipBad: continue
 
         jetMask=hhhSelector.getSelectedJetCollectionMaskPt(eTree,jetMask=jetMask,pTMin=pTMin)
-        if sum(jetMask) < 4 :
+        if sum(jetMask) < 3 :
             sumEntries.Fill('nJetPreselectionPt',1)
             sumWeights.Fill('nJetPreselectionPt',wei)
             if skipBad: continue
         if doOverlapRemoval:
             jetMask=hhhSelector.getSelectedJetCollectionMaskOverLap(eTree,jetMask=jetMask,overlapRemovalDRMax=overlapRemovalDRMax)
-            if sum(jetMask) < 4 :
+            if sum(jetMask) < 3 :
                 sumEntries.Fill('nJetPreselectionOR',1)
                 sumWeights.Fill('nJetPreselectionOR',wei)
                 if skipBad: continue

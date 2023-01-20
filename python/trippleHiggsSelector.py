@@ -92,15 +92,23 @@ def getHiggsDauP4s(eTree,pdgId):
     if allP4[order[0]].Pt() < allP4[order[1]].Pt():
         order=[1,0]
     if len(allP4) > 2:
+        #print("\n in getDau : ",end= "")
+        #for ii in range(4):
+        #    print(ii," ) ",np.round(allP4[ii].Pt(),2 ), " | ",end="")
         if genHPt[1] > genHPt[0]:
             order=[2,3,order[0],order[1]]
         else:
             order=[order[0],order[1],2,3]
         if allP4[order[0]].Pt() < allP4[order[1]].Pt():
             t=order[1] ; order[1]=order[0] ; order[0]=t;
+        #print("\tallP4[",order[2]",].Pt() < allP4[",order[3],"].Pt() ",allP4[order[2]].Pt(),"  < "allP4[order[3]].Pt())
         if allP4[order[2]].Pt() < allP4[order[3]].Pt():
-            t=order[2] ; order[2]=order[3] ; order[2]=t;
+            t=order[2] ; order[2]=order[3] ; order[3]=t;
            
+        #print("  order : ",order ," ) \n\t",end="")
+        #for ii in range(4):
+        #    print(ii," ) ",np.round(allP4[order[ii]].Pt(),2 ), " | ",end="")
+
     return [allP4[i] for i in order ]
     
 def checkGenMatches(eTree,jetIndices):
@@ -218,12 +226,17 @@ def checkGenMatches(eTree,jetIndices):
 
 def getBestGetMatchesGlobalFGG(eTree,jetMask=[],drMax=0.4):
 #def getBestGetMatchesGlobalFGG(eTree,drMax=0.4,etaCut=2.5,pTMin=25.0):
+    #print("In getBestGetMatchesGlobalFGG")
+
     idxs  =[-1 for i in range(4)]
     
     jetPt=[]
     jetEta=[]
     jetPhi=[]
     jetMass=[]
+    fggIdx=[]
+    jetBtagScore=[]
+    flav=[]
     N_JET_MAX=8
 
     if jetMask==[]:
@@ -236,13 +249,18 @@ def getBestGetMatchesGlobalFGG(eTree,jetMask=[],drMax=0.4):
         jetEta.append(getattr(eTree,'jet_'+str(i)+'_eta'))
         jetPhi.append(getattr(eTree,'jet_'+str(i)+'_phi'))
         jetMass.append(getattr(eTree,'jet_'+str(i)+'_mass'))
+        jetBtagScore.append(getattr(eTree , 'jet_'+str(i)+'_deepJetScore') ) 
+        flav.append(getattr(eTree,'jet_'+str(i)+'_flavour'))
+        fggIdx.append(i)
 
+    scoreorder=np.argsort(np.array(jetBtagScore)*-1)
+    bJetScoreRankMap={ k : n for n,k in enumerate(scoreorder)}
     jetPt =np.array(jetPt)
     jetEta=np.array(jetEta)
     jetPhi=np.array(jetPhi)
     allGammas=getHiggsDauP4s(eTree,22)
     allBquarks=getHiggsDauP4s(eTree,5)
-    
+        
     genPt=[]
     genEta=[]
     genPhi=[]
@@ -256,68 +274,116 @@ def getBestGetMatchesGlobalFGG(eTree,jetMask=[],drMax=0.4):
     genPhi=np.array(genPhi)
     
     drMins=[]
+    drMinsPostFlavourMatch=[]
     jetMassMatch=[]
     deepJetScores=[]
     allP4s=[]
     hFlavour=[]
+    hFlavourAll=[]
+
+    jetIdLoose=[]
+    jetIdTight=[]
+    jetIdTight2017=[]
+    jetIdTight2018=[]
+    jetPUScore=[]
+
     drMaxs=[drMax for i in range(4)]
     #print("jet Eta ",np.round(jetEta,3))
     #print("jet Phi ",np.round(jetPhi,3))
     if len(jetPt) > 0 :
         for i in range(4):
             drs=deltaR(genEta[i],genPhi[i],jetEta,jetPhi)
-     #       print()
-     #       print("New Jet @gen ",genEta[i],genPhi[i]," [ ",allBquarks[i].Eta(),allBquarks[i].Phi(),"] ")
-     #       print(np.round(drs,3))
             idxDrsWise=np.argsort(drs)
+            fggIdxDrWise= [ fggIdx[k] for k in idxDrsWise]
             genB=allBquarks[i]
-     #       print(idxDrsWise)
-            #print("gen b ",i,"  : ",genB.Pt(),genB.Eta(),genB.Phi())
-            #for idx in idxDrsWise:
-            #    print("\t",idx," : ",jetPt[idx]," , ",jetEta[idx]," , ",jetPhi[idx])
+    #    print()
+    #    print("New Jet @gen ",genEta[i],genPhi[i]," [ ",allBquarks[i].Eta(),allBquarks[i].Phi(),"] ")
+    #    print(np.round(drs,3))
+    #    print(idxDrsWise, " | ",fggIdxDrWise)
+    #    print("gen b ",i,"  : ",genB.Pt(),genB.Eta(),genB.Phi())
+    #    for n,idx in enumerate(idxDrsWise):
+    #        print("\t",idx," : pt ",jetPt[idx]," , eta ",jetEta[idx]," , phi ",jetPhi[idx]," flav : ",flav[idx], " : dr ",drs[idx] ," btag ",jetBtagScore[idx],bJetScoreRankMap[idx])
             drMins.append(drs[idxDrsWise[0]])
+            drMinsPostFlavourMatch.append(drs[idxDrsWise[0]])
+
             jetMassMatch.append(jetMass[ idxDrsWise[0] ])
             p4=ROOT.TLorentzVector()
             p4.SetPtEtaPhiM( jetPt[idxDrsWise[0]] , jetEta[idxDrsWise[0]], jetPhi[idxDrsWise[0]],jetMass[idxDrsWise[0]] )
             allP4s.append(p4)
-            deepJetScores.append(getattr(eTree,'jet_'+str( idxDrsWise[0] )+'_deepCSVScore'))
-            hFlavour.append(getattr(eTree,'jet_'+str( idxDrsWise[0] )+'_flavour'))
+            fggIdx0=fggIdx[idxDrsWise[0]]
+            hFlavourAll.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_flavour'))
+            deepJetScores.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_deepCSVScore'))
+            jetIdLoose.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_isLoose'))
+            jetIdTight.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_isTight'))
+            jetIdTight2017.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_isTight2017'))
+            jetIdTight2018.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_isTight2018'))
+            jetPUScore.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_puJetIdMVA'))
+            hFlavour.append(getattr(eTree,'jet_'+str( fggIdx0 )+'_flavour'))
             drMin_=1e9
             drMax = drMaxs[i]
-            for idx in idxDrsWise :
+            for fgg_idx,idx in zip(fggIdxDrWise,idxDrsWise) :
+                #print("   ",fgg_idx," | ",idx, " mathing flav : ",getattr(eTree,'jet_'+str( fgg_idx )+'_flavour')  )
+                if abs(getattr(eTree,'jet_'+str( fgg_idx )+'_flavour')) <4.80:
+                    continue
+                if drs[idx]<drMinsPostFlavourMatch[-1]:
+                    #print("   flavour match found with dr ",drs[idx])
+                    drMinsPostFlavourMatch[-1]=drs[idx]
+                    hFlavourAll[-1]=getattr(eTree,'jet_'+str( fgg_idx )+'_flavour')
                 if drs[idx] > drMax : #and abs(jetPt[idx]*jetRegCorr[idx]/genPt[i] - 1.0) < 0.2:
                     break
-                if abs(getattr(eTree,'jet_'+str( idx )+'_flavour')) <4.80:
-                    continue
-               # print( "mathing flav : ",getattr(eTree,'jet_'+str( idx )+'_flavour')  )
                 if idxs[i] > -1:
                    if drs[idx] > drMin_:
                         continue
                 idxs[i]=idx
                 drMin_=drs[idx]
-                hFlavour[-1]=getattr(eTree,'jet_'+str( idx )+'_flavour')
-                deepJetScores[-1]=getattr(eTree,'jet_'+str( idx )+'_deepCSVScore')
+                hFlavour[-1]=getattr(eTree,'jet_'+str( fgg_idx )+'_flavour')
+                deepJetScores[-1]=getattr(eTree,'jet_'+str( fgg_idx )+'_deepCSVScore')
+                jetIdLoose[-1] = getattr(eTree,'jet_'+str( fgg_idx )+'_isLoose')
+                jetIdTight[-1] = getattr(eTree,'jet_'+str( fgg_idx )+'_isTight')
+                jetIdTight2017[-1] = getattr(eTree,'jet_'+str( fgg_idx )+'_isTight2017')
+                jetIdTight2018[-1] = getattr(eTree,'jet_'+str( fgg_idx )+'_isTight2018')
+                jetPUScore[-1] = getattr(eTree,'jet_'+str( fgg_idx )+'_puJetIdMVA')
                 allP4s[-1].SetPtEtaPhiM( jetPt[idx] , jetEta[idx], jetPhi[idx],jetMass[idx] ) ;allP4s[-1]=p4;
                 jetMassMatch[-1]=jetMass[idx]
-    #print("Allocated idxs ",idxs)
+                #print("    Setting matched idx as fgg : ",fgg_idx,"  , idx ",idx )
+    #print("Allocated idxs ",idxs,"  jetPts : ",jetPt)
     idx=copy.deepcopy(idxs)
-    if idx[1] >0 :
-        if idx[0] >0 and jetPt[idx[0]] > jetPt[idx[1]]:
-            pass
-        else:
-                t=idx[0]
-                idx[0]=idx[1]
-                idx[1]=t
+    #if idx[1] >-1 :
+    #    if (idx[0] >-1) and (jetPt[idx[0]] > jetPt[idx[1]]):
+    #        pass
+    #    else:
+    #        t=idx[0]
+    #        print("\t FALSE jetPt[",idx[0],"] > jetPt[",idx[1],"] ", jetPt[idx[0]] ,">", jetPt[idx[1]] ," ==> ", jetPt[idx[0]] > jetPt[idx[1]])
+    #        idx[0]=idx[1]
+    #        idx[1]=t
 
-    if idx[3] >0 :
-        if idx[2] >0 and jetPt[idx[2]] > jetPt[idx[3]]:
-            pass
+    #if idx[3] >-1 :
+    #    if (idx[2] >-1) and (jetPt[idx[2]] > jetPt[idx[3]]):
+    #        pass
+    #    else:
+    #        print("\t  jetPt[",idx[0],"] > jetPt[",idx[1],"] ", jetPt[idx[0]] ,">", jetPt[idx[1]] ," ==> ", jetPt[idx[0]] > jetPt[idx[1]])
+    #        t=idx[2]
+    #        idx[2]=idx[3]
+    #        idx[3]=t
+    fgg_idxs_matched=[]
+    bjetScoreRanks=[]
+    for k in idx:
+        if k >-1:
+            fgg_idxs_matched.append(fggIdx[k])
+            bjetScoreRanks.append(bJetScoreRankMap[k])
         else:
-                t=idx[2]
-                idx[2]=idx[3]
-                idx[3]=t
+            fgg_idxs_matched.append(-1)
+            bjetScoreRanks.append(-1)
      
-    return {'idxs':idxs,'drMins' : drMins , 'jetMass':jetMassMatch , 'p4s': allP4s ,'deepJetScores' : deepJetScores , 'hFlavour':hFlavour}
+    #print("-->  idxs ",idx,"-->",fgg_idxs_matched," btag --> ",bjetScoreRanks)
+    return {
+               'idxs':idx , 'fgg_idxs' : fgg_idxs_matched,'bJetScoreRanks': bjetScoreRanks,
+               'drMins' : drMins , 'drMinsPostFlavourMatch' : drMinsPostFlavourMatch,
+               'jetMass':jetMassMatch , 'p4s': allP4s ,
+               'deepJetScores' : deepJetScores , 'hFlavour':hFlavour,'hFlavourAll':hFlavourAll,
+               'isLoose': jetIdLoose , 'isTight' : jetIdTight ,
+               'isTight2017': jetIdTight2017 , 'isTight2018' : jetIdTight2018 ,
+            }
 
 def getBestGetMatchesGlobal(eTree):
 
@@ -449,7 +515,7 @@ def getDiPhotons(eTree):
             result['nDiPhotons']+=1
     return result
 
-def getBJetParisFGG(eTree,mask=[]):
+def getBJetParisFGG(eTree,mask=[],doMisclassificationCorrection=False):
     result={'isValid':False , 'allBJetQuads':[],'bJetQuad':[],'nJetQuads':0,'fail':'Pass'}
     X0OverY0=1.05
     jets_pt=[]
@@ -463,7 +529,6 @@ def getBJetParisFGG(eTree,mask=[]):
     if len(mask)==0:
         mask=np.zeros(N_JET_MAX , dtype=bool)
     for i in range(N_JET_MAX):
-
         if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
             continue
         if not mask[i]:
@@ -503,15 +568,14 @@ def getBJetParisFGG(eTree,mask=[]):
     #print("\t Sorted ordering of jets under consideratio n : ",jetScoreOrder)
     #print("\t Sorted ordering of jets under consideratio n : ",jet_deepJetScore[jetScoreOrder])
 
-    nMax = 4
+    nMax =  4
     mask[jetScoreOrder[nMax:]]=False
     goodJets=np.where(mask)[0]
     if(len(goodJets) < 4 ): 
         print("SANITY CHECK FAILS !! att FGG BJet Pair maker ")
         result['fail']='goodJets'
         return result
-
-    allJetCombinations=itrTools.combinations(goodJets,nMax)
+    allJetCombinations=itrTools.combinations(goodJets,4)
     jetsIdx=np.arange(0,4,1)
     jetLVs=[]
     for i in range(4):
@@ -520,17 +584,18 @@ def getBJetParisFGG(eTree,mask=[]):
     
     jetCobinationScores=[]
     metric_min=1e9
-    metric_min_idx=-1
-#     print("Good jets  : ",goodJets)
+    etric_min_idx=-1
+ #   print("Good jets  : ",goodJets)
     for jetCombination in allJetCombinations:
         # setting 4 jet values
+ #       print("Doing Jet Combination : ",jetCombination)
         for j in range(4):
             ii=jetCombination[j]
             jetLVs[j].SetPtEtaPhiM(jets_pt[ii],jets_eta[ii],
                            jets_phi[ii],jets_mass[ii])
-#         print("Doing Jet Combination : ",jetCombination)
         # scanning combination in 4 jets
         for combi in possiblilities_:
+#            print("  Permutation  : ",combi)
             quad_={}
             quad_['idxs']=[jetCombination[i] for i in combi]
 
@@ -586,7 +651,7 @@ def getBJetParisFGG(eTree,mask=[]):
             result['allBJetQuads'].append(quad_)
             result['isValid']=True
             result['nJetQuads']+=1
-    if True:
+    if doMisclassificationCorrection:
         idx2ndMin=-1
         metri2ndMin=1e10
         for idx in range(len(result['allBJetQuads'])):
@@ -598,6 +663,7 @@ def getBJetParisFGG(eTree,mask=[]):
         if( idx2ndMin < 0 ):
             print("Problem !! no second quad !! setting idx2ndMin = metric_min_idx")
             idx2ndMin=metric_min_idx
+        print("idx2ndMin, metric_min_idx",idx2ndMin,metric_min_idx)
         if abs(result['allBJetQuads'][idx2ndMin]['D_HH']-result['allBJetQuads'][metric_min_idx]['D_HH']) <30.0:
             if result['allBJetQuads'][idx2ndMin]['pT'] > result['allBJetQuads'][metric_min_idx]['pT']:
                 metric_min_idx=idx2ndMin
@@ -1228,3 +1294,12 @@ def getSelectedJetCollectionMaskOverLap(eTree ,jetMask=[] , overlapRemovalDRMax=
             jetMask[i]=False
     return np.array(jetMask)      
 
+def vetoOverCountings(nBs,dataTag):
+    if dataTag=='ggJets':
+        if nBs>0:
+            return True
+    if dataTag=='ggJets1b':
+        if nBs>1:
+            return True
+
+    return False

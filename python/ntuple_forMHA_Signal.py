@@ -213,6 +213,7 @@ for fname in allFnames:
     for ky in eTree.GetListOfBranches():
         allBranches.append(ky.GetName())
     for i in range(maxEvents_):
+        evt=i
         eTree.GetEntry(i)
         wei=eTree.weight
         sumEntries.Fill('total', 1)
@@ -238,7 +239,7 @@ for fname in allFnames:
      
         
         ##   JET PRE-SELECTION
-        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
+        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax,jetMask=[])
         if sum(jetMask) < 4 :
             sumEntries.Fill('nJetPreselectionEta',1)
             sumWeights.Fill('nJetPreselectionEta',wei)
@@ -263,9 +264,9 @@ for fname in allFnames:
         allJetMatchP4=rslt['p4s']
         deepJetScores=rslt['deepJetScores']
         hFlavour=rslt['hFlavour']
+        
         isAllRecoed=True
         isRecoed={}
-        
         for i in range(4):
             isRecoed['isRecoed_'+str(i)]=True
         for i in range(4):
@@ -315,6 +316,7 @@ for fname in allFnames:
         if isAllRecoed:
             sumEntries.Fill('isAllRecoed', 1)
             sumWeights.Fill('isAllRecoed', wei)
+        
         nUniqueJets = len(np.unique(idxs))
         sumEntries.Fill("nUnique_"+str(nUniqueJets) ,  1  )
         sumWeights.Fill("nUnique_"+str(nUniqueJets) , wei )
@@ -347,9 +349,7 @@ for fname in allFnames:
             else:
                 tofill['label_'+str(i)]=0
                 tofill['label_idx_'+str(i)]=0
-            if abs(getattr(eTree,'jet_'+str(i)+'_eta') ) > etaMax:
-                tofill['jet_'+str(i)+'_isValid']=0
-            if abs(getattr(eTree,'jet_'+str(i)+'_pt') )  < pTMin:
+            if not jetMask[i]:
                 tofill['jet_'+str(i)+'_isValid']=0
             if i in idxs:
                 th1Store['pt_'+str(idxs.index(i))].Fill(   getattr(eTree,'jet_'+str(i)+'_pt')  )
@@ -362,7 +362,6 @@ for fname in allFnames:
         LVStore['g1LV'].SetPtEtaPhiM(eTree.leadingPhoton_pt,eTree.leadingPhoton_eta,eTree.leadingPhoton_phi,0.0)
         LVStore['g2LV'].SetPtEtaPhiM(eTree.subleadingPhoton_pt,eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi,0.0)
         LVStore['HggLV'].SetPtEtaPhiM( eTree.diphoton_pt , eTree.diphoton_eta , eTree.diphoton_phi , eTree.CMS_hgg_mass )
- 
         for i in range(8):
             if getattr(eTree,'jet_'+str(i)+'_isValid') > 0.5:
                 LVStore['jetLV'].SetPtEtaPhiM(  
@@ -403,11 +402,13 @@ for fname in allFnames:
             ntuple['SingleJetMiss'].Fill(array('f', tofill.values()))
         if nout<=1 and x>=3 and 'Max1JetMiss' in treesToStore:
             ntuple['Max1JetMiss'].Fill(array('f', tofill.values()))
-        
-        if nout<3  and 'MultiJetMiss' in treesToStore:
+        if nout>1  and 'MultiJetMiss' in treesToStore:
             ntuple['MultiJetMiss'].Fill(array('f', tofill.values()))
-            
-        if x<4 and x<nout and 'MergedJetMiss' in treesToStore:
+        
+        idx_=[k for k in idxs]
+        while -1 in idx_:
+            idx_.remove(-1)
+        if x!=len(np.unique(idx_)) and ('MergedJetMiss' in treesToStore) :
             ntuple['MergedJetMiss'].Fill(array('f', tofill.values()))
         
         if 'allEvents' in treesToStore:

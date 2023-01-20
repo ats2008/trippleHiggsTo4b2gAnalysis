@@ -45,6 +45,8 @@ for header in headers:
 
 def insideTheEllipse( x,y,x1,y1,x2,y2,a):
     return np.sqrt( (x1-x)*(x1-x)+(y1-y)*(y1-y) ) + np.sqrt( (x2-x)*(x2-x)+(y2-y)*(y2-y) ) < a           
+etaMax=2.5
+pTMin=25.0
 
 allFnames =utl.getListOfStringsFromConfigs(cfgTxt,"#FNAMES_BEG","#FNAMES_END")
 foutName  =utl.getValueFromConfigs(cfgTxt,"OutpuFileName","fggHists.root")
@@ -55,9 +57,6 @@ isData =utl.getValueFromConfigs(cfgTxt,"isData",default="1") ; isData = int(isDa
 etaMax =float(utl.getValueFromConfigs(cfgTxt,"etaMax",default="2.5"))
 pTMin =float(utl.getValueFromConfigs(cfgTxt,"pTMin",default="25.0"))
 overlapRemovalDRMax =float(utl.getValueFromConfigs(cfgTxt,"overlapRemovalDRMax",default="0.4"))
-
-etaMax=2.5
-pTMin=25.0
 
 print("allFnames   :  ",              allFnames)
 print("foutName   :  ",               foutName)
@@ -144,6 +143,7 @@ for fname in allFnames:
             print("      time left : ", str(datetime.timedelta(seconds= timeLeftSec)),
                     " [ time elapsed : ",datetime.timedelta(seconds= timeSpendSec), " s ]")
             print(" gg mass   : ",eTree.CMS_hgg_mass)
+        
         jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
         if sum(jetMask) < 4 :
             histStore["events"]['allFailIdsEvents' ].Fill('nJetPreselectionEta',1)

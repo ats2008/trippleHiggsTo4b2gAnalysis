@@ -8,7 +8,7 @@ import itertools as itrTools
 from Util import *
 import warnings
 import trippleHiggsSelector as hhhSelector
-
+N_JET_MAX=8
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -184,52 +184,7 @@ def getPtDependentScaleFactor(name="scaleFactor",dataHist=None,mcHists=None,binE
     return scaler
 
 def getHiggsDauP4s(eTree,pdgId):
-    genPt=[1e4 for i in range(4)]
-    genEta=[1e4 for i in range(4)]
-    genPhi=[1e4 for i in range(4)]
-    genE=[1e4 for i in range(4)]
-    k=0
-    if abs(eTree.gen_H1_dau1_pdgId)==pdgId:
-        genPt[k]=eTree.gen_H1_dau1_pt
-        genEta[k]=eTree.gen_H1_dau1_eta
-        genPhi[k]=eTree.gen_H1_dau1_phi
-        genE[k]=eTree.gen_H1_dau1_e
-        k+=1
-        genPt[k]=eTree.gen_H1_dau2_pt
-        genEta[k]=eTree.gen_H1_dau2_eta
-        genPhi[k]=eTree.gen_H1_dau2_phi
-        genE[k]=eTree.gen_H1_dau2_e
-        k+=1
-    if abs(eTree.gen_H2_dau1_pdgId)==pdgId:
-        genPt[k]=eTree.gen_H2_dau1_pt
-        genEta[k]=eTree.gen_H2_dau1_eta
-        genPhi[k]=eTree.gen_H2_dau1_phi
-        genE[k]=eTree.gen_H2_dau1_e
-        k+=1
-        genPt[k]=eTree.gen_H2_dau2_pt
-        genEta[k]=eTree.gen_H2_dau2_eta
-        genPhi[k]=eTree.gen_H2_dau2_phi
-        genE[k]=eTree.gen_H2_dau2_e
-        k+=1
-
-    if abs(eTree.gen_H3_dau1_pdgId)==pdgId:
-        genPt[k]=eTree.gen_H3_dau1_pt
-        genEta[k]=eTree.gen_H3_dau1_eta
-        genPhi[k]=eTree.gen_H3_dau1_phi
-        genE[k]=eTree.gen_H3_dau1_e
-        k+=1
-        genPt[k]=eTree.gen_H3_dau2_pt
-        genEta[k]=eTree.gen_H3_dau2_eta
-        genPhi[k]=eTree.gen_H3_dau2_phi
-        genE[k]=eTree.gen_H3_dau2_e
-        k+=1
-    allP4=[]
-    for i in range(k):
-      lv=ROOT.TLorentzVector()
-      lv.SetPtEtaPhiE(genPt[i],genEta[i],genPhi[i],genE[i])
-      allP4.append(lv)
-    return allP4
-
+    return hhhSelector.getHiggsDauP4s(eTree,pdgId)
 def addFlasggVars(histStore): 
     
     histStore["flashggVars"]={}
@@ -330,14 +285,14 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict['pTh2subleadJ_overMh2'] = LVStore['k2LV'].Pt()  / LVStore['H2bbLV'].M() 
     
     varDict["h1bbCosThetaLeadJet"]    =  abs(np.cos( LVStore['H1LV'].Angle(LVStore['j1LV'].Vect())))
-    varDict['h1bb_pt'] = LVStore['H1LV'].Pt() 
-    varDict['h2bb_pt'] = LVStore['H2LV'].Pt() 
-    varDict['h1bb_eta'] = LVStore['H1LV'].Eta() 
-    varDict['h2bb_eta'] = LVStore['H2LV'].Eta() 
-    varDict['h1bb_phi'] = LVStore['H1LV'].Phi() 
-    varDict['h2bb_phi'] = LVStore['H2LV'].Phi() 
-    varDict['h1bb_mass'] = LVStore['H1LV'].M() 
-    varDict['h2bb_mass'] = LVStore['H2LV'].M() 
+    varDict['h1bb_pt'] = LVStore['H1bbLV'].Pt() 
+    varDict['h2bb_pt'] = LVStore['H2bbLV'].Pt() 
+    varDict['h1bb_eta'] = LVStore['H1bbLV'].Eta() 
+    varDict['h2bb_eta'] = LVStore['H2bbLV'].Eta() 
+    varDict['h1bb_phi'] = LVStore['H1bbLV'].Phi() 
+    varDict['h2bb_phi'] = LVStore['H2bbLV'].Phi() 
+    varDict['h1bb_mass'] = LVStore['H1bbLV'].M() 
+    varDict['h2bb_mass'] = LVStore['H2bbLV'].M() 
     
 
     varDict["HH4bCosThetaLeadJet"]    =  abs(np.cos( LVStore['HH4bLV'].Angle(LVStore['j1LV'].Vect())))
@@ -1306,13 +1261,15 @@ def fillTrippleHRecoVariables(eTree,histStore, LVStore, quad):
     histStore["hhhTo4b2gamma"]["massX0X3"].Fill( mx0,mx3  )
     histStore["hhhTo4b2gamma"]["massX1X2"].Fill( mx1,mx2  )
 
-def visualizeEvents(eTree ,text=None,outputFname=None ) :
+def visualizeEvents(eTree ,text=None,outputFname=None ,jetMask=[]) :
     
     artists=[]
     legends=[]
-    fig, ax = plt.subplots(figsize=(8,8))
+    fig, ax = plt.subplots(figsize=(11,8))
     jetX=[]
     jetY=[]
+    if jetMask==[]:
+        jetMask=[True for i in range(N_JET_MAX) ]
     for i in range(8):
         if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
             continue
@@ -1321,7 +1278,15 @@ def visualizeEvents(eTree ,text=None,outputFname=None ) :
         jetY.append(phi)
         cir=plt.Circle((eta,phi),0.4,color='b',fill='b',alpha=0.9-i*0.1)
         artists.append( cir )
-        legends.append(str(i)+'. jet '+str(np.round(getattr(eTree,'jet_'+str(i)+'_pt') ,1))+' GeV')
+        lbl='j'+str(i)+' : '+str(np.round(getattr(eTree,'jet_'+str(i)+'_deepJetScore') ,2))
+        lbl+=' , '+str(np.round(getattr(eTree,'jet_'+str(i)+'_pt') ,1))+' GeV'
+        lbl+=' ['+str(np.round(getattr(eTree,'jet_'+str(i)+'_flavour') ,0))+']'
+        if jetMask[i]:
+            lbl=u'\u2713 ' +lbl
+        else:
+            lbl=u'\u2717 ' +lbl
+
+        legends.append( lbl )
         ax.text(eta+0.45,phi,"j"+str(i))
     eta,phi=eTree.leadingPhoton_eta,eTree.leadingPhoton_phi
     cir=plt.Circle((eta,phi),0.5,color='darkorange',fill='darkorange',alpha=0.4,label='leadG')
@@ -1329,24 +1294,24 @@ def visualizeEvents(eTree ,text=None,outputFname=None ) :
 
     
     eta,phi=eTree.subleadingPhoton_eta,eTree.subleadingPhoton_phi
-    cir=plt.Circle((eta,phi),0.5,color='orange',fill='orange',alpha=0.2,label='subLeadG ')
-    artists.append( cir ); legends.append('subleadG '+str(np.round(eTree.leadingPhoton_pt,1))+' GeV')
+    cir=plt.Circle( (eta,phi),0.5,color='orange',fill='orange',alpha=0.2,label='subLeadG ' )
+    artists.append( cir ); legends.append( 'subleadG '+str(np.round(eTree.subleadingPhoton_pt,1))+' GeV' )
     
     bDaus=hhhSelector.getHiggsDauP4s(eTree,5)
     gDaus=hhhSelector.getHiggsDauP4s(eTree,22)
     
-    cir=plt.Circle((gDaus[0].Eta(),gDaus[0].Phi()),0.1,color='lime',alpha=0.8); legends.append('geb LeadG '+str(np.round(gDaus[0].Pt(),1))+' GeV')   ;artists.append( cir ) ;
-    cir=plt.Circle((gDaus[1].Eta(),gDaus[1].Phi()),0.1,color='aqua',alpha=0.6); legends.append('gen SubLeadG '+str(np.round(gDaus[0].Pt(),1))+' GeV');artists.append( cir ) ; 
-    cir=plt.Circle((bDaus[0].Eta(),bDaus[0].Phi()),0.1,color='magenta' ,alpha=0.8);legends.append('gen b0 ' + str(np.round(bDaus[0].Pt(),1))+' GeV');    artists.append( cir )
-    cir=plt.Circle((bDaus[1].Eta(),bDaus[1].Phi()),0.1,color='crimson' ,alpha=0.8);legends.append('gen b1 ' + str(np.round(bDaus[1].Pt(),1))+' GeV');    artists.append( cir )
-    cir=plt.Circle((bDaus[2].Eta(),bDaus[2].Phi()),0.1,color='deeppink',alpha=0.8);legends.append('gen b1 ' + str(np.round(bDaus[2].Pt(),1))+' GeV');    artists.append( cir )
-    cir=plt.Circle((bDaus[3].Eta(),bDaus[3].Phi()),0.1,color='plum'    ,alpha=0.8);legends.append('gen b1 ' + str(np.round(bDaus[3].Pt(),1))+' GeV');    artists.append( cir )
+    cir=plt.Circle((gDaus[0].Eta(),gDaus[0].Phi()),0.1,color='forestgreen',alpha=0.8); legends.append('geb $\gamma_{1}$ '+str(np.round(gDaus[0].Pt(),1))+' GeV');artists.append( cir ) ;
+    cir=plt.Circle((gDaus[1].Eta(),gDaus[1].Phi()),0.1,color='limegreen',alpha=0.6); legends.append('gen $\gamma_{2}$ '+str(np.round(gDaus[1].Pt(),1))+' GeV');artists.append( cir ) ; 
+    cir=plt.Circle((bDaus[0].Eta(),bDaus[0].Phi()),0.1,color='magenta' ,alpha=0.8);legends.append('gen b1 ' + str(np.round(bDaus[0].Pt(),1))+' GeV');    artists.append( cir )
+    cir=plt.Circle((bDaus[1].Eta(),bDaus[1].Phi()),0.1,color='plum' ,alpha=0.8);legends.append('gen b2 ' + str(np.round(bDaus[1].Pt(),1))+' GeV');    artists.append( cir )
+    cir=plt.Circle((bDaus[2].Eta(),bDaus[2].Phi()),0.1,color='orangered',alpha=0.8);legends.append('gen b3 ' + str(np.round(bDaus[2].Pt(),1))+' GeV');    artists.append( cir )
+    cir=plt.Circle((bDaus[3].Eta(),bDaus[3].Phi()),0.1,color='coral'    ,alpha=0.8);legends.append('gen b4 ' + str(np.round(bDaus[3].Pt(),1))+' GeV');    artists.append( cir )
        
     ax.set_aspect( 1 )
-    ax.set_xlim([-3.0,7.0])
+    ax.set_xlim([-3.0,6.6])
     ax.set_ylim([-3.8,3.2])
     if text:   
-        ax.text(-2.7,-3.6,text)
+        ax.text(-2.7,-3.6,text,zorder=100,backgroundcolor='w')
         
     for art in artists:
         ax.add_artist(art)
@@ -1359,4 +1324,84 @@ def visualizeEvents(eTree ,text=None,outputFname=None ) :
     if outputFname:
         #fig.savefig(outputFname)
         fig.savefig(outputFname,bbox_inches='tight')
+    plt.close(fig)
+
+def printEventInfo(eTree,jetMask=[]):
+    if jetMask==[]:
+        jetMask=[True  for i in range(N_JET_MAX)]
+    
+    print("-"*20)
+    print("Event ID : ",eTree.event)
+    
+    print("lead photon [pt/eta/phi ]   : ", np.round(eTree.leadingPhoton_pt ,1),
+                                         np.round(eTree.leadingPhoton_eta,2),
+                                         np.round(eTree.leadingPhoton_phi,2))
+
+    print("sublead photon [pt/eta/phi] : ", np.round(eTree.subleadingPhoton_pt ,1),
+                                         np.round(eTree.subleadingPhoton_eta,2),
+                                         np.round(eTree.subleadingPhoton_phi,2))
+
+    for i in range(N_JET_MAX ):
+        if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
+            continue
+        isMasked='V' 
+        if not jetMask[i]:
+            isMasked='X' 
+            
+        print("Jet ",i,"| ",isMasked," |  : ", np.round(getattr(eTree,'jet_'+str(i)+'_pt') ,1),
+                              np.round(getattr(eTree,'jet_'+str(i)+'_eta'),2),
+                              np.round(getattr(eTree,'jet_'+str(i)+'_phi'),2) )
+ 
+def printEventInfoFromLVStore(LVStore,eid=None):
+    print("-"*20)
+    if eid:
+        print("Event ID : ",eid)
+    
+    print("lead photon [pt/eta/phi ]   : ", np.round(LVStore['g1LV'].Pt(),1),
+                                            np.round(LVStore['g1LV'].Eta(),2),
+                                            np.round(LVStore['g1LV'].Phi(),2))
+
+    print("sublead photon [pt/eta/phi ]   : ", np.round(LVStore['g2LV'].Pt(),1),
+                                               np.round(LVStore['g2LV'].Eta(),2),
+                                               np.round(LVStore['g2LV'].Phi(),2))
+
+    print("b1 [pt/eta/phi] : ",np.round(LVStore['j1LV'].Pt(),1),
+                               np.round(LVStore['j1LV'].Eta(),2),
+                               np.round(LVStore['j1LV'].Phi(),2))
+    print("b2 [pt/eta/phi] : ",np.round(LVStore['j2LV'].Pt(),1),
+                               np.round(LVStore['j2LV'].Eta(),2),
+                               np.round(LVStore['j2LV'].Phi(),2))
+    print("b3 [pt/eta/phi] : ",np.round(LVStore['k1LV'].Pt(),1),
+                               np.round(LVStore['k1LV'].Eta(),2),
+                               np.round(LVStore['k1LV'].Phi(),2))
+    print("b4 [pt/eta/phi] : ",np.round(LVStore['k2LV'].Pt(),1),
+                               np.round(LVStore['k2LV'].Eta(),2),
+                               np.round(LVStore['k2LV'].Phi(),2))
+def getDataTag(fname):
+    
+    txt=fname.lower()
+    dataType='data'
+    if 'diphotonjetsbox1bjet' in txt:
+        dataType='ggJets1b'
+    elif 'diphotonjetsbox2bjet' in txt:
+        dataType='ggJets2b'
+    elif 'diphotonjetsbox' in txt:
+        dataType='ggJets'
+
+    return dataType
+
+def getNBsFromQuad(eTree,quad):
+    bCount=0
+    if  getattr(eTree,'jet_'+str(quad['fgg_idxs'][0])+'_flavour')==5:
+        bCount+=1
+    if  getattr(eTree,'jet_'+str(quad['fgg_idxs'][1])+'_flavour')==5:
+        bCount+=1
+    if  getattr(eTree,'jet_'+str(quad['fgg_idxs'][2])+'_flavour')==5:
+        bCount+=1
+    if  getattr(eTree,'jet_'+str(quad['fgg_idxs'][3])+'_flavour')==5:
+        bCount+=1
+
+    return bCount
+
+
 

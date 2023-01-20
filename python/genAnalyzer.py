@@ -24,6 +24,7 @@ f.close()
 
 allFnames=getListOfStringsFromConfigs(cfgTxt,"#FNAMES_BEG","#FNAMES_END")
 foutName=getValueFromConfigs(cfgTxt,"OutpuFileName")
+treeName=getValueFromConfigs(cfgTxt,"treeName",default="ntuplizer/tree")
 
 maxEvents=-1
 tmp_=getValueFromConfigs(cfgTxt,"MaxEvents")
@@ -35,6 +36,7 @@ for i in allFnames:
 if(maxEvtsSuperSeeder > 0):
     maxEvents=maxEvtsSuperSeeder
 print("maxevents : ",maxEvents)
+print("treeName : ",treeName)
 
 histStore = getGenHistos()
 
@@ -58,9 +60,9 @@ for i in range(4):
 for fname in allFnames:
     
     simFile = ROOT.TFile(fname,'READ')
-    eTree=simFile.Get('ntuplizer/tree')
+    eTree=simFile.Get(treeName)
     if not eTree:
-        eTree=simFile.Get('Ntuple/tree')
+        eTree=simFile.Get(treeName)
         
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
@@ -153,9 +155,8 @@ for fname in allFnames:
         histStore['vars']['H1H2DeltaPhi'].Fill(abs(eTree.gen_H1_phi - eTree.gen_H2_phi))
         histStore['vars']['H2H3DeltaPhi'].Fill(abs(eTree.gen_H2_phi - eTree.gen_H3_phi))
         histStore['vars']['H3H1DeltaPhi'].Fill(abs(eTree.gen_H3_phi - eTree.gen_H1_phi))
-        
-
         for ii in range(4):
+            #print(ii," ) ",np.round(bDaus[ii].Pt(),2 ), " | ",end="")
             histStore['vars']["B"+str(ii+1)+"Pt"].Fill(bDaus[ii].Pt())
             histStore['vars']["B"+str(ii+1)+"Eta"].Fill(bDaus[ii].Eta())
             histStore['vars']["B"+str(ii+1)+"Phi"].Fill(bDaus[ii].Phi())
@@ -163,6 +164,8 @@ for fname in allFnames:
 
         for ii in range(2):
             histStore['vars']["gamma"+str(ii+1)+"Pt"].Fill(gammaDaus[ii].Pt())
+            histStore['vars']["gamma"+str(ii+1)+"Eta"].Fill(gammaDaus[ii].Eta())
+            histStore['vars']["gamma"+str(ii+1)+"Phi"].Fill(gammaDaus[ii].Phi())
         
         LVStore=getLVStoreFromGen(eTree)
         fillTrippleHGenVariablesFromLVStore(histStore,LVStore)
