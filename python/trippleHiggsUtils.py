@@ -12,56 +12,6 @@ N_JET_MAX=8
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
-class mcScaler:
-    def __init__(self):
-        self.dataHist=None
-        self.mcHist=None
-        self.binEdges=[]
-        self.scaleFactors=[]
-        self.def_scaleFactor=0
-        self.underflow_x={}
-        self.overflow_x={}
-        self.underflow_scaleFactor={}
-        self.overflow_scaleFactor={}
-        self.scaleFactorHist={}
-        self.scaleFactorHistSet={}
-        self.File=None
-    
-    def setSFHist(self,hist,cat='def'):
-        self.scaleFactorHist[cat]=hist.Clone()
-        self.underflow_x[cat]= self.scaleFactorHist[cat].GetBinLowEdge(1)
-        self.overflow_x[cat]= self.scaleFactorHist[cat].GetBinLowEdge(self.scaleFactorHist[cat].GetNbinsX())
-        self.underflow_scaleFactor[cat] = self.scaleFactorHist[cat].GetBinContent(1)
-        self.overflow_scaleFactor[cat] = self.scaleFactorHist[cat].GetBinContent(self.scaleFactorHist[cat].GetNbinsX()-1)
-        print("  Setting scale factor for category " , cat  )
-        print("     Scale factors defined for x = [ ",self.underflow_x[cat],self.overflow_x[cat]," ]")
-        print("     Under flow Scale factor     =  ",self.underflow_scaleFactor[cat])
-        print("     Over flow Scale factor      = ",self.overflow_scaleFactor[cat])
-
-        self.scaleFactorHistSet[cat]=True
-    
-    def setSFHistFromFile(self,fname,histNames={}):
-        self.File=ROOT.TFile(fname,"READ")
-        print(histNames)
-        for cat in histNames:
-            print("CAT : ",cat," || Setting SF hist ",histNames[cat]," from ",fname)
-            hist=self.File.Get(histNames[cat])
-            self.setSFHist(hist,cat)
-    
-    def getSFForX(self,x,cat):
-        if cat not in self.scaleFactorHistSet:
-            print("\tWARNING ! : scaleFactor Hist not set , returning -1.0  [ cat : ",cat," available cats : ",self.scaleFactorHist.keys(),"]")
-            return -1.0
-        if x < self.underflow_x[cat]:
-            return self.underflow_scaleFactor[cat]
-        if x > self.overflow_x[cat]:
-            return self.overflow_x[cat]
-        bid=self.scaleFactorHist[cat].FindBin(x)
-        #print("bid = ",bid," for x ",x, " Bin edges --> ",
-        #         self.scaleFactorHist.GetBinLowEdge(bid), 
-        #         self.scaleFactorHist.GetBinLowEdge(bid)+self.scaleFactorHist.GetBinWidth(bid))
-        return self.scaleFactorHist[cat].GetBinContent(bid)
-
 def btagID( deepJetScore,TYPE='loose' ):
 
     if TYPE=='tight' and  deepJetScore  > 0.7346:
@@ -405,7 +355,7 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict['h1_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['j1LV'],j1_res , LVStore['j2LV'] , j2_res )
     varDict['h2_dijetSigmaMOverM'] = getSigmaMOverM( LVStore['k1LV'],k1_res , LVStore['k2LV'] , k2_res )
     
-    varDict['triHiggs_mass']= LVStore['HHHLV'].M()
+    varDict['trihiggs_mass']= LVStore['HHHLV'].M()
     varDict['trihiggs_pt']= LVStore['HHHLV'].Pt()
     if hasattr(eTree,'ttH_MET'):
         varDict['ttH_MET'] = eTree.ttH_MET
@@ -1387,6 +1337,10 @@ def getDataTag(fname):
         dataType='ggJets2b'
     elif 'diphotonjetsbox' in txt:
         dataType='ggJets'
+    elif 'gjet_pt-40toinf' in txt:
+        dataType='gJet40ToInf'
+    elif 'gjet_pt-20to40' in txt:
+        dataType='gJet20To40'
 
     return dataType
 

@@ -64,11 +64,12 @@ if(not os.path.exists(destination)):
     os.system("mkdir -p "+destination)
 
 destination=os.path.abspath(destination)
-cfgExtraTxt=args.cfgExtras.split("|")
+cfgExtraTxt=args.cfgExtras
 cfgExtraDict={}
-for item in cfgExtraTxt:
-    it=item.split(":")
-    cfgExtraDict[it[0]]=it[1]
+if len(cfgExtraTxt) >0:
+    for item in cfgExtraTxt.split("|"):
+        it=item.split(":")
+        cfgExtraDict[it[0]]=it[1]
 
 
 print("      Executable ",executable)

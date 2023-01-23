@@ -1301,5 +1301,12 @@ def vetoOverCountings(nBs,dataTag):
     if dataTag=='ggJets1b':
         if nBs>1:
             return True
+    return False
+
+def hasToRePtWeight(dataTag):
+
+    if dataTag in ["ggJets","ggJets1b","ggJets2b"]:
+        return True
 
     return False
+

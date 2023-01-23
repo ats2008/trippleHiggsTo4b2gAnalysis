@@ -8,6 +8,8 @@ from array import array
 import Util  as utl
 import trippleHiggsUtils as hhhUtil
 import trippleHiggsSelector as hhhSelector
+import trippleHiggsGenAnlayzer as hhhGen
+from scaleFactorUtil import mcScaler
 from TMVA_Model import *
 
 import datetime
@@ -61,17 +63,20 @@ outTreeName=utl.getValueFromConfigs(cfgTxt,"outTreeName",default="Data_13TeV_Tri
 weightScale=float(utl.getValueFromConfigs(cfgTxt,"WeightScale",default="1.0"))
 resetWeight=float(utl.getValueFromConfigs(cfgTxt,"resetWeight",default=-1e5))
 doWeight=utl.getBoolFromConfigs(cfgTxt,"doWeight",default=False)
+doSR=utl.getBoolFromConfigs(cfgTxt,"doSR",default=False)
 doPtReWeighting=utl.getBoolFromConfigs(cfgTxt,"doPtReWeighting",default=False)
 pTReweitingFile=utl.getValueFromConfigs(cfgTxt,"pTReweitingFile",default="")
 pTReweitingHistName=utl.getValueFromConfigs(cfgTxt,"pTReweitingHistName",default="")
+pTReweitingHistCatagories=utl.getValueFromConfigs(cfgTxt,"pTReweitingHistCatagories",default="")
 mlScoreTag=utl.getValueFromConfigs(cfgTxt,"mlScoreTag",default="")
 methord=utl.getValueFromConfigs(cfgTxt,"methord",default="DHH")
 doOverlapRemoval =utl.getValueFromConfigs(cfgTxt,"doOverlapRemoval",default="1") ; doOverlapRemoval = int(doOverlapRemoval) > 0.5
+doBadBJetRemoval =utl.getValueFromConfigs(cfgTxt,"doBadBJetRemoval",default="1") ; doBadBJetRemoval = int(doBadBJetRemoval) > 0.5
 isData =utl.getValueFromConfigs(cfgTxt,"isData",default="1") ; isData = int(isData) > 0.5
 etaMax =float(utl.getValueFromConfigs(cfgTxt,"etaMax",default="2.5"))
 pTMin =float(utl.getValueFromConfigs(cfgTxt,"pTMin",default="25.0"))
 overlapRemovalDRMax =float(utl.getValueFromConfigs(cfgTxt,"overlapRemovalDRMax",default="0.4"))
-
+doBjetCounting=True
 print("allFnames   :  ",              allFnames)
 print("foutName   :  ",               foutName)
 print("processID   :  ",              processID)
@@ -83,10 +88,22 @@ print("pTReweitingHistName   :  ",    pTReweitingHistName)
 print('etaMax   :       ', etaMax)
 print('pTMin    :       ', pTMin)
 print('drMax    :       ', drMax)
+print('methord    :       ', methord)
+print('mlScoreTag    :       ', mlScoreTag)
+print('unblind    :       ', doSR)
 
-scaler=hhhUtil.mcScaler()
+scaler=mcScaler()
+unblind = doSR
+
 if doPtReWeighting:
-    scaler.setSFHistFromFile(pTReweitingFile,pTReweitingHistName)
+    hnames=pTReweitingHistName.split(',')
+    cats=pTReweitingHistCatagories.split(',')
+    catMap={cat:hname for cat,hname in zip(cats,hnames)}
+    if len(cats)!=len(hnames):
+        print("Wrong number of cats / hanmes ")
+        exit(1)
+        
+    scaler.setSFHistFromFile(pTReweitingFile,catMap)
 print("")
 
 
@@ -131,12 +148,16 @@ branches=[
      'subleadingPhotonSigOverE', 'sumScore_3j', 'sumScore_4j', 'trihiggs_mass',
      'ttH_MET', 'weight','rho','trihiggs_pt',
      "CosThetaH1_hhhF",  "HH4bCosTheta_hhhF",  "HggCosTheta_hhhF",  "HH4bCosThetaLeadJet_hhhF",  "absCosThetaH4bHgg_hhhF",  
-     'H1bbCosTheta_hhhF','H2bbCosTheta_hhhF'
+     'H1bbCosTheta_hhhF','H2bbCosTheta_hhhF',
+     'leadingPhoton_pt','leadingPhoton_eta','leadingPhoton_phi',
+     'subleadingPhoton_pt','subleadingPhoton_eta','subleadingPhoton_phi',
+     'diphoton_pt','diphoton_eta','diphoton_phi','weight_v0'
 ]
-#branches+=['quadjet_0_mlScore', 'quadjet_0_mlScoreY1s', 'quadjet_0_mlScoreY2s' ,
-#    'quadjet_1_mlScore', 'quadjet_1_mlScoreY1s', 'quadjet_1_mlScoreY2s' ,
-#    'quadjet_2_mlScore', 'quadjet_2_mlScoreY1s', 'quadjet_2_mlScoreY2s' ,
-#    'quadjet_3_mlScore', 'quadjet_3_mlScoreY1s', 'quadjet_3_mlScoreY2s' ]
+branches+=['quadjet_0_mlScore', 'quadjet_0_mlScoreY1s', 'quadjet_0_mlScoreY2s' ,
+    'quadjet_1_mlScore', 'quadjet_1_mlScoreY1s', 'quadjet_1_mlScoreY2s' ,
+    'quadjet_2_mlScore', 'quadjet_2_mlScoreY1s', 'quadjet_2_mlScoreY2s' ,
+    'quadjet_3_mlScore', 'quadjet_3_mlScoreY1s', 'quadjet_3_mlScoreY2s' ]
+branches+=['genRecoCategory']    
 
 ntuple={}
 branches=np.unique(branches)
@@ -163,13 +184,21 @@ th1Store={}
 
 beg=datetime.datetime.now()
 has_printed=True
+dataTag=""
 for fname in allFnames:
     print("Opening file : ",fname)
     simFile = ROOT.TFile(fname,'READ')
+    dataTag=hhhUtil.getDataTag(fname)
     eTree=simFile.Get(treeName)
-    print(" NEntries = ", eTree.GetEntries())
     if not eTree:
-        eTree=simFile.Get('tagsDumper/trees/EGamma_13TeV_TrippleHTag_0')
+        treeName='tagsDumper/trees/EGamma_13TeV_TrippleHTag_0'
+        print("Trying tree name : ",treeName)
+        eTree=simFile.Get(treeName)
+    if not eTree:
+        treeName='tagsDumper/trees/ggHHH_125_13TeV'
+        print("Trying tree name : ",treeName)
+        eTree=simFile.Get(treeName)
+    print(" NEntries = ", eTree.GetEntries())
     maxEvents_ = eTree.GetEntries()
     if(maxEvents >0  and (totalEvents+maxEvents_) > maxEvents):
         maxEvents_= (maxEvents - totalEvents)
@@ -186,19 +215,22 @@ for fname in allFnames:
         eTree.GetEntry(i)
         
         isMasked = isData_ and  (eTree.CMS_hgg_mass > 115.0) and (eTree.CMS_hgg_mass < 135.0)
-        if isMasked:
+        if isMasked and not unblind:
             continue
         
+        wei_base=eTree.weight
         wei=eTree.weight
+        print("weight0 : ",wei)
         if doWeight:
             if resetWeight > -1e4:
                 wei=resetWeight
             if weightScale > -1e4:
                 wei*=weightScale
-            if doPtReWeighting:
-                pT=eTree.diphoton_pt
-                scaleFactor=scaler.getSFForX(pT)
-                wei*=scaleFactor
+        if doPtReWeighting and hhhSelector.hasToRePtWeight( dataTag ):
+            pT=eTree.diphoton_pt
+            scaleFactor=scaler.getSFForX(pT,'inclusive')
+            #print("scaleFactor : ",scaleFactor,"[  ",pT," ]")
+            wei*=scaleFactor
 
         sumEntries.Fill('total', 1)
         sumWeights.Fill('total', wei)
@@ -211,7 +243,6 @@ for fname in allFnames:
             print("      time left : ", str(datetime.timedelta(seconds= timeLeftSec)),
                     " [ time elapsed : ",datetime.timedelta(seconds= timeSpendSec), " s ]")
             print(" gg mass   : ",eTree.CMS_hgg_mass)
-         
         _tmp=False
         for ky in tofill:
             if ky in allBranches:
@@ -224,7 +255,7 @@ for fname in allFnames:
             has_printed=True
         
         ##   JET PRE-SELECTION
-        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,etaMax=etaMax)
+        jetMask=hhhSelector.getSelectedJetCollectionMaskEta(eTree,jetMask=[],etaMax=etaMax)
         if sum(jetMask) < 4 :
             sumEntries.Fill('nJetPreselectionEta',1)
             sumWeights.Fill('nJetPreselectionEta',wei)
@@ -241,7 +272,12 @@ for fname in allFnames:
                 sumEntries.Fill('nJetPreselectionOR',1)
                 sumWeights.Fill('nJetPreselectionOR',wei)
                 continue
-    
+        if doBadBJetRemoval:
+            jetMask=hhhSelector.getSelectedJetCollectionMaskBadBJet(eTree,jetMask=jetMask)
+            if sum(jetMask) < 4 :
+                sumEntries.Fill('nJetPreselectionBadBJet',1)
+                sumWeights.Fill('nJetPreselectionBadBJet',wei)
+                continue
  
         verbose=False
         sumScore_3j=0.0
@@ -260,7 +296,7 @@ for fname in allFnames:
                 i+=1
 
         elif methord=='mha':
-            allQuads=hhhSelector.getBJetParis_wrapper(eTree, mask= jetMask , methord='mha',mlScoreTag='H3SIN61',threshold=-1e3,doMisclassificationCorrection = False)
+            allQuads=hhhSelector.getBJetParis_wrapper(eTree, mask= jetMask , methord='mha',mlScoreTag=mlScoreTag,threshold=-1e3,doMisclassificationCorrection = False)
             if not allQuads['isValid']:
                 print("anity check failed after the quad finding")
                 exit(1)
@@ -303,22 +339,73 @@ for fname in allFnames:
             #    print(tofill['quadjet_'+str(i)+'_mlScoreY1s']  )
             #    print(tofill['quadjet_'+str(i)+'_mlScoreY2s']  )
             #    i+=1
+        genCat=0
+        if processID=='sig':
+            cat=1
+            rslt=hhhSelector.getBestGetMatchesGlobalFGG(eTree,jetMask=jetMask)
+            idxs=rslt['fgg_idxs']
+            isRecoed={}
+            for i in range(4):
+                isRecoed['isRecoed_'+str(i)]=True
+            for i in range(4):
+                if idxs[i] < 0:
+                    isAllRecoed=False
+                    isRecoed['isRecoed_'+str(i)]=False
             
+            h1Out=  isRecoed['isRecoed_0'] and isRecoed['isRecoed_1']
+            h2Out=  isRecoed['isRecoed_2'] and isRecoed['isRecoed_3']
+            
+            nout=0
+            if not isRecoed['isRecoed_0']:            nout+=1;    
+            if not isRecoed['isRecoed_1']:            nout+=1;    
+            if not isRecoed['isRecoed_2']:            nout+=1;    
+            if not isRecoed['isRecoed_3']:            nout+=1;
+
+            x=0
+            for i in range(8):
+                if i in idxs:
+                    x+=1
+            cat=1
+            if nout==0 and x==4 :
+                cat=2 #'allRecoed'
+            elif nout==1 and x==3 :
+                cat=3 #' SingleJetMiss |'
+            if nout==2 and x==2  :
+                cat=4 #' 2 JetMiss |'
+            if nout==3 and x==1  :
+                cat=5 #' 3 JetMiss |'
+            genCat=cat
+        
+        tofill['genRecoCategory']=genCat*1.0
         tofill["sumScore_4j"]=sumScore_4j
         tofill["sumScore_3j"]=sumScore_3j
+        
+        
 
         quad=allQuads['bJetQuad']
+
+        if doBjetCounting:
+            nb=hhhUtil.getNBsFromQuad(eTree,quad)
+            if hhhSelector.vetoOverCountings(nb,dataTag):
+                sumEntries.Fill('nFailedFromOverCounting',1)
+                sumWeights.Fill('nFailedFromOverCounting',wei)
+                continue
+
+
         LVStore = hhhUtil.getLVStoreFromTreeAndQuad(eTree,quad)
         j1CosTheta,k1CosTheta,ggCostheta,drMin,drOther=hhhUtil.getCosthetaVars(eTree,LVStore)
         
         tofill['r_HH'] = quad['r_HH']
         tofill['D_HH'] = quad['D_HH']
-        tofill['weight'] =  wei
 
-        varDict=hhhUtil.getOtherDerivedVariables(eTree,LVStore,quad)
+        #hhhUtil.printEventInfo(eTree,jetMask=jetMask)
+        #hhhUtil.printEventInfoFromLVStore(LVStore,eid=eTree.event)
+        #print("\n")
+        #print("fgg indexs selected : ",quad['fgg_idxs'])
         #for ky in tofill:
         #    if ky not in varDict:
         #       print("filling default barnch value  for branch",ky)
+        varDict=hhhUtil.getOtherDerivedVariables(eTree,LVStore,quad)
         for ky in varDict:
             tofill[ky]=varDict[ky]
         tofill['ttH_MET'] = eTree.ttH_MET
@@ -328,6 +415,9 @@ for fname in allFnames:
             if ky not in tofill:
                 print("not in tofill ",ky)
 
+        tofill['weight'] =  wei
+        tofill['weight_v0'] =  wei_base
+        #print("weight : ",tofill['weight_v0']," --> ",tofill['weight'])
         for i in outputDataDict:
             outputDataDict[i]=tofill[i]
         arr=array('f', outputDataDict.values())

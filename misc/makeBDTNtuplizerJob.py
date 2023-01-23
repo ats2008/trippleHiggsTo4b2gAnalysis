@@ -11,11 +11,14 @@ parser.add_argument('-t',"--test", help="Test Job", action='store_true' )
 parser.add_argument('-p',"--printOnly", help="Only Print the commands", action='store_true' )
 parser.add_argument('-n',"--njobs", help="Number of jobs to make",default='-6000')
 parser.add_argument('-e',"--nevts", help="Number of events per job",default='-1')
-parser.add_argument('-v',"--version", help="Vesion of the specific work",default='1p0')
+parser.add_argument('-c',"--cats", help="Categories of jobs to process ",default=None)
+parser.add_argument('-y',"--years", help="Year of jobs to process ",default="*")
+parser.add_argument('-v',"--version", help="Vesion of the specific work",default='3p0')
 
 args = parser.parse_args()
 
 version=args.version
+#version='higsin90_'+args.version
 
 njobs=int(args.njobs)
 maxevents=int(args.nevts)
@@ -25,12 +28,16 @@ submit2Condor=args.submit
 resubmit2Condor=args.resubmit
 isTest=args.test
 onlyPrint=args.printOnly
+cats=args.cats
+years=args.years.split(",")
 print(" submit jobs ",submit2Condor)
 print(" resubmit jobs ",resubmit2Condor)
 print(" isTest ",isTest)
 print(" printOnly ",onlyPrint)
 print(" njobs ",njobs)
 print(" maxEvt ",maxevents)
+print(" cats ",cats)
+print(" years ",years)
 
 if submit2Condor or resubmit2Condor:
     choice=raw_input("Do you really want to submit the jobs to condor pool ? ")
@@ -44,6 +51,7 @@ with open('misc/jsons/bdtNtuplizer.json') as f:
 
 fileListDict={}
 with open('misc/jsons/fileListToUse.json') as f:
+#with open('misc/jsons/fileListPostMLScoreAdditionToUse.json') as f:
     fileListDict=json.load(f)
 
 templateCMD="""
@@ -59,35 +67,55 @@ templateCMD="""
        --tag             @@TAG 
        --jobType         @@JOB_TYPE
        --maxMeterialize  @@MAX_METERIALIZE
+       --cfgExtras \"@@CFG_EXTRAS\"
 """
 
-if isTest or onlyPrint :
+if isTest :
+    njobs=2
+    maxevents=1000
+if onlyPrint:    
     templateCMD= 'echo '+templateCMD 
-
 allCondorSubFiles=[]
 if jobsToProcess==None:
     jobsToProcess=list( jobDict.keys() )
-jobsToProcess=['bkg','sig']
+jobsToProcess=['bkg','sig','data']
+#jobsToProcess=['data']
+
+if cats:
+    jobsToProcess=cats.split(",")
+
+print()
+print(" Processing Job categories : ",jobsToProcess)
+print()
 for jobTag in jobsToProcess:
-    print(jobDict[jobTag])
+    #print(jobDict[jobTag])
     if njobs > 0:
         jobDict[jobTag]['njobs']=njobs
     if maxevents > 0:
         jobDict[jobTag]['maxevents']=maxevents
-    print(jobDict[jobTag])
+    #print(jobDict[jobTag])
     cmd=templateCMD.replace("@@EXE",jobDict[jobTag]['exe'])
-    cmd=cmd.replace("@@CFG_TPL"        ,jobDict[jobTag]['cfg'])
-    cmd=cmd.replace("@@SCRIPT_TPL"     ,jobDict[jobTag]['script'])
-    cmd=cmd.replace("@@NJOBS"          ,str(jobDict[jobTag]['njobs']))
-    cmd=cmd.replace("@@JOB_TYPE"          ,str(jobDict[jobTag]['jobType']))
-    cmd=cmd.replace("@@FILES_PER_JOB"        ,str(jobDict[jobTag]['files_per_job']))
-    cmd=cmd.replace("@@MAXEVENTS"        , str(jobDict[jobTag]['maxevents']) )
-    cmd=cmd.replace("@@MAX_METERIALIZE"        , str(jobDict[jobTag]['max_meterialize']) )
+    cmd=cmd.replace(  "@@CFG_TPL"        ,jobDict[jobTag]['cfg'])
+    cmd=cmd.replace(  "@@SCRIPT_TPL"     ,jobDict[jobTag]['script'])
+    cmd=cmd.replace(  "@@NJOBS"          ,str(jobDict[jobTag]['njobs']))
+    cmd=cmd.replace(  "@@JOB_TYPE"          ,str(jobDict[jobTag]['jobType']))
+    cmd=cmd.replace(  "@@FILES_PER_JOB"        ,str(jobDict[jobTag]['files_per_job']))
+    cmd=cmd.replace(  "@@MAXEVENTS"        , str(jobDict[jobTag]['maxevents']) )
+    cmd=cmd.replace(  "@@MAX_METERIALIZE"        , str(jobDict[jobTag]['max_meterialize']) )
+    cfgExtra='""'
     for key in jobDict[jobTag]:
         if '@@' in key:
             cmd=cmd.replace( key ,jobDict[jobTag][ key ]  )
 
     for dset in jobDict[jobTag]['datasets']:
+        if "*" not in years:
+            hasYear=False
+            for yr in years:
+                if yr in dset:
+                    hasYear=True
+                    break
+            if not hasYear:
+                continue
         dset=dset.encode('ascii','replace')
         if dset in fileListDict:
             flist=fileListDict[dset]
@@ -99,6 +127,14 @@ for jobTag in jobsToProcess:
         cmdD=cmdD.replace("@@FILELIST",flist)
         destination = jobDict[jobTag]['destn'] +'/'+tag+'/'
         cmdD=cmdD.replace("@@DESTN",destination)
+        cfgExtra_=cfgExtra
+        if 'cfgExtras' in jobDict[jobTag]:
+            if "*" in jobDict[jobTag]['cfgExtras'] :
+                cfgExtra_= jobDict[jobTag]['cfgExtras']["*"]   
+            if dset in jobDict[jobTag]['cfgExtras']:
+                cfgExtra_=  jobDict[jobTag]['cfgExtras'][dset]  
+        print(cfgExtra_)
+        cmdD=cmdD.replace("@@CFG_EXTRAS",cfgExtra_)
         
         head='Condor/'+jobDict[jobTag]['jobType']+'/Jobs'+tag
         condorScriptName=head+'/job'+tag+'.sub'
