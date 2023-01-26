@@ -18,12 +18,12 @@ if __name__=='__main__':
 
     unblind= args.unblind
 
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan19/correlations/'
+    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan23/correlationsX/'
     fileDict={}
-    with open('workarea/data/bdtNtuples/v2/filelist.json') as f:
+    with open('workarea/data/bdtNtuples/v7p2/filelist.json') as f:
         fileDict=json.load(f)
     yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
-    #yearsToProcess=['run2']
+    yearsToProcess=['2018']
     bkgToProcess=[ 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
 
     rdataFrames={}
@@ -54,24 +54,27 @@ if __name__=='__main__':
                 print()
                 continue
             fileName = fileDict[yr]['bkg'][bkg]
-            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName)
+            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(' CMS_hgg_mass < 115.0  || CMS_hgg_mass >135.0')
             print("Registering datset : ",bkg," , ",yr," withh tree",treeName)
     
     varlist=[
-        'sumScore_4j','h1bb_mass','h2bb_mass','''sumScore_3j''','trihiggs_pt','scalarPtSum4b',
+        'sumScore_4j','h1bb_mass','h2bb_mass','sumScore_3j','trihiggs_pt','scalarPtSum4b',
         'quadjet_0_deepJetScore','quadjet_2_deepJetScore','HH4bCosTheta_hhhF',
         'quadjet_1_deepJetScore','pThgg_overMgg','H1H2JetDrMin',
         'pTsubleadG_overMgg','quadjet_3_deepJetScore','pTh1leadJ_overMh1',
         'HggCosTheta_hhhF','H1bbCosTheta_hhhF','PhoJetMaxDr',
         'LeadJetDrMinWithOtherJets','CosThetaH1_hhhF','PhoJetMinDrOther',
-        'PhoJetMinDr','pTh1subleadJ_overMh1','trihiggs_mass',
+        'PhoJetMinDr','pTh1subleadJ_overMh1',
         'pTh2subleadJ_overMh2','customSubLeadingPhotonIDMVA','h1bb_eta',
         'H1H2JetDrMax','h2bb_eta','customLeadingPhotonIDMVA','pTh2leadJ_overMh2',
         'r_HH','pTleadG_overMgg','PhoJetMaxDrOther','ttH_MET','h2_dijetSigmaMOverM',
         'absCosThetaH4bHgg','LeadJetDrMaxWithOtherJets','h1_dijetSigmaMOverM',
         'LeadJetAbsCosThetaMax','scalarPtSum4b2g','scalarPtSumHHH'
     ]
-
+#    varlist=[
+#        'LeadJetDrMinWithOtherJets','CosThetaH1_hhhF','PhoJetMinDrOther'
+#    ]
+    NVARS=len(varlist)
     dataForCorr={}
     for yr  in yearsToProcess:
         print("Processing Year : ",yr)
@@ -114,18 +117,21 @@ if __name__=='__main__':
 
     correlationDictAllYears={}
     correlationMatrixesAllYears={}
+    kk=0
     for yr  in yearsToProcess:
+        kk+=1
         correlationDict={'sig':{},'bkg':{},'data':{}}
-        correlationDict['varlist']={ i : varlist[i] for i in range(len(varlist)) }
-        corrData=np.zeros((len(varlist),len(varlist)))
-        corrSig=np.zeros((len(varlist),len(varlist)))
-        corrBkg=np.zeros((len(varlist),len(varlist)))
-        print("Processing Year ",yr," [ ",i+1,'/',len(yearsToProcess)," ]")
+        correlationDict['varlist']={ i : varlist[i] for i in range(NVARS) }
+        corrData=np.zeros((NVARS,NVARS))
+        corrSig =np.zeros((NVARS,NVARS))
+        corrBkg =np.zeros((NVARS,NVARS))
+        print("Processing Year ",yr," [ ",kk,'/',len(yearsToProcess)," ]")
         for i,var in enumerate(varlist):
             correlationDict['data'][i]={}
             correlationDict['bkg'][i]={}
             correlationDict['sig'][i]={}
-            
+            if var=='LeadJetDrMinWithOtherJets':
+                print("Data  : ",dataForCorr[yr]['data']['x'][i])
             for j in range(len(varlist)):
                 correlationDict['data'][i][j]=utl.wei_corr(dataForCorr[yr]['data']['x'][i],
                            dataForCorr[yr]['data']['x'][j] ,
@@ -153,11 +159,11 @@ if __name__=='__main__':
         for key in correlationMatrixesAllYears[yr]:
             mat=correlationMatrixesAllYears[yr][key]
             f,ax=plt.subplots(figsize=(18,12))
-            c=ax.imshow(mat,vmin=-1.0, vmax=1.0,cmap='tab20c',extent= (0, 42, 0, 42*4),aspect=0.14)
-            varlist_y=[i+'  ['+str(n)+'] ' for n,i in enumerate(varlist)]
-            varlist_x=['['+str(n)+']' for n,i in enumerate(varlist)]
-            t=ax.set_yticks(np.arange(0.0,42,1)*4,varlist_y)
-            t=ax.set_xticks(np.arange(0.0,42,1),varlist_x,ha='left')
+            c=ax.imshow(mat,vmin=-1.0, vmax=1.0,cmap='tab20c',extent= (0, NVARS, 0, NVARS*4),aspect=0.14)
+            varlist_y=[varlist[n]+'  ['+str(n)+'] ' for n in range(NVARS)]
+            varlist_x=['['+str(n)+']' for n in range(NVARS)]
+            t=ax.set_yticks(np.arange(0.0,NVARS,1)*4,varlist_y)
+            t=ax.set_xticks(np.arange(0.0,NVARS,1),varlist_x,ha='left')
             ax2 = f.add_axes([ax.get_position().x1+0.005,ax.get_position().y0,
                                0.02,ax.get_position().height])
             plt.colorbar(c,cax=ax2)

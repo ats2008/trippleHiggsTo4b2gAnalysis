@@ -17,11 +17,11 @@ if __name__=='__main__':
 
     unblind= args.unblind
 
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan19/'
+    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan23/variables_v0Scaled/geometric/'
     fileDict={}
-    with open('workarea/data/bdtNtuples/v4/filelist.json') as f:
+    with open('workarea/data/bdtNtuples/filelistToUse.json') as f:
         fileDict=json.load(f)
-    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
+    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
     bkgToProcess=[ 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
 
     rdataFrames={}
@@ -52,7 +52,7 @@ if __name__=='__main__':
                 print()
                 continue
             fileName = fileDict[yr]['bkg'][bkg]
-            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName)
+            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(' CMS_hgg_mass < 115.0  || CMS_hgg_mass >135.0')
             print("Registering datset : ",bkg," , ",yr," withh tree",treeName)
 
     varToBinMap={  

@@ -2,6 +2,18 @@ import os, sys
 import ROOT
 import numpy as np
 
+lumiMap={'2018':'58','2017':'41.5','2016':'36.3' , '2016PreVFP':'19.5','2016PostVFP':'16.8','run2':'137.61'}
+backgroundStackList=['gJet20To40','ggBox2Bjet','ggBox1Bjet','gJet40ToInf','ggBox','bkg']
+
+def wei_cov(x, y, w):
+    """Weighted Covariance"""
+    return np.sum(w * (x - np.average(x, weights=w)) * (y - np.average(y, weights=w))) / np.sum(w)
+
+def wei_corr(x, y, w):
+    """Weighted Correlation"""
+    return wei_cov(x, y, w) / np.sqrt(wei_cov(x, x, w) * wei_cov(y, y, w))
+
+
 
 def saveTheDictionary(aCollection,fname=None,folder=None):
     outfile=folder
@@ -142,4 +154,23 @@ def getAClonedTree(eTree,name=""):
     tofill = OrderedDict(zip(branches, [np.nan]*len(branches)))
     
     return oTree
-
+def rebin(hist,n=2):
+    bins=[hist[1][0]]
+    counts=[]
+    k=0
+    s=0
+    for i in range(len(hist[0])):
+        s+=hist[0][i]
+        k+=1
+        if k==n:
+            bins.append(hist[1][i+1])
+            counts.append(s)
+            k=0
+            s=0
+    return (np.array(counts),np.array(bins))
+            
+def getTH1FromNumpHist(nph):
+    hist = ROOT.TH1D("","",len(nph[1])-1,nph[1])
+    for i,freq in enumerate(nph[0]):
+        hist.SetBinContent(i+1,freq)
+    return hist            

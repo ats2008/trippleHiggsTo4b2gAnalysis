@@ -1,28 +1,31 @@
 import matplotlib.pyplot as plt
 import mplhep as hep
-import uproot3 as urt
+import uproot as urt
 import ROOT
 import json
 import numpy as np
 import os,argparse
+
 from Util import lumiMap
+import Util as utl
 import trippleHiggsPlotter as plotterUtil
 
 if __name__=='__main__':
     
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--unblind", help="Unblind the Mgg spectrum", action='store_true' )
     args=parser.parse_args()
 
     unblind= args.unblind
 
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan19/'
+    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan25/variables_v0Scaled/kinematics/'
     fileDict={}
-    with open('workarea/data/bdtNtuples/v4/filelist.json') as f:
+    with open('workarea/data/analysisNtuples/v1p1/filelist.json') as f:
+    #with open('workarea/data/bdtNtuples/filelistToUse.json') as f:
         fileDict=json.load(f)
 
-    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
+    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
+    yearsToProcess=['2018','run2']
     bkgToProcess=[ 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
 
     rdataFrames={}
@@ -33,7 +36,7 @@ if __name__=='__main__':
         treeName = "trees/ggHHH_125_13TeV"
         rdataFrames[yr]['sig']['ggHHH']= ROOT.RDataFrame(treeName, fileName)
         print("Registering datset : ggHHH , ",yr," withh tree",treeName)
-    
+        print("\t\tFilename :", fileName)
         ky=list(fileDict[yr]['data'].keys())[0]
         fileName=fileDict[yr]['data'][ky]
         treeName = "trees/Data_13TeV_TrippleHTag_0"
@@ -43,6 +46,7 @@ if __name__=='__main__':
         else:
             rdataFrames[yr]['data']['data']= ROOT.RDataFrame(treeName, fileName).Filter(' CMS_hgg_mass < 115.0  || CMS_hgg_mass >135.0')
         print("Registering datset : data , ",yr," withh tree",treeName)
+        print("\t\tFilename :", fileName)
     
         rdataFrames[yr]['bkg']={}
         treeName = "trees/bkg_13TeV_TrippleHTag_0"
@@ -53,43 +57,54 @@ if __name__=='__main__':
                 print()
                 continue
             fileName = fileDict[yr]['bkg'][bkg]
-            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName)
+            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(' CMS_hgg_mass < 115.0  || CMS_hgg_mass >135.0')
             print("Registering datset : ",bkg," , ",yr," withh tree",treeName)
+            print("\t\tFilename :", fileName)
 
     varToBinMap={  
-                   'h1bb_mass' : ("","",50,0.0,300.0),
-                   'h2bb_mass' : ("","",50,0.0,300.0),
-                   'CMS_hgg_mass' :("","",50,100.0,200.0),
+                   'h1bb_mass' : ("","",30,0.0,300.0),
+                   'h2bb_mass' : ("","",30,0.0,300.0),
+                   "diphoton_pt"  : ("","",20,0.0,400),
                    'pThgg_overMgg' : ("","",20,0.0,4.0),
                    "h1bb_eta" : ("","",30,-3.0,3.0),
                    "h1bb_phi" : ("","",30,-3.2,3.2),
-                   "h1bb_pt"  : ("","",100,0.0,600),
+                   "h1bb_pt"  : ("","",20,0.0,400),
                    "h2bb_eta" : ("","",30,-3.0,3.0),
                    "h2bb_phi" : ("","",30,-3.2,3.2),
-                   "h2bb_pt"  : ("","",100,0.0,600),
-                   "pT_4b"  : ("","",100,0.0,600),
+                   "h2bb_pt"  : ("","",20,0.0,400),
+                   "pT_4b"  : ("","",20,0.0,400),
                    "h1_dijetSigmaMOverM"  : ("","",25,0.0,0.25),
                    "h2_dijetSigmaMOverM"  : ("","",25,0.0,0.25),
-                    "pTh1leadJ_overMh1"   : ("","",30,0.0,6.0),
-                    "pTh1subleadJ_overMh1": ("","",25,0.0,2.5),
-                    "pTh2leadJ_overMh2"   : ("","",30,0.0,6.0),
-                    "pTh2subleadJ_overMh2": ("","",25,0.0,2.5),
-                    "pThgg_overMgg" :  ("","",30,0.0,3.0),
-                    "pTleadG_overMgg" : ("","",16,0.0,3.2),
-                    "pTsubleadG_overMgg": ("","",16,0.0,1.2),
-                    "scalarPtSum4b" : ("","",100,0.0,1000.0),
-                    "scalarPtSum4b2g": ("","",100,0.0,1200.0),
-                    "scalarPtSumHHH": ("","",100,0.0,1200.0),
-                    "sigmaMOverM" : ("","",40,0.0,0.20),
-                    "trihiggs_mass" : ("","",140,0.0,2100.0),
-                    "trihiggs_pt" : ("","",60,0.0,600.0),
-                    "ttH_MET" : ("","",100,0.0,200.0)
+                   "pTh1leadJ_overMh1"   : ("","",30,0.0,6.0),
+                   "pTh1subleadJ_overMh1": ("","",25,0.0,2.5),
+                   "pTh2leadJ_overMh2"   : ("","",30,0.0,6.0),
+                   "pTh2subleadJ_overMh2": ("","",25,0.0,2.5),
+                   "pThgg_overMgg" :  ("","",30,0.0,3.0),
+                   "pTleadG_overMgg" : ("","",16,0.0,3.2),
+                   "pTsubleadG_overMgg": ("","",16,0.0,1.2),
+                   "scalarPtSum4b" : ("","",20,0.0,1000.0),
+                   "scalarPtSum4b2g": ("","",20,0.0,1200.0),
+                   "scalarPtSumHHH": ("","",20,0.0,1200.0),
+                   "sigmaMOverM" : ("","",40,0.0,0.20),
+                   "trihiggs_mass" : ("","",20,0.0,2100.0),
+                   "trihiggs_pt" : ("","",20,0.0,400.0),
+                   "ttH_MET" : ("","",10,0.0,200.0),
+                   "pT_h1leadJ"   : ("","",30,25.0,720.0),
+                   "pT_h1subleadJ": ("","",30,25.0,720.0),
+                   "pT_h2leadJ"   : ("","",30,25.0,720.0),
+                   "pT_h2subleadJ": ("","",30,25.0,720.0),
                 }
+
+    varToExpressionMap={
+                   "pT_h1leadJ"   :"pTh1leadJ_overMh1*h1bb_mass" ,
+                   "pT_h1subleadJ":"pTh1subleadJ_overMh1*h1bb_mass" ,
+                   "pT_h2leadJ"   :"pTh2leadJ_overMh2*h2bb_mass" ,
+                   "pT_h2subleadJ":"pTh2subleadJ_overMh2*h2bb_mass" 
+               }
 
     varToProcess=[
            'h1bb_mass' ,
            'h2bb_mass' ,
-           'CMS_hgg_mass' ,
            'pThgg_overMgg' ,
            "h1bb_eta" ,
            "h1bb_phi" ,
@@ -115,6 +130,12 @@ if __name__=='__main__':
             "trihiggs_pt" ,
             "ttH_MET" ,
          ]
+    varToProcess=[
+                   "pT_h1leadJ"   ,
+                   "pT_h1subleadJ",
+                   "pT_h2leadJ"   ,
+                   "pT_h2subleadJ"
+         ]
     allHistoDict={}
     for yr  in yearsToProcess:
         allHistoDict[yr]={}
@@ -124,14 +145,22 @@ if __name__=='__main__':
             saveBase=prefixBase+'/'+yr+'/'
             os.system('mkdir -p '+saveBase)
             histStore={'sig':{},'bkg':{},'data':{}}
+            expression=var
+            if var in varToExpressionMap:
+                expression=varToExpressionMap[var]
             print("   Year : ",yr,' Signal')
             for ky in rdataFrames[yr]['sig']:
+                rdataFrames[yr]['sig'][ky]=rdataFrames[yr]['sig'][ky].Define(var,expression)
                 histStore['sig'][ky]=rdataFrames[yr]['sig'][ky].Histo1D(varToBinMap[var],var,'weight')
             print("   Year : ",yr,' Background')
-            for ky in rdataFrames[yr]['bkg']:
+            for ky in utl.backgroundStackList:
+                if ky not in rdataFrames[yr]['bkg']:
+                    continue
+                rdataFrames[yr]['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Define(var,expression)
                 histStore['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Histo1D(varToBinMap[var],var,'weight')
             print("   Year : ",yr,' Data')
             for ky in rdataFrames[yr]['data']:
+                rdataFrames[yr]['data'][ky]=rdataFrames[yr]['data'][ky].Define(var,expression)
                 histStore['data']=rdataFrames[yr]['data'][ky].Histo1D(varToBinMap[var],var,'weight')
             allHistoDict[yr][var]=histStore
             print("Saving into : ",saveBase)
