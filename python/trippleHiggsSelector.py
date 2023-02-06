@@ -55,7 +55,7 @@ def getHiggsDauP4s(eTree,pdgId):
         genEta[k]=eTree.gen_H1_dau2_eta
         genPhi[k]=eTree.gen_H1_dau2_phi
         genE[k]=eTree.gen_H1_dau2_e
-        genHPt[k/2]=eTree.gen_H1_pt
+        genHPt[int(k/2)]=eTree.gen_H1_pt
         k+=1
     if abs(eTree.gen_H2_dau1_pdgId)==pdgId:
         genPt[k]=eTree.gen_H2_dau1_pt
@@ -67,7 +67,7 @@ def getHiggsDauP4s(eTree,pdgId):
         genEta[k]=eTree.gen_H2_dau2_eta
         genPhi[k]=eTree.gen_H2_dau2_phi
         genE[k]=eTree.gen_H2_dau2_e
-        genHPt[k/2]=eTree.gen_H2_pt
+        genHPt[int(k/2)]=eTree.gen_H2_pt
         k+=1
 
     if abs(eTree.gen_H3_dau1_pdgId)==pdgId:
@@ -80,7 +80,7 @@ def getHiggsDauP4s(eTree,pdgId):
         genEta[k]=eTree.gen_H3_dau2_eta
         genPhi[k]=eTree.gen_H3_dau2_phi
         genE[k]=eTree.gen_H3_dau2_e
-        genHPt[k/2]=eTree.gen_H3_pt
+        genHPt[int(k/2)]=eTree.gen_H3_pt
         k+=1
     allP4=[]
     for i in range(k):
@@ -1306,6 +1306,13 @@ def vetoOverCountings(nBs,dataTag):
 def hasToRePtWeight(dataTag):
 
     if dataTag in ["ggJets","ggJets1b","ggJets2b"]:
+        return True
+
+    return False
+
+def hasToBDTReWeight(dataTag):
+
+    if dataTag in ["ggJets","ggJets1b","ggJets2b","gJet20To40","gJet40ToInf"]:
         return True
 
     return False

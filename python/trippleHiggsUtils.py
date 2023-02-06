@@ -227,6 +227,21 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict['pTh2jj_overMh2']  = LVStore['H2bbLV'].Pt() / LVStore['H2bbLV'].M()
     varDict['pThgg_overMgg']   = LVStore['HggLV'].Pt() / LVStore['HggLV'].M()
 
+    varDict['pT_h1leadJ']    = LVStore['j1LV'].Pt()
+    varDict['pT_h1subleadJ'] = LVStore['j2LV'].Pt()
+    varDict['pT_h2leadJ']    = LVStore['k1LV'].Pt()
+    varDict['pT_h2subleadJ'] = LVStore['k2LV'].Pt()
+    
+    varDict['eta_h1leadJ']    = LVStore['j1LV'].Eta()
+    varDict['eta_h1subleadJ'] = LVStore['j2LV'].Eta()
+    varDict['eta_h2leadJ']    = LVStore['k1LV'].Eta()
+    varDict['eta_h2subleadJ'] = LVStore['k2LV'].Eta()
+    
+    varDict['phi_h1leadJ']    = LVStore['j1LV'].Phi()
+    varDict['phi_h1subleadJ'] = LVStore['j2LV'].Phi()
+    varDict['phi_h2leadJ']    = LVStore['k1LV'].Phi()
+    varDict['phi_h2subleadJ'] = LVStore['k2LV'].Phi()
+    
     varDict['pTleadG_overMgg']    = LVStore['g1LV'].Pt() / LVStore['HggLV'].M()
     varDict['pTsubleadG_overMgg'] = LVStore['g2LV'].Pt() / LVStore['HggLV'].M()
     varDict['pTh1leadJ_overMh1'] = LVStore['j1LV'].Pt() / LVStore['H1bbLV'].M()
@@ -1330,19 +1345,67 @@ def printEventInfoFromLVStore(LVStore,eid=None):
 def getDataTag(fname):
     
     txt=fname.lower()
-    dataType='data'
+    dataType='data',-1
     if 'diphotonjetsbox1bjet' in txt:
-        dataType='ggJets1b'
+        dataType=('ggJets1b',1)
     elif 'diphotonjetsbox2bjet' in txt:
-        dataType='ggJets2b'
+        dataType=('ggJets2b',2)
     elif 'diphotonjetsbox' in txt:
-        dataType='ggJets'
+        dataType=('ggJets',0)
     elif 'gjet_pt-40toinf' in txt:
-        dataType='gJet40ToInf'
+        dataType=('gJet40ToInf',3)
     elif 'gjet_pt-20to40' in txt:
-        dataType='gJet20To40'
+        dataType=('gJet20To40',4)
+    elif 'HHHTo4B2G_c3_0_d4_0' in txt:
+        dataType=('HHHTo4B2G_c3_0_d4_0',5)
+    elif 'ggbox2bjet' in txt:
+        dataType=('ggJets1bjet',1)
+    elif 'ggbox1bjet' in txt:
+        dataType=('ggJets2bjet',2)
+    elif 'ggbox' in txt:
+        dataType=('ggJets',0)
+    elif 'gjet40toinf' in txt:
+        dataType=('gJet40ToInf',3)
+    elif 'gjet20to40' in txt:
+        dataType=('gJet20To40',4)
+    elif 'gghhh' in txt:
+        dataType=('HHHTo4B2G_c3_0_d4_0',5)
+
+
 
     return dataType
+
+def getYear(fname):
+    txt=fname.lower()
+    year=None
+    hasit=0
+    if '2018' in txt:
+        year='2018'
+        return year,3
+    if '2017' in txt:
+        year='2017'
+        return year,2
+    if '2016postvfp' in txt:
+        year='2016PostVFP'
+        return year,1
+    if '2016prevfp' in txt:
+        year='2016PreVFP'
+        return year,0
+    if 'ul18' in txt:
+        year='2018'
+        return year,3
+    if 'ul17' in txt:
+        year='2017'
+        return year,2
+    if 'ul16postvfp' in txt:
+        year='2016PostVFP'
+        return year,1
+    if 'ul16prevfp' in txt:
+        year='2016PreVFP'
+        return year,0
+    if hasit>1:
+        print("Ambegeous year ! for file  : ",fname," [ currently tagged as ",year," ]")
+    return year
 
 def getNBsFromQuad(eTree,quad):
     bCount=0

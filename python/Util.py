@@ -3,7 +3,16 @@ import ROOT
 import numpy as np
 import functools,warnings
 
-    
+lumiMap={
+    '2018':'59.8',
+    '2017':'41.5',
+    '2016':'36.3' ,
+    '2016PreVFP':'19.5',
+    '2016PostVFP':'16.8',
+    'run2':'137.61'
+    }
+backgroundStackList=['gJet20To40','ggBox2Bjet','ggBox1Bjet','gJet40ToInf','ggBox']
+   
 
 def saveTheDictionary(aCollection,fname=None,folder=None,closeFile=True):
     outfile=folder
