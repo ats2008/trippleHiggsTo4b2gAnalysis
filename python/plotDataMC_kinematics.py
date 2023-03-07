@@ -14,18 +14,22 @@ if __name__=='__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--unblind", help="Unblind the Mgg spectrum", action='store_true' )
+    parser.add_argument("-i","--flist", help="File list To Use", default='workarea/data/bdtNtuples/v8p2/filelist.json' )
+    parser.add_argument("-o","--dest", help="destination To Use", default='workarea/results/plots/analysis/feb8/' )
+    parser.add_argument("-w","--weight", help="weight var to use", default='weight' )
     args=parser.parse_args()
 
     unblind= args.unblind
 
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan25/variables_v0Scaled/kinematics/'
+    weightVar=args.weight
+    inputfile= args.flist
+    prefixBase=args.dest
+    prefixBase+='/variables/'
     fileDict={}
-    with open('workarea/data/analysisNtuples/v1p1/filelist.json') as f:
-    #with open('workarea/data/bdtNtuples/filelistToUse.json') as f:
+    with open(inputfile) as f:
         fileDict=json.load(f)
 
-    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
-    yearsToProcess=['2018','run2']
+    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
     bkgToProcess=[ 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
 
     rdataFrames={}
@@ -96,10 +100,10 @@ if __name__=='__main__':
                 }
 
     varToExpressionMap={
-                   "pT_h1leadJ"   :"pTh1leadJ_overMh1*h1bb_mass" ,
-                   "pT_h1subleadJ":"pTh1subleadJ_overMh1*h1bb_mass" ,
-                   "pT_h2leadJ"   :"pTh2leadJ_overMh2*h2bb_mass" ,
-                   "pT_h2subleadJ":"pTh2subleadJ_overMh2*h2bb_mass" 
+                #   "pT_h1leadJ"   :"pTh1leadJ_overMh1*h1bb_mass" ,
+                #   "pT_h1subleadJ":"pTh1subleadJ_overMh1*h1bb_mass" ,
+                #   "pT_h2leadJ"   :"pTh2leadJ_overMh2*h2bb_mass" ,
+                #   "pT_h2subleadJ":"pTh2subleadJ_overMh2*h2bb_mass" 
                }
 
     varToProcess=[
@@ -142,26 +146,30 @@ if __name__=='__main__':
         print("Procssing for Year  : ",yr)
         for var in varToProcess:
             print("  Procssing for variable  : ",var)
-            saveBase=prefixBase+'/'+yr+'/'
+            saveBase=prefixBase+'/'+yr+'/kinematics/'
             os.system('mkdir -p '+saveBase)
             histStore={'sig':{},'bkg':{},'data':{}}
             expression=var
             if var in varToExpressionMap:
                 expression=varToExpressionMap[var]
+                rdataFrames[yr]['sig'][ky]=rdataFrames[yr]['sig'][ky].Define(var,expression)
             print("   Year : ",yr,' Signal')
             for ky in rdataFrames[yr]['sig']:
-                rdataFrames[yr]['sig'][ky]=rdataFrames[yr]['sig'][ky].Define(var,expression)
-                histStore['sig'][ky]=rdataFrames[yr]['sig'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['sig'][ky]=rdataFrames[yr]['sig'][ky].Histo1D(varToBinMap[var],var,weightVar)
             print("   Year : ",yr,' Background')
             for ky in utl.backgroundStackList:
+                if var in varToExpressionMap:
+                    expression=varToExpressionMap[var]
+                    rdataFrames[yr]['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Define(var,expression)
                 if ky not in rdataFrames[yr]['bkg']:
                     continue
-                rdataFrames[yr]['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Define(var,expression)
-                histStore['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Histo1D(varToBinMap[var],var,weightVar)
             print("   Year : ",yr,' Data')
             for ky in rdataFrames[yr]['data']:
-                rdataFrames[yr]['data'][ky]=rdataFrames[yr]['data'][ky].Define(var,expression)
-                histStore['data']=rdataFrames[yr]['data'][ky].Histo1D(varToBinMap[var],var,'weight')
+                if var in varToExpressionMap:
+                    expression=varToExpressionMap[var]
+                    rdataFrames[yr]['data'][ky]=rdataFrames[yr]['data'][ky].Define(var,expression)
+                histStore['data']=rdataFrames[yr]['data'][ky].Histo1D(varToBinMap[var],var,weightVar)
             allHistoDict[yr][var]=histStore
             print("Saving into : ",saveBase)
             plotterUtil.plotVariableDistribution(histStore,var,year=yr,lumi=lumiMap[yr],savePrefix=saveBase)

@@ -13,17 +13,23 @@ if __name__=='__main__':
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--unblind", help="Unblind the Mgg spectrum", action='store_true' )
+    parser.add_argument("-i","--flist", help="File list To Use", default='workarea/data/bdtNtuples/v8p2/filelist.json' )
+    parser.add_argument("-o","--dest", help="destination To Use", default='workarea/results/plots/analysis/feb8/' )
+    parser.add_argument("-w","--weight", help="weight var to use", default='weight' )
     args=parser.parse_args()
 
     unblind= args.unblind
     
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan25/variables_v0Scaled/tagScores/'
+    inputfile= args.flist
+    prefixBase=args.dest
+    prefixBase+='variables/'
+    weightVar=args.weight
+    
     fileDict={}
-    #with open('workarea/data/bdtNtuples/filelistToUse.json') as f:
-    with open('workarea/data/analysisNtuples/v1p1/filelist.json') as f:
+    with open(inputfile) as f:
         fileDict=json.load(f)
-    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
-    yearsToProcess=['2018','run2']
+    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
+    yearsToProcess=['2018']
     bkgToProcess=[ 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
     #bkgToProcess=[ 'bkg']
 
@@ -34,7 +40,7 @@ if __name__=='__main__':
         fileName=fileDict[yr]['sig']['ggHHH']
         treeName = "trees/ggHHH_125_13TeV"
         rdataFrames[yr]['sig']['ggHHH']= ROOT.RDataFrame(treeName, fileName)
-        print("Registering datset : ggHHH , ",yr," withh tree",treeName)
+        print("Registering datset : ggHHH , ",yr," withh tree",treeName,"\n\t from file : ",fileName)
     
         ky=list(fileDict[yr]['data'].keys())[0]
         fileName=fileDict[yr]['data'][ky]
@@ -79,7 +85,7 @@ if __name__=='__main__':
     allHistoDict={}
     for yr  in yearsToProcess:
         allHistoDict[yr]={}
-        saveBase=prefixBase+'/'+yr+'/'
+        saveBase=prefixBase+'/'+yr+'/tagScores/
         os.system('mkdir -p '+saveBase)
         print(" Procssing for year  : ",yr)
         for var in varToProcess:
@@ -87,13 +93,13 @@ if __name__=='__main__':
             print("    Procssing for variable  : ",var)
             print("   Year : ",yr,' Signal')
             for ky in rdataFrames[yr]['sig']:
-                histStore['sig'][ky]=rdataFrames[yr]['sig'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['sig'][ky]=rdataFrames[yr]['sig'][ky].Histo1D(varToBinMap[var],var,'weight_bdt')
             print("   Year : ",yr,' Background')
             for ky in rdataFrames[yr]['bkg']:
-                histStore['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Histo1D(varToBinMap[var],var,'weight_bdt')
             print("   Year : ",yr,' Data')
             for ky in rdataFrames[yr]['data']:
-                histStore['data']=rdataFrames[yr]['data'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['data']=rdataFrames[yr]['data'][ky].Histo1D(varToBinMap[var],var,'weight_bdt')
             allHistoDict[yr][var]=histStore
             plotterUtil.plotVariableDistribution(histStore,var,year=yr,lumi=lumiMap[yr],savePrefix=saveBase,lumiScale=False)
 

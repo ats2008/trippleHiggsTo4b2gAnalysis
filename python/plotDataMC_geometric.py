@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import mplhep as hep
-import uproot3 as urt
+import uproot as urt
 import ROOT
 import json
 import numpy as np
@@ -13,15 +13,23 @@ if __name__=='__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--unblind", help="Unblind the Mgg spectrum", action='store_true' )
+    parser.add_argument("-i","--flist", help="File list To Use", default='workarea/data/bdtNtuples/v8p2/filelist.json' )
+    parser.add_argument("-o","--dest", help="destination To Use", default='workarea/results/plots/analysis/feb8/' )
+    parser.add_argument("-w","--weight", help="weight var to use", default='weight' )
     args=parser.parse_args()
 
     unblind= args.unblind
 
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan23/variables_v0Scaled/geometric/'
+    inputfile= args.flist
+    prefixBase=args.dest
+    prefixBase+='/variables/'
+    weightVar=args.weight
+
     fileDict={}
-    with open('workarea/data/bdtNtuples/filelistToUse.json') as f:
+    #with open('workarea/data/bdtNtuples/filelistToUse.json') as f:
+    with open(inputfile) as f:
         fileDict=json.load(f)
-    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
+    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
     bkgToProcess=[ 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
 
     rdataFrames={}
@@ -109,19 +117,19 @@ if __name__=='__main__':
         allHistoDict[yr]={}
         print("Procssing for year  : ",yr)
         for var in varToProcess:
-            saveBase=prefixBase+'/'+yr+'/'
+            saveBase=prefixBase+'/'+yr+'/geometric/'
             os.system('mkdir -p '+saveBase)
             histStore={'sig':{},'bkg':{},'data':{}}
             print(" Var : ",var)
             print("   Year : ",yr,' Signal')
             for ky in rdataFrames[yr]['sig']:
-                histStore['sig'][ky]=rdataFrames[yr]['sig'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['sig'][ky]=rdataFrames[yr]['sig'][ky].Histo1D(varToBinMap[var],var,weightVar)
             print("   Year : ",yr,' Background')
             for ky in rdataFrames[yr]['bkg']:
-                histStore['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['bkg'][ky]=rdataFrames[yr]['bkg'][ky].Histo1D(varToBinMap[var],var,weightVar)
             print("   Year : ",yr,' Data')
             for ky in rdataFrames[yr]['data']:
-                histStore['data']=rdataFrames[yr]['data'][ky].Histo1D(varToBinMap[var],var,'weight')
+                histStore['data']=rdataFrames[yr]['data'][ky].Histo1D(varToBinMap[var],var,weightVar)
             allHistoDict[yr][var]=histStore
             print("Saving into : ",saveBase)
             plotterUtil.plotVariableDistribution(histStore,var,year=yr,lumi=lumiMap[yr],savePrefix=saveBase)

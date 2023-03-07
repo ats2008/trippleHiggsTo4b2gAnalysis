@@ -155,8 +155,8 @@ def getPtDependentScaleFactor(name="scaleFactor",
 
 class bdtScaler:
     
-    def __init__(self,balanceDataMCCounts=True):
-        self.balanceDataMCCounts=True
+    def __init__(self,balanceDataMCCounts=False):
+        self.balanceDataMCCounts=balanceDataMCCounts
         self.doTransformation=False
         self.eval= True
         self.data_x= None
@@ -169,6 +169,7 @@ class bdtScaler:
         self.reweightedWeights=None
         self.modelInitalized =False
         self.classifierInitialized =False
+        self.normalizationFactor=1.0
 
     def setData(self,X,W):
         self.data_x = X 
@@ -223,7 +224,7 @@ class bdtScaler:
         self.reweighter.fit(original=mc_x   , original_weight=mc_w,
                             target  =data_x , target_weight  =data_w)
     
-    def fit(self,data_x,data_w,mc_x,mc_w):
+    def fit(self,data_x,data_w,mc_x,mc_w,var_list):
         if not self.modelInitalized:
             raise Exception("Model defenition is empty ")
         
@@ -235,9 +236,16 @@ class bdtScaler:
             mc_xp   = transformer.transform(mc_x.T).to_numpy().T
         self.setData(data_xp,data_w)
         self.setMC(mc_xp,mc_w)
-
+        self.var_list=var_list
         self._fitModel()
-    
+        MC_weights  = self.predictWeight(mc_x)
+        wMC_total   = np.sum(MC_weights)
+        wData_Total = np.sum(self.data_w)
+        self.normalizationFactor= wData_Total/wMC_total
+        
+        self.setTestEvent()
+        self.evalTestEvent()
+
     def setClassifier(self,n_estimators=100, learning_rate=1.0 , max_depth=3):
         self.classifier= GradientBoostingClassifier(  n_estimators=n_estimators ,
                                                       learning_rate=learning_rate ,
@@ -309,13 +317,24 @@ class bdtScaler:
 
         return results
     
-    def doKSComparisonTest(var,x_mc,w_data,w_mc,w_mc_bdt=None,bins=None):
-        results={}
+    def setTestEvent(self):
+        self.test_vector=self.mc_x[:,:4]
+        self.test_weight=self.predictWeight(self.test_vector)
 
-        
+    def getTestEvents(self):    
+        return self.test_vector , self.test_weight
 
 
-
+    def evalTestEvent(self,returnEval=True):
+        i=0
+        wpred=self.predictWeight(self.test_vector)
+        for row,w,wp in zip(self.test_vector.T , np.round(self.test_weight,3),wpred):
+            i+=1
+            rowp=[ i for i in np.round(row,3) ]
+            print(f"{i=} | {rowp}  ,| real : { w:.3f}  eval : {wp:.3f}")
+        if returnEval:
+            return wpred
+        return None
     def saveModel(self,f):
         if not self.modelInitalized:
             raise Exception("Model defenition is empty ")
@@ -323,6 +342,7 @@ class bdtScaler:
         result['baseReweighter']  =self.reweighter_base
         result['reweighter']      =self.reweighter
         result['doTransformation']=self.doTransformation
+        result['variables']=self.var_list
         result['haprams']={}
         for ky in ['n_estimators','min_samples_leaf','max_depth','gb_args']:
             result['haprams'][ky]=getattr(self,ky)
@@ -354,7 +374,7 @@ class bdtScaler:
         if self.doTransformation:
             xp=self.transform.transform(x.T).to_numpy().T
         
-        return self.reweighter.predict_weights( xp.T )   
+        return self.reweighter.predict_weights( xp.T )*self.normalizationFactor   
 
     def transform(self, x):
         if doTransformation:

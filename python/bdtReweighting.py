@@ -22,26 +22,46 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v',"--version", help="Version of the specific derivation ",default='')
     parser.add_argument('-i',"--inputFile", help="Input File",default=None)
-    parser.add_argument('-y',"--year", help="Year",default='2018')
+    parser.add_argument('-y',"--year", help="Year",default='*')
+    parser.add_argument('-f',"--fsrc", help="Input file Source",default=None)
+    parser.add_argument("--test", help="do testing of model ",action='store_true')
+    parser.add_argument("--exportWeights", help="export events weights ",action='store_true')
     parser.add_argument('-t',"--transformData", help="trnsoform data using IronTransformer ",default=False,action='store_true')
+    parser.add_argument('-o',"--dest", help="results/plots/analysis/feb7/bdtReweighting/2018/",default=None)
+
     args = parser.parse_args()
+    
     version = args.version
+    inputFileSource= args.fsrc
     doIronTrnsformation=False
     inputFile  = args.inputFile
     saveOutput = True
+    isTest = args.test
+    exportWeights = args.exportWeights
     outDict={}
+
+    if not inputFileSource:
+        if not isTest:
+            inputFileSource='workarea/data/bdtNtuples/v8p2/train/filelist.json'
+        else:
+            inputFileSource='workarea/data/bdtNtuples/v8p2/test/filelist.json'
+
 
     if inputFile:
         saveOutput=False
+    if isTest:
+        print(" Testing the model !")
+        saveOutput=False
+        if not inputFile:
+            print("Please provide an input sample file")
+            exit(1)
     fileDict={}
-    with open('../workarea/data/analysisNtuples/v2p0/filelist.json') as f:
+    with open(inputFileSource) as f:
         fileDict=json.load(f)
     
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/feb1/bdtReweighting'
-    
+    prefixBase=args.dest
     varToPlot=[
          'diphoton_pt' ,
-         "nonResonantMVA_v0",
          "quadjet_0_deepJetScore" ,
          "quadjet_1_deepJetScore" ,
          "quadjet_2_deepJetScore" ,
@@ -64,14 +84,17 @@ def main():
     ## Making the variables for th reweighter training
     varForReweighting=[
         'leadingPhoton_pt','leadingPhoton_eta',
+        'subleadingPhoton_pt','subleadingPhoton_eta',
         'pT_h1leadJ' ,'eta_h1leadJ',
         'pT_h1subleadJ' ,'eta_h1subleadJ',
         'pT_h2leadJ' ,'eta_h2leadJ',
         'pT_h2subleadJ' ,'eta_h2subleadJ'
     ] 
+    
     if args.transformData:
         prefixBase+='_ironTransformed/'    
         doIronTrnsformation=True
+    
     if 'WithScores'==version:
         prefixBase+='_'+version+'/'    
         varForReweighting+=[
@@ -99,36 +122,39 @@ def main():
                 "scalarPtSum4b2g","scalarPtSumHHH","sumScore_3j","sumScore_4j","trihiggs_mass",
                 "trihiggs_pt","ttH_MET" 
               ]
-    
     else:
         prefixBase+=version+'/'    
+
     varForReweighting_=np.unique(varForReweighting)
     varForReweighting=[ i for i in varForReweighting_]
     outDict['varForReweighting']=varForReweighting
     yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','run2']
     
     yearsToProcess=[]
-    for yr in args.year.split(","):
-        if yr not in yearsToProcess_all:
-            print(yr," not in catalogue. Skipping !! ")
-            continue
-        yearsToProcess.append(yr)
+    if '*' in args.year:
+        yearsToProcess=yearsToProcess_all
+    else:
+        for yr in args.year.split(","):
+            if yr not in yearsToProcess_all:
+                print(yr," not in catalogue. Skipping !! ")
+                continue
+            yearsToProcess.append(yr)
+
+    if isTest:
+        prefixBase+='/test/'
 
     bkgToProcess=[ 'ggBox1Bjet',
                    'ggBox2Bjet', 
                    'ggBox', 
                    'gJet20To40',
                    'gJet40ToInf'
-                   ]
+                 ]
     bkgToFit = [
             'ggBox',
             'ggBox1Bjet',
-            'ggBox2Bjet'
-    ]
-    bkgToProcess = [
-            'ggBox',
-            'ggBox1Bjet',
-            'ggBox2Bjet'
+            'ggBox2Bjet',
+            'gJet20To40',
+            'gJet40ToInf'
     ]
     varToBinMap={}
     with open('data/binMap.json','r') as f:
@@ -165,7 +191,7 @@ def main():
         for bkg in bkgToProcess:
             if bkg not in fileDict[yr]['bkg']:
                 print()
-                print("FILE NOT FOUNG FOR : ",yr," background ",bkg)
+                print("FILE NOT FOUND FOR : ",yr," background ",bkg)
                 print()
                 continue
             fileName = fileDict[yr]['bkg'][bkg]
@@ -208,6 +234,7 @@ def main():
             if ky not in bkgToFit:
                 continue
             print("\t\t adding background ",ky)
+            print( [k for k in varForReweighting])
             xMC=np.stack([dataStore[yr]['bkg'][ky][k] for k in varForReweighting])
             if isFirst:
                 data['mc']['x']=xMC
@@ -276,19 +303,20 @@ def main():
         outDict['nMC'] = str( mc_x.shape[1] )
 
         if not inputFile:
-            bdtReweighter = scl.bdtScaler( balanceDataMCCounts=True)
-            bdtReweighter.setModel( n_estimators=40,min_samples_leaf=100,max_depth=2 ) #,gb_args={'subsample': 0.5}
+            bdtReweighter = scl.bdtScaler( balanceDataMCCounts=False)
+            bdtReweighter.setModel( n_estimators=40,min_samples_leaf=100,max_depth=3 ) #,gb_args={'subsample': 0.5}
             if doIronTrnsformation: 
                 print("\tSetting the Iron transormation ")
                 bdtReweighter.setTransformation(True)
 
             print( "\tFitting the reweighter ! " )
-            bdtReweighter.fit( data['data']['x']  , data['data']['weight']  , data['mc']['x']  , data['mc']['weight'] )
+            bdtReweighter.fit( data['data']['x']  , data['data']['weight']  , data['mc']['x']  , data['mc']['weight'] ,varForReweighting)
+            bdtReweighter.setTestEvent()
             print("\tDone ! ")
             data_x,data_w = bdtReweighter.getData()
             mc_x,mc_w     = bdtReweighter.getMC()
             print("setting the mc_x with ",mc_x.shape)
-            bdtReweighter.setClassifier(n_estimators=10, learning_rate=0.8 , max_depth=3)
+            bdtReweighter.setClassifier(n_estimators=50, learning_rate=0.8 , max_depth=3)
             print("\tFitting the classifier ! ")
             bdtReweighter.trainClassifierModel()
             print("\tDone ! ")
@@ -316,11 +344,15 @@ def main():
         ###        Plotting te obtained new weights and scale factors ! ##
         print("\t Obtaining then Scale factors for full MC ! ")
         MC_weights  = bdtReweighter.predictWeight(mc_x)
-        wMC_total   = np.sum(MC_weights)
-        wData_Total = np.sum(data_w)
-        normalizationFactor= wData_Total/wMC_total
-        print("\t     Normalization factor obtained as : ", normalizationFactor)
-        MC_weights= MC_weights * normalizationFactor
+        print("\t     Normalization factor obtained as : ", bdtReweighter.normalizationFactor)
+        
+        outDict['normalizationFactor']=str(np.round(bdtReweighter.normalizationFactor,4))
+        outDict['test_vector'],outDict['test_weight'] = bdtReweighter.getTestEvents()
+        outDict['test_eval'] = bdtReweighter.evalTestEvent( returnEval=True)
+        outDict['test_vector'] = [ [str( np.round(val,4)  )  for val  in row ] for row in outDict['test_vector'].T ]
+        outDict['test_weight'] = [  str( np.round(val,4)  )  for val in outDict['test_weight'] ]
+        outDict['test_eval']   = [  str( np.round(val,4)  )  for val in outDict['test_eval'] ]
+        #MC_weights= MC_weights * normalizationFactor
         #MC_weights = data['mc']['weight']
         f=plt.figure()    
         plt.hist(data['mc']['weight'],histtype='step',label='raw',bins=80)
@@ -349,7 +381,6 @@ def main():
         ###                 YIELD Calculation             ###
 
         print("\t Obtaining the yields post fitting ! ")
-        
         outDict['yields']={}
         tabYieldData=ptab.PrettyTable(['Year','Process','Events','Raw Yield','Reweighted v1','Reweighted v2' ] ) 
         wraw   =np.sum(dataStore[yr]['data']['data']['weight_v0'])
@@ -362,15 +393,17 @@ def main():
        
         tabYield=ptab.PrettyTable(['Year','Process','Events','Raw Yield','Reweighted v1','Reweighted v2' ] ) 
         sumY={'raw':0.0 ,'binned':0.0 ,'bdt':0.0,'evts':0}
+        bkgWeights={}
         for ky in dataStore[yr]['bkg']:
             wraw   =np.sum(dataStore[yr]['bkg'][ky]['weight_v0']*dataStore[yr]['bkg'][ky]['lumi'])
             wbinned=np.sum(dataStore[yr]['bkg'][ky]['weight'])
             xMC=np.stack([dataStore[yr]['bkg'][ky][k] for k in varForReweighting])
-            wbdt = np.sum(bdtReweighter.predictWeight( xMC ))*normalizationFactor
+            wbdt = np.sum(bdtReweighter.predictWeight( xMC ))
             outDict['yields'][ky]          =  {}
             outDict['yields'][ky]['raw']   =str(np.round(wraw,3))
             outDict['yields'][ky]['binned']=str(np.round(wbinned,3))
             outDict['yields'][ky]['bdt']   =str(np.round(wbdt,3))
+            bkgWeights[ky]=wbdt
             if ky !='bkg':
                 sumY['raw']    += wraw
                 sumY['binned'] += wbinned
@@ -379,6 +412,11 @@ def main():
             tabYield.add_row([yr , ky ,len(dataStore[yr]['bkg'][ky]['weight']),
                                 outDict['yields'][ky]['raw'] , outDict['yields'][ky]['binned'] , outDict['yields'][ky]['bdt']   ])
         tabYield.add_row([yr , 'sum' , sumY['evts'] ,np.round(sumY['raw'],3) , np.round(sumY['binned'],3) , np.round(sumY['bdt'],3) ])
+
+        outDict['yields']['bkg_sum']          =  {}
+        outDict['yields']['bkg_sum']['raw']   =str(np.round(sumY['raw'] ,3))
+        outDict['yields']['bkg_sum']['binned']=str(np.round(sumY['binned'],3))
+        outDict['yields']['bkg_sum']['bdt']   =str(np.round(sumY['bdt'],3))
         print(tabYieldData)
         print(tabYield)
  
@@ -407,17 +445,17 @@ def main():
         outDict['auc']['raw'] = str(np.round(results['validation_default']['auc_raw'],3))
         
         roc=results['validation_default']['roc_pre']
-        plt.plot( roc['tpr'], roc['fpr'],label='Default [ AUC : '+str(np.round(results['validation_default']['auc_pre'],3))+' ]')
+        plt.plot( roc['tpr'], 1-roc['fpr'],label='Default [ AUC : '+str(np.round(results['validation_default']['auc_pre'],3))+' ]')
         outDict['auc']['pre'] = str(np.round(results['validation_default']['auc_pre'],3))
         tabROC.add_row(["ROC with default Event Weights",np.round(results['validation_default']['auc_pre'],3)] )
         
         roc=results['validation_binned']['roc_pre']
-        plt.plot( roc['tpr'], roc['fpr'],label='Binned Rw. [ AUC :'+str(np.round(results['validation_binned']['auc_pre'],3))+' ]')
+        plt.plot( roc['tpr'], 1-roc['fpr'],label='Binned Rw. [ AUC :'+str(np.round(results['validation_binned']['auc_pre'],3))+' ]')
         outDict['auc']['binned'] = str(np.round(results['validation_binned']['auc_pre'],3))
         tabROC.add_row(["ROC with Event Weights [ binned Rw. ]",np.round(results['validation_binned']['auc_pre'],3) ] )
         
         roc=results['validation_binned']['roc_post']
-        plt.plot( roc['tpr'], roc['fpr'],label='BDT-Rewei. [ '+str(np.round(results['validation_default']['auc_post'],3))+' ]')
+        plt.plot( roc['tpr'], 1-roc['fpr'],label='BDT-Rewei. [ '+str(np.round(results['validation_default']['auc_post'],3))+' ]')
         outDict['auc']['bdt'] = str(np.round(results['validation_binned']['auc_post'],3))
         tabROC.add_row(["ROC with Event Weights [ BDT Rw. ]",np.round(results['validation_default']['auc_post'],3) ] )
         
@@ -425,6 +463,8 @@ def main():
         print("\t\t"+t.replace("\n","\n\t\t"))
 
         foutname=saveBase+'/'+'validation_rocs.png'
+        plt.xlabel('Efficiency')
+        plt.ylabel('Fake Rejection')
         plt.legend()
         plt.savefig(foutname,bbox_inches='tight')
 
@@ -436,10 +476,15 @@ def main():
         i=0
         makePlot=True
         print("Processing the variables for KS")
+        kk=0
+        nn=len(allVars)
+        print("\n\t\t\t")
         for var in allVars:
             x_mc  =np.concatenate([dataStore[yr]['bkg'][ky][var] for ky in bkgToProcess])
             x_data=np.concatenate([dataStore[yr]['data'][ky][var] for ky in dataStore[yr]['data']])
             binEdges=np.linspace(varToBinMap[var][3] , varToBinMap[var][4] ,varToBinMap[var][2] )
+            kk+=1
+            print("\t\t  [",kk,"/",nn,"] ",var)
             if makePlot:
                 scl.plotDataMCComparison(var,
                                      x_mc,
@@ -447,13 +492,14 @@ def main():
                                      w_data,w_mc,w_mc_binned,w_mc_bdt,
                                      bins=binEdges,
                                      saveBase=saveBase)
-            makePlot=False                                     
+           # makePlot=False                                     
             results['ks_test'][var] = {
                             'pre' : stat.twoSample_KSTest(x_data, x_mc ,w_data, w_mc),
                             'binReweighted' : stat.twoSample_KSTest(x_data, x_mc ,w_data, w_mc_binned),
                             'bdtReweighted' : stat.twoSample_KSTest(x_data, x_mc ,w_data, w_mc_bdt)
                         }
-        
+
+        print() 
         outDict['ks_test']={}
         if var in results['ks_test']:
             heads=list(results['ks_test'][var].keys())
@@ -472,11 +518,17 @@ def main():
                 #pickle.dump(bdtReweighter,f)
         
         foutname=saveBase+'/'+'modelValidation.pkl'
+        print("Validation outputs saved in  : ",saveBase)
         with open(foutname, 'wb') as f:
             pickle.dump(results,f)
         foutname=saveBase+'/'+'modelValidation.json'
         with open(foutname, 'w') as f:
             json.dump(outDict,f,indent=4)
+        if exportWeights:  
+            fname=saveBase+'/'+'modelWeights.pkl'
+            print("Exporting weights to ",fname)
+            with open(fname,'wb') as f:
+                pickle.dump( bkgWeights, f)
 
 if __name__=='__main__':
     main( )

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import mplhep as hep
-import uproot3 as urt
+import uproot as urt
 import ROOT
 import json
 import numpy as np
@@ -18,9 +18,9 @@ if __name__=='__main__':
 
     unblind= args.unblind
 
-    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/jan23/correlationsX/'
+    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/results/plots/analysis/mar3/correlationsX/'
     fileDict={}
-    with open('workarea/data/bdtNtuples/v7p2/filelist.json') as f:
+    with open('workarea/data/bdtNtuples/v8p3/filelist.json') as f:
         fileDict=json.load(f)
     yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
     yearsToProcess=['2018']
