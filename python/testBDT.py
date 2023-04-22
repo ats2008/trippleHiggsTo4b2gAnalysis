@@ -21,13 +21,11 @@ def main():
  
     parser = argparse.ArgumentParser()
     parser.add_argument('-v',"--version", help="Version of the specific derivation ",default='')
-    parser.add_argument('-i',"--inputFile", help="Input File list",default=None)
+    parser.add_argument('-i',"--inputFile", help="Input File",default=None)
     parser.add_argument('-y',"--year", help="Year",default='*')
     parser.add_argument('-f',"--fsrc", help="Input file Source",default=None)
     parser.add_argument("--test", help="do testing of model ",action='store_true')
-    parser.add_argument("--exportWeights", help="export events weights ",action='store_true')
     parser.add_argument('-t',"--transformData", help="trnsoform data using IronTransformer ",default=False,action='store_true')
-    parser.add_argument('-o',"--dest", help="results/plots/analysis/feb7/bdtReweighting/2018/",default=None)
 
     args = parser.parse_args()
     
@@ -37,14 +35,13 @@ def main():
     inputFile  = args.inputFile
     saveOutput = True
     isTest = args.test
-    exportWeights = args.exportWeights
     outDict={}
 
     if not inputFileSource:
         if not isTest:
-            inputFileSource='workarea/data/bdtNtuples/v8p2/train/filelist.json'
+            inputFileSource='workarea/data/bdtNtuples/v8p0/train/filelist.json'
         else:
-            inputFileSource='workarea/data/bdtNtuples/v8p2/test/filelist.json'
+            inputFileSource='workarea/data/bdtNtuples/v8p0/test/filelist.json'
 
 
     if inputFile:
@@ -59,41 +56,31 @@ def main():
     with open(inputFileSource) as f:
         fileDict=json.load(f)
     
-    prefixBase=args.dest
+    prefixBase='/home/aravind/cernbox/work/trippleHiggs/hhhTo4b2gamma/genAnalysis/python/analysis/workarea/results/plots/analysis/feb7/bdtReweighting/'
+    if isTest:
+        prefixBase+='test/'
     varToPlot=[
-        'diphoton_pt' ,
-        "quadjet_0_deepJetScore" ,
-        "quadjet_1_deepJetScore" ,
-        "quadjet_2_deepJetScore" ,
-        "quadjet_3_deepJetScore" ,
-        "sumScore_4j" ,
-        "sumScore_3j" ,
-        'h1bb_mass' ,
-        'h2bb_mass' ,
-        "h1bb_eta" ,
-        "h1bb_phi" ,
-        "h1bb_pt"  ,
-        "h2bb_eta" ,
-        "h2bb_phi" ,
-        "h2bb_pt"  ,
-        'diphoton_pt',
-        'diphoton_eta',
-        'CMS_hgg_mass',
-        'leadingPhoton_pt',
-        'leadingPhoton_eta',
-        'subleadingPhoton_pt',
-        'subleadingPhoton_eta',
-        'pT_h1leadJ' ,
-        'eta_h1leadJ' ,
-        'pT_h1subleadJ' ,
-        'eta_h1subleadJ' ,
-        'pT_h2leadJ' ,
-        'eta_h2leadJ' ,
-        'pT_h2subleadJ' ,
-        'eta_h2subleadJ'
+         'diphoton_pt' ,
+         "quadjet_0_deepJetScore" ,
+         "quadjet_1_deepJetScore" ,
+         "quadjet_2_deepJetScore" ,
+         "quadjet_3_deepJetScore" ,
+         "sumScore_4j" ,
+         "sumScore_3j" ,
+         'h1bb_mass' ,
+         'h2bb_mass' ,
+         "h1bb_eta" ,
+         "h1bb_phi" ,
+         "h1bb_pt"  ,
+         "h2bb_eta" ,
+         "h2bb_phi" ,
+         "h2bb_pt"  ,
+         'diphoton_pt',
+         'diphoton_eta',
+         'CMS_hgg_mass'
     ]
 
-    ## Making the variables for the reweighter training
+    ## Making the variables for th reweighter training
     varForReweighting=[
         'leadingPhoton_pt','leadingPhoton_eta',
         'subleadingPhoton_pt','subleadingPhoton_eta',
@@ -102,11 +89,9 @@ def main():
         'pT_h2leadJ' ,'eta_h2leadJ',
         'pT_h2subleadJ' ,'eta_h2subleadJ'
     ] 
-    
     if args.transformData:
         prefixBase+='_ironTransformed/'    
         doIronTrnsformation=True
-    
     if 'WithScores'==version:
         prefixBase+='_'+version+'/'    
         varForReweighting+=[
@@ -134,13 +119,13 @@ def main():
                 "scalarPtSum4b2g","scalarPtSumHHH","sumScore_3j","sumScore_4j","trihiggs_mass",
                 "trihiggs_pt","ttH_MET" 
               ]
+    
     else:
         prefixBase+=version+'/'    
-
     varForReweighting_=np.unique(varForReweighting)
     varForReweighting=[ i for i in varForReweighting_]
     outDict['varForReweighting']=varForReweighting
-    yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','2016','run2']
+    yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','run2']
     
     yearsToProcess=[]
     if '*' in args.year:
@@ -152,36 +137,19 @@ def main():
                 continue
             yearsToProcess.append(yr)
 
-    if isTest:
-        prefixBase+='/test/'
-
-    bkgToProcess=[ 
-                   'ggBox1Bjet',
+    bkgToProcess=[ 'ggBox1Bjet',
                    'ggBox2Bjet', 
                    'ggBox', 
                    'gJet20To40',
-                   'gJet40ToInf',
+                   'gJet40ToInf'
                  ]
-
     bkgToFit = [
             'ggBox',
             'ggBox1Bjet',
             'ggBox2Bjet',
             'gJet20To40',
-            'gJet40ToInf',
+            'gJet40ToInf'
     ]
-    
-    for ky in bkgToFit:
-        if ky not in bkgToProcess:
-            print(f"{ky} not available in the bkgToProcess list ! exiting ")
-            exit(1)
-
-    precise_bkgToProcess=[
-        'ttgg',
-        'ttgj',
-        'ttjj',
-    ]
-
     varToBinMap={}
     with open('data/binMap.json','r') as f:
         varToBinMap=json.load(f)['varToBinMap']
@@ -217,29 +185,17 @@ def main():
         for bkg in bkgToProcess:
             if bkg not in fileDict[yr]['bkg']:
                 print()
-                print("FILE NOT FOUND FOR : ",yr," background ",bkg)
+                print("FILE NOT FOUNG FOR : ",yr," background ",bkg)
                 print()
                 continue
             fileName = fileDict[yr]['bkg'][bkg]
             rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(blind)
             print("Registering datset : ",bkg," , ",yr," with tree",treeName)
-        
-        rdataFrames[yr]['precise_bkg']={}
-        treeName = "trees/bkg_13TeV_TrippleHTag_0"
-        for bkg in precise_bkgToProcess:
-            if bkg not in fileDict[yr]['bkg']:
-                print()
-                print("FILE NOT FOUND FOR : ",yr," background ",bkg)
-                print()
-                continue
-            fileName = fileDict[yr]['bkg'][bkg]
-            rdataFrames[yr]['precise_bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(blind)
-            print("Registering datset : ",bkg," , ",yr," with tree",treeName)
+                       
     
     # reading the vars from file    
-    oVars=['weight','weight_v0','weight_binned','lumi']
+    oVars=['weight','weight_v0','lumi']
     varsToGet=[ i for i in np.unique(varForReweighting + oVars + varToPlot)]
-
     allVars = np.unique(varForReweighting+varToPlot)
     
     for var in allVars:
@@ -248,16 +204,12 @@ def main():
 
     dataStore={}
     for yr in yearsToProcess:
-        lumi=utl.lumiMap[yr]
         models={}
         print("Processing for year : ",yr)
         saveBase=prefixBase+'/'+yr+'/'
         os.system('mkdir -p '+saveBase)
         dataStore[yr]={}
         bkgStack=None
-        dataStore[yr]['precise_bkg']={}
-        for ky in rdataFrames[yr]['precise_bkg']:
-            dataStore[yr]['precise_bkg'][ky]=rdataFrames[yr]['precise_bkg'][ky].AsNumpy(varsToGet)
         dataStore[yr]['bkg']={}
         for ky in rdataFrames[yr]['bkg']:
             dataStore[yr]['bkg'][ky]=rdataFrames[yr]['bkg'][ky].AsNumpy(varsToGet)
@@ -267,7 +219,7 @@ def main():
         data={
                 'data'    :{'x':None,'weight':None},
                 'mc'      :{'x':None,'weight':None},
-                'known_mc'  :{'x':None,'weight':None}
+                'mc_fit'  :{'x':None,'weight':None}
              }
         
         isFirst=True
@@ -276,11 +228,12 @@ def main():
             if ky not in bkgToFit:
                 continue
             print("\t\t adding background ",ky)
+            print( [k for k in varForReweighting])
             xMC=np.stack([dataStore[yr]['bkg'][ky][k] for k in varForReweighting])
             if isFirst:
                 data['mc']['x']=xMC
                 data['mc']['weight']      =dataStore[yr]['bkg'][ky]['weight_v0']*dataStore[yr]['bkg'][ky]['lumi']
-                data['mc']['weight_binned']=dataStore[yr]['bkg'][ky]['weight_binned']
+                data['mc']['weight_bined']=dataStore[yr]['bkg'][ky]['weight']
                 isFirst=False
             else:
                 data['mc']['x']=np.concatenate( [data['mc']['x'],xMC ] , axis=-1)
@@ -288,31 +241,32 @@ def main():
                 data['mc']['weight']=np.concatenate( [data['mc']['weight'],
                                                       w ] ,
                                                       axis=-1)
-                data['mc']['weight_binned']=np.concatenate( [data['mc']['weight_binned'],
-                                                      dataStore[yr]['bkg'][ky]['weight_binned'] ] ,
+                data['mc']['weight_bined']=np.concatenate( [data['mc']['weight_bined'],
+                                                      dataStore[yr]['bkg'][ky]['weight'] ] ,
                                                       axis=-1)
-        print("Loading bagrounds with correct scales ")                                                      
-        isFirst=True
-        for ky in dataStore[yr]['precise_bkg']:
-            if ky in precise_bkgToProcess:
-                print("\t\t adding background with known modeling  ",ky)
+        print()                                                      
+        for ky in dataStore[yr]['bkg']:
+            if ky not in bkgToFit:
+                continue
+            print("\t\t adding background for fitting ",ky)
+            xMC=np.stack([dataStore[yr]['bkg'][ky][k] for k in varForReweighting])
+            if isFirst:
+                data['mc_fit']['x']=xMC
+                data['mc_fit']['weight']      =dataStore[yr]['bkg'][ky]['weight_v0']*dataStore[yr]['bkg'][ky]['lumi']
+                data['mc_fit']['weight_bined']=dataStore[yr]['bkg'][ky]['weight']
+                isFirst=False
+            else:
+                data['mc_fit']['x']=np.concatenate( [data['mc']['x'],xMC ] , axis=-1)
+                w=dataStore[yr]['bkg'][ky]['weight_v0']*dataStore[yr]['bkg'][ky]['lumi']
+                data['mc_fit']['weight']=np.concatenate( [data['mc']['weight'],
+                                                      w ] ,
+                                                      axis=-1)
+                data['mc_fit']['weight_bined']=np.concatenate( [data['mc']['weight_bined'],
+                                                      dataStore[yr]['bkg'][ky]['weight'] ] ,
+                                                      axis=-1)
+ 
 
-                xMC=np.stack([dataStore[yr]['precise_bkg'][ky][k] for k in varForReweighting])
 
-                if isFirst:
-                    data['known_mc']['x']=xMC
-                    data['known_mc']['weight']      =dataStore[yr]['precise_bkg'][ky]['weight_v0']*dataStore[yr]['precise_bkg'][ky]['lumi']
-                    data['known_mc']['weight_binned']=dataStore[yr]['precise_bkg'][ky]['weight']
-                    isFirst=False
-                else:
-                    data['known_mc']['x']=np.concatenate( [data['known_mc']['x'],xMC ] , axis=-1)
-                    w=dataStore[yr]['precise_bkg'][ky]['weight_v0']*dataStore[yr]['precise_bkg'][ky]['lumi']
-                    data['known_mc']['weight']=np.concatenate( [data['known_mc']['weight'],
-                                                          w ] ,
-                                                          axis=-1)
-                    data['known_mc']['weight_binned']=np.concatenate( [data['known_mc']['weight_binned'],
-                                                          dataStore[yr]['precise_bkg'][ky]['weight'] ] ,
-                                                          axis=-1)
         print("\tLoading data ! ")
         isFirst=True
         for ky in dataStore[yr]['data']:
@@ -328,44 +282,38 @@ def main():
                                                       axis=-1)
         transformedData={
                 'data':{},
-                'mc'  :{},
-                'known_mc'  :{}
+                'mc'  :{}
              }
         
         bdtReweighter=None
-        
-        target_x = data['data']['x']
+        data_x = data['data']['x']
         mc_x   = data['mc']['x'] 
-        known_mc_x   = data['known_mc']['x'] 
-        
-        target_w = data['data']['weight']
+        data_w = data['data']['weight']
         mc_w   = data['mc']['weight'] 
-        known_mc_w   = data['known_mc']['weight'] 
-        
-        
-        if len(known_mc_w) > 0 :
-            target_x = np.concatenate( [ target_x , known_mc_x ]    , axis=-1)
-            target_w = np.concatenate( [ target_w , -1*known_mc_w ] , axis=-1)
 
-        outDict['nData'] = str( target_x.shape[1] )
+        print("\t  nData : ",data_x.shape[1])
+        print("\t  nMC   : ",mc_x.shape[1])
+        outDict['nData'] = str( data_x.shape[1] )
         outDict['nMC'] = str( mc_x.shape[1] )
-        outDict['nKnownMC'] = str( known_mc_x.shape[1] )
-        outDict['nTrain'] = str( target_x.shape[1] )
 
         if not inputFile:
-            bdtReweighter = scl.bdtScaler( lumi=lumi , balanceDataMCCounts=False)
+            bdtReweighter = scl.bdtScaler( balanceDataMCCounts=True)
             bdtReweighter.setModel( n_estimators=40,min_samples_leaf=100,max_depth=3 ) #,gb_args={'subsample': 0.5}
             if doIronTrnsformation: 
                 print("\tSetting the Iron transormation ")
                 bdtReweighter.setTransformation(True)
 
             print( "\tFitting the reweighter ! " )
-            bdtReweighter.fit( target_x  , target_w , mc_x   , mc_w  ,varForReweighting)
+            bdtReweighter.fit( data['data']['x']  , data['data']['weight']  , data['mc']['x']  , data['mc']['weight'] ,varForReweighting)
             bdtReweighter.setTestEvent()
             print("\tDone ! ")
             data_x,data_w = bdtReweighter.getData()
             mc_x,mc_w     = bdtReweighter.getMC()
             print("setting the mc_x with ",mc_x.shape)
+            bdtReweighter.setClassifier(n_estimators=50, learning_rate=0.8 , max_depth=3)
+            print("\tFitting the classifier ! ")
+            bdtReweighter.trainClassifierModel()
+            print("\tDone ! ")
         else:
             result={}
             with open(inputFile,'rb') as f:
@@ -374,7 +322,7 @@ def main():
                 bdtReweighter=results['model']
                 doTransformation=results['doTransformation']
                 if doTransformation:
-                    target_x = bdtReweighter.transform( target_x )
+                    data_x = bdtReweighter.transform( data_x )
                     mc_x   = bdtReweighter.transform( mc_x   )
         
         if doIronTrnsformation:
@@ -390,6 +338,17 @@ def main():
         ###        Plotting te obtained new weights and scale factors ! ##
         print("\t Obtaining then Scale factors for full MC ! ")
         MC_weights  = bdtReweighter.predictWeight(mc_x)
+        mc_x_here=np.array( [ 2.11650157, 1.24093544,-0.98925751, 0.95101458, 1.80029738,
+                              78.46308899,83.09875488,31.88282394,40.21229935,32.32614517,
+                              2.45438051,41.41204453] ).reshape(-1,1)
+
+        print()
+        print()
+        MCW  = bdtReweighter.predictWeight(mc_x_here)
+        print(" mc_x_here : ",mc_x_here)
+        print(" MCW : ",MCW)
+        print()
+        print()
         print("\t     Normalization factor obtained as : ", bdtReweighter.normalizationFactor)
         
         outDict['normalizationFactor']=str(np.round(bdtReweighter.normalizationFactor,4))
@@ -402,7 +361,7 @@ def main():
         #MC_weights = data['mc']['weight']
         f=plt.figure()    
         plt.hist(data['mc']['weight'],histtype='step',label='raw',bins=80)
-        plt.hist(data['mc']['weight_binned'],histtype='step',label='binScaled',bins=80)
+        plt.hist(data['mc']['weight_bined'],histtype='step',label='binScaled',bins=80)
         plt.hist(MC_weights,histtype='step',label='bdtSclaed',bins=80)
         plt.legend()
         plt.semilogy()
@@ -411,7 +370,7 @@ def main():
         plt.close(f)
         
         f=plt.figure()    
-        plt.hist(data['mc']['weight_binned']/data['mc']['weight'],histtype='step',label='binScaled',bins=80)
+        plt.hist(data['mc']['weight_bined']/data['mc']['weight'],histtype='step',label='binScaled',bins=80)
         plt.hist(MC_weights/data['mc']['weight'],histtype='step',label='bdtSclaed',bins=80)
         plt.legend()
         plt.semilogy()
@@ -420,11 +379,12 @@ def main():
      
         w_data      = data['data']['weight']
         w_mc        = data['mc']['weight'] 
-        w_mc_binned = data['mc']['weight_binned'] 
+        w_mc_binned = data['mc']['weight_bined'] 
         w_mc_bdt    = MC_weights 
         results={}
         
         ###                 YIELD Calculation             ###
+
         print("\t Obtaining the yields post fitting ! ")
         outDict['yields']={}
         tabYieldData=ptab.PrettyTable(['Year','Process','Events','Raw Yield','Reweighted v1','Reweighted v2' ] ) 
@@ -438,7 +398,6 @@ def main():
        
         tabYield=ptab.PrettyTable(['Year','Process','Events','Raw Yield','Reweighted v1','Reweighted v2' ] ) 
         sumY={'raw':0.0 ,'binned':0.0 ,'bdt':0.0,'evts':0}
-        bkgWeights={}
         for ky in dataStore[yr]['bkg']:
             wraw   =np.sum(dataStore[yr]['bkg'][ky]['weight_v0']*dataStore[yr]['bkg'][ky]['lumi'])
             wbinned=np.sum(dataStore[yr]['bkg'][ky]['weight'])
@@ -448,7 +407,6 @@ def main():
             outDict['yields'][ky]['raw']   =str(np.round(wraw,3))
             outDict['yields'][ky]['binned']=str(np.round(wbinned,3))
             outDict['yields'][ky]['bdt']   =str(np.round(wbdt,3))
-            bkgWeights[ky]=wbdt
             if ky !='bkg':
                 sumY['raw']    += wraw
                 sumY['binned'] += wbinned
@@ -456,26 +414,6 @@ def main():
                 sumY['evts']    += len(dataStore[yr]['bkg'][ky]['weight'])
             tabYield.add_row([yr , ky ,len(dataStore[yr]['bkg'][ky]['weight']),
                                 outDict['yields'][ky]['raw'] , outDict['yields'][ky]['binned'] , outDict['yields'][ky]['bdt']   ])
-        for ky in dataStore[yr]['precise_bkg']:
-            wraw   =np.sum(dataStore[yr]['precise_bkg'][ky]['weight_v0']*dataStore[yr]['precise_bkg'][ky]['lumi'])
-            wbinned=np.sum(dataStore[yr]['precise_bkg'][ky]['weight'])
-            xMC=np.stack([dataStore[yr]['precise_bkg'][ky][k] for k in varForReweighting])
-            wbdt=wraw
-            #wbdt = np.sum(bdtReweighter.predictWeight( xMC ))
-            outDict['yields'][ky]          =  {}
-            outDict['yields'][ky]['raw']   =str(np.round(wraw,3))
-            outDict['yields'][ky]['binned']=str(np.round(wbinned,3))
-            outDict['yields'][ky]['bdt']   =str(np.round(wbdt,3))
-            bkgWeights[ky]=wbdt
-            if ky !='bkg':
-                sumY['raw']    += wraw
-                sumY['binned'] += wbinned
-                sumY['bdt']    += wbdt
-                sumY['evts']    += len(dataStore[yr]['precise_bkg'][ky]['weight'])
-            tabYield.add_row([yr , ky ,len(dataStore[yr]['precise_bkg'][ky]['weight']),
-                                outDict['yields'][ky]['raw'] , outDict['yields'][ky]['binned'] , outDict['yields'][ky]['bdt']   ])
-         
-
         tabYield.add_row([yr , 'sum' , sumY['evts'] ,np.round(sumY['raw'],3) , np.round(sumY['binned'],3) , np.round(sumY['bdt'],3) ])
 
         outDict['yields']['bkg_sum']          =  {}
@@ -488,40 +426,15 @@ def main():
         ###                                    ROC TEST                     ###
 
         print("\tROC Test : ")
-        validation_data_x =  data['data']['x']
-        validation_data_w =  data['data']['weight']
-        
-        validation_mc_x = np.concatenate(  [ mc_x ,known_mc_x ] , axis= -1) 
-        validation_mc_w = np.concatenate(  [ mc_w ,known_mc_w ] , axis= -1) 
-        validation_mc_w_binned = np.concatenate(  [ data['mc']['weight_binned'] ,  data['known_mc']['weight_binned'] ] , axis= -1 ) 
-        
-        w_  = bdtReweighter.predictWeight(mc_x)
-        validation_mc_bdtWeighted =  np.concatenate([ w_ , known_mc_w  ])
-        dataDict={
-            'data_x' : validation_data_x,
-            'data_w' : validation_data_w,
-            'mc_x' : validation_mc_x,
-            'mc_w' : validation_mc_w
-        }
-        if not isTest :
-            bdtReweighter.setClassifier(n_estimators=50, learning_rate=0.8 , max_depth=3)
-            print("\tFitting the classifier ! ")
-            bdtReweighter.trainClassifierModel(dataDict)
-            print("\tDone ! ")
-        
-        results['validation_default']=bdtReweighter.validateClassifierModel( validation_data_x , validation_mc_x , validation_mc_w )
-        results['validation_binned'] =bdtReweighter.validateClassifierModel( validation_data_x , validation_mc_x , validation_mc_w_binned )
+        results['validation_default']=bdtReweighter.validateClassifierModel( data_x , mc_x , w_mc )
+        results['validation_binned'] =bdtReweighter.validateClassifierModel( data_x , mc_x , w_mc_binned )
         
         plt.figure()        
 
-        _=plt.hist(results['validation_default']['data_score'],bins=np.linspace(0,1,20),color='k',
-                        histtype='step', density=True ,label='data')
-        _=plt.hist(results['validation_default']['mc_score']  ,weights=validation_mc_w,bins=np.linspace(0,1,20),color='g',
-                        histtype='step',linewidth=2,density=True ,label='mc raw weights')
-        _=plt.hist(results['validation_default']['mc_score']  ,weights=validation_mc_w_binned,bins=np.linspace(0,1,20),color='b',
-                        histtype='step',linewidth=2,density=True ,label='mc binned weights')
-        _=plt.hist(results['validation_default']['mc_score']  ,weights=validation_mc_bdtWeighted   ,bins=np.linspace(0,1,20),color='m',
-                        histtype='step',linewidth=2,density=True ,label='mc bdt weights')
+        _=plt.hist(results['validation_default']['data_score'],bins=np.linspace(0,1,20),color='k',histtype='step', density=True ,label='data')
+        _=plt.hist(results['validation_default']['mc_score'],weights=w_mc       ,bins=np.linspace(0,1,20),color='g',histtype='step',linewidth=2,density=True ,label='mc raw weights')
+        _=plt.hist(results['validation_default']['mc_score'],weights=w_mc_binned,bins=np.linspace(0,1,20),color='b',histtype='step',linewidth=2,density=True ,label='mc binned weights')
+        _=plt.hist(results['validation_default']['mc_score'],weights=w_mc_bdt   ,bins=np.linspace(0,1,20),color='m',histtype='step',linewidth=2,density=True ,label='mc bdt weights')
         plt.legend()
         plt.savefig( saveBase+'/classifier_scores.png'  , bbox_inches='tight' )
 
@@ -569,19 +482,9 @@ def main():
         kk=0
         nn=len(allVars)
         print("\n\t\t\t")
-        
-        w_data = validation_data_w
-        w_mc   = validation_mc_w
-        w_mc_binned   = validation_mc_w_binned
-        w_mc_bdt   = validation_mc_bdtWeighted
-
         for var in allVars:
-            x_mc_       =np.concatenate([dataStore[yr]['bkg'][ky][var] for ky in bkgToProcess])
-            x_known_mc_=np.concatenate([dataStore[yr]['precise_bkg'][ky][var] for ky in dataStore[yr]['precise_bkg']])
-            x_mc  =np.concatenate([x_mc_,x_known_mc_],axis=-1)
-                   
+            x_mc  =np.concatenate([dataStore[yr]['bkg'][ky][var] for ky in bkgToProcess])
             x_data=np.concatenate([dataStore[yr]['data'][ky][var] for ky in dataStore[yr]['data']])
-
             binEdges=np.linspace(varToBinMap[var][3] , varToBinMap[var][4] ,varToBinMap[var][2] )
             kk+=1
             print("\t\t  [",kk,"/",nn,"] ",var)
@@ -618,17 +521,11 @@ def main():
                 #pickle.dump(bdtReweighter,f)
         
         foutname=saveBase+'/'+'modelValidation.pkl'
-        print("Validation outputs saved in  : ",saveBase)
         with open(foutname, 'wb') as f:
             pickle.dump(results,f)
         foutname=saveBase+'/'+'modelValidation.json'
         with open(foutname, 'w') as f:
             json.dump(outDict,f,indent=4)
-        if exportWeights:  
-            fname=saveBase+'/'+'modelWeights.pkl'
-            print("Exporting weights to ",fname)
-            with open(fname,'wb') as f:
-                pickle.dump( bkgWeights, f)
 
 if __name__=='__main__':
     main( )

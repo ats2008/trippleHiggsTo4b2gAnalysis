@@ -55,7 +55,7 @@ def main():
     
     prefixBase=args.dest
    
-    yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','run2']
+    yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','run2','2016','extras']
     yearsToProcess=yearsToProcess_all
     
     if 'all' not in args.year:
@@ -72,7 +72,10 @@ def main():
                    'ggBox2Bjet', 
                    'ggBox', 
                    'gJet20To40',
-                   'gJet40ToInf'
+                   'gJet40ToInf',
+                   'ttgg',
+                   'ttgj',
+                   'ttjj'
                    ]
     varToBinMap={}
     
@@ -107,14 +110,20 @@ def main():
         
         rdataFrames[yr]['bkg']={}
         treeName = "trees/bkg_13TeV_TrippleHTag_0"
-        for bkg in bkgToProcess:
+        for bkg in fileDict[yr]['bkg'] : #bkgToProcess:
             if bkg not in fileDict[yr]['bkg']:
                 print()
                 print("FILE NOT FOUNG FOR : ",yr," background ",bkg)
                 print()
                 continue
             fileName = fileDict[yr]['bkg'][bkg]
-            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(blind)
+            treeName = "trees/bkg_13TeV_TrippleHTag_0"
+            try:
+                rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(blind)
+            except:
+                treeName = "trees/Data_13TeV_TrippleHTag_0"
+                rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(blind)
+                 
             for cut in cutsToApply:
                 rdataFrames[yr]['bkg'][bkg] = rdataFrames[yr]['bkg'][bkg].Filter(cut)
             

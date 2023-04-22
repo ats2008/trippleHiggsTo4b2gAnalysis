@@ -137,7 +137,44 @@ def getClassifier(tag='GB_BDT',modelParameters_={}):
         }
         clf=xgb_bdt(modelParameters)
         return clf,modelParameters
+     
+    if tag=='XGB_BDT_v5':
+        modelParameters = {
+            "n_estimators": 400,
+            "eta": 0.3,
+            "max_depth": 3,
+            "random_state": 2,
+            "subsample" : 0.7,
+            'tree_method' : 'hist'
+        }
+        clf=xgb_bdt(modelParameters)
+        return clf,modelParameters
+     
+    if tag=='XGB_BDT_v5':
+        modelParameters = {
+            "n_estimators": 400,
+            "eta": 0.3,
+            "max_depth": 3,
+            "random_state": 2,
+            "subsample" : 0.7,
+            'tree_method' : 'hist'
+        }
+        clf=xgb_bdt(modelParameters)
+        return clf,modelParameters
+  
+    if tag=='XGB_BDT_v6':
+        modelParameters = {
+            "n_estimators": 800,
+            "eta": 0.3,
+            "max_depth": 3,
+            "random_state": 2,
+            "subsample" : 0.7,
+            'tree_method' : 'hist'
+        }
+        clf=xgb_bdt(modelParameters)
+        return clf,modelParameters
  
+
 def plot_mvaScores(y_train_pred,W_train,C_train,y_true=None,fname=None,year=2018):    
     edges=np.linspace(0,1,50)
     edgesCentr=0.5*(edges[:-1]+edges[1:])

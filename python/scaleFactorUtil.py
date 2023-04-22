@@ -155,7 +155,7 @@ def getPtDependentScaleFactor(name="scaleFactor",
 
 class bdtScaler:
     
-    def __init__(self,balanceDataMCCounts=False):
+    def __init__(self,lumi=1.0,balanceDataMCCounts=False):
         self.balanceDataMCCounts=balanceDataMCCounts
         self.doTransformation=False
         self.eval= True
@@ -170,6 +170,7 @@ class bdtScaler:
         self.modelInitalized =False
         self.classifierInitialized =False
         self.normalizationFactor=1.0
+        self.lumi=lumi
 
     def setData(self,X,W):
         self.data_x = X 
@@ -253,12 +254,19 @@ class bdtScaler:
         self.classifierInitialized=True
     
         
-    def trainClassifierModel(self):
+    def trainClassifierModel(self,dataDict=None):
         if not self.classifierInitialized:
             raise Exception("Classifier not initialized")
         
         data_x=self.data_x ; data_w   = self.data_w
         mc_x  =self.mc_x ; mc_w = self.mc_w
+        if dataDict:
+
+            data_x=dataDict['data_x']
+            mc_x=dataDict['mc_x']
+
+            data_w=dataDict['data_w']
+            mc_w=dataDict['mc_w']
         
         if self.balanceDataMCCounts:
             n=min(len(mc_w),len(data_w))
@@ -267,16 +275,16 @@ class bdtScaler:
             data_x=data_x[:n].T ; data_w = data_w[:n]
             mc_x  =mc_x[:n].T     ; mc_w = mc_w[:n]
 
-        X_train=np.concatenate( [ self.data_x , self.mc_x ] , axis = -1).T
-        y1=np.ones(self.data_x.shape[1])
-        y2=np.zeros( self.mc_x.shape[1])  # MC is set as the positive class 
+        X_train=np.concatenate( [ data_x , mc_x ] , axis = -1).T
+        y1=np.ones(data_x.shape[1])
+        y2=np.zeros( mc_x.shape[1])  # MC is set as the positive class 
         Y_train= np.concatenate([y1,y2])
-        w1= self.data_w# /sum(self.data_w)
-        w2= self.mc_w  # /sum(self.mc_w)
+        w1= data_w# /sum(data_w)
+        w2= mc_w  # /sum(mc_w)
         w_train=np.concatenate([w1,w2])
         
-        self.X_train,self.Y_train = shuffle(X_train,Y_train, random_state=42)
-        self.classifier.fit(self.X_train,self.Y_train, sample_weight = w_train )
+        self.X_train,self.Y_train,self.w_train = shuffle(X_train,Y_train,w_train, random_state=42)
+        self.classifier.fit(self.X_train,self.Y_train, sample_weight = self.w_train )
 
     def validateClassifierModel( self , data_x, mc_x, mc_w, w_post=None):
         results={}
@@ -369,11 +377,18 @@ class bdtScaler:
     def getMC(self):
         return self.mc_x,self.mc_w
       
+    def predictWeightWithoutLumi(self, x,lumi=None):
+        if not lumi:
+            lumi = self.lumi
+        xp=x
+        if self.doTransformation:
+            xp=self.transform.transform(x.T).to_numpy().T
+        return self.reweighter.predict_weights( xp.T )*self.normalizationFactor/lumi
+
     def predictWeight(self, x):
         xp=x
         if self.doTransformation:
             xp=self.transform.transform(x.T).to_numpy().T
-        
         return self.reweighter.predict_weights( xp.T )*self.normalizationFactor   
 
     def transform(self, x):

@@ -16,6 +16,7 @@ if __name__=='__main__':
     parser.add_argument("-i","--flist", help="File list To Use", default='workarea/data/bdtNtuples/v8p2/filelist.json' )
     parser.add_argument("-o","--dest", help="destination To Use", default='workarea/results/plots/analysis/feb8/' )
     parser.add_argument("-w","--weight", help="weight var to use", default='weight' )
+    parser.add_argument('-y',"--year", help="Year",default='2018')
     args=parser.parse_args()
 
     unblind= args.unblind
@@ -29,8 +30,20 @@ if __name__=='__main__':
     #with open('workarea/data/bdtNtuples/filelistToUse.json') as f:
     with open(inputfile) as f:
         fileDict=json.load(f)
-    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
+    
+    yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
+    yearsToProcess=yearsToProcess_all
+    
+    if 'all' not in args.year:
+        yearsToProcess=[]
+        for yr in args.year.split(","):
+            if yr not in yearsToProcess_all:
+                print(yr," not in catalogue. Skipping !! ")
+                continue
+            yearsToProcess.append(yr)
+
     bkgToProcess=[ 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
+    bkgToProcess=['all', 'ggBox1Bjet','ggBox2Bjet', 'ggBox','gJet20To40','gJet40ToInf']
 
     rdataFrames={}
     for yr  in yearsToProcess:
@@ -53,8 +66,10 @@ if __name__=='__main__':
     
         rdataFrames[yr]['bkg']={}
         treeName = "trees/bkg_13TeV_TrippleHTag_0"
-        for bkg in bkgToProcess:
-            if bkg not in fileDict[yr]['bkg']:
+        for bkg in  fileDict[yr]['bkg']:
+            if bkg=='bkg':
+                continue
+            if ("all" not in bkgToProcess )  and (bkg not in bkgToProcess) :
                 print()
                 print("FILE NOT FOUNG FOR : ",yr," background ",bkg)
                 print()
@@ -111,6 +126,18 @@ if __name__=='__main__':
                        "h1bbCosThetaLeadJet"     , 
                        "absCosThetaH4bHgg"       , 
                        "absCosThetaH4bHgg_hhhF"  , 
+                       "absCosThetaH4bHgg_hhhF"  ,
+                       "D_HH"                    ,  
+                       "r_HH"                    ,  
+                       "H1H2JetDrMax"            ,  
+                       "H1H2JetDrMin"            ,  
+                       "LeadJetDrMaxWithOtherJets", 
+                       "LeadJetDrMinWithOtherJets",
+                       "PhoJetMaxDr"              , 
+                       "PhoJetMaxDrOther"         ,
+                       "PhoJetMinDr"              ,
+                       "PhoJetMinDrOther"
+
                 ]
     allHistoDict={}
     for yr  in yearsToProcess:

@@ -17,7 +17,7 @@ blind='CMS_hgg_mass < 115 || CMS_hgg_mass > 135.0'
 
 def main():
  
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='testTrainSplitter.py',description='For all the years in filelist , and all the tags inside , the files are split into test and train based on eventID%STRIDE==0 or not [ STRIDE = nEVTS*_frac]')
     parser.add_argument('-v',"--version", help="Version of the specific derivation ",default='')
     parser.add_argument('-i',"--inputFile", help="Input File", required=True)
     parser.add_argument('-o',"--outputDestination", help="output Destination", required=True)
@@ -38,7 +38,7 @@ def main():
         for year in fileDict:
             fileDict_[year]=flatdict.FlatDict(fileDict[year])
         fileDict=fileDict_
-    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2']
+    yearsToProcess=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
     yearsToProcess=list(fileDict.keys())
     
     varToBinMap={}
@@ -47,6 +47,10 @@ def main():
     # allows us to interact with the data contained in the tree.
     trainBase=outputDestination+'/train'
     testBase =outputDestination+'/test'
+    if args.slim > 0:
+        trainBase=outputDestination+'/slim_train'
+        testBase =outputDestination+'/slim_test'
+        
     os.makedirs(outputDestination,exist_ok=True) 
     os.makedirs(trainBase,exist_ok=True) 
     os.makedirs(testBase,exist_ok=True) 
@@ -88,7 +92,7 @@ def main():
             print("\t       Test Events      : ",test_dset.Count().GetValue())
             if os.path.exists(trainOFileName):
                 trainOFileName=trainOFileName.replace('.root','_train.root')
-            print("\t writing train file : ",trainOFileName)
+            print("\t writing train file : ",trainOFileName," [ tree : ", treeName ," ]")
             train_dset.Snapshot(treeName,trainOFileName)
             if os.path.exists(testOFileName):
                 testOFileName=testOFileName.replace('.root','_test.root')

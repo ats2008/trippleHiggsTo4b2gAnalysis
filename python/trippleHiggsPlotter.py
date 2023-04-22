@@ -4,7 +4,7 @@ import ROOT
 import numpy as np
 import Util as utl
 
-def plotVariableDistribution(histStore,varName,savePrefix=None,year='2018',lumi='58',lumiScale=False):
+def plotVariableDistribution(histStore,varName,savePrefix=None,year='2018',lumi='58',lumiScale=False,sortByCounts=False):
     if savePrefix:
         f1=plt.figure(figsize=(8,8))
         ax1=plt.subplot(4,1,(1,3))
@@ -19,25 +19,53 @@ def plotVariableDistribution(histStore,varName,savePrefix=None,year='2018',lumi=
         ax3=plt.subplot(4,2,8)
     
     hists=[]
+    hists_integral=[]
     labels=[]
     histTot=None
     print("Drawing ",varName," for year ",year,"@ lumi = ",lumi)
-    for ky in utl.backgroundStackList:
-        if ky not in histStore['bkg']:
+    for ky  in histStore['bkg']:
+        if ky not in utl.backgroundStackList:
+            print(f"== skipping background : {ky} , since colurs are not defiend for the {ky} ! ")
+            continue
+    for ky  in utl.backgroundStackList: 
+        if ky not in histStore['bkg']: 
             continue
         if not histTot:
             histTot=histStore['bkg'][ky].Clone()
         else:
             histTot.Add(histStore['bkg'][ky].Clone())
+        
         hists.append(histStore['bkg'][ky].Clone())
+        labels.append(ky)
+        hists_integral.append(histStore['bkg'][ky].Integral())
+
         if lumiScale:
             hists[-1].Scale(float(lumi))
-        labels.append(ky)
+
     if lumiScale:
         histTot.Scale(float(lumi))
+    
+    hists_toplot  = hists
+    labels_toplot = labels
+    if sortByCounts:
+        ordering=np.argsort(hists_integral)
+        hists_toplot=[hists[i] for i in ordering]
+        labels_toplot=[labels_toplot[i] for i in ordering]
+    else:
+       labels_toplot=[]
+       hists_toplot=[]
+       for ky in utl.backgroundStackList:
+            if ky in labels:
+                idx=labels.index(ky)
+                labels_toplot.append(labels[idx])
+                hists_toplot.append(hists[idx])
+    
+    if len(labels)!=len(labels_toplot):
+        print(f"{labels=} , {labels_toplot =} .. sorry they dont agree please update Util.backgroundStackList ! exiting ")
+        exit(1)
 
-    hep.histplot(hists,stack=True,label=labels,histtype='fill',ax=ax1)
-    hep.histplot(histStore['data'],ax=ax1,label='Data')
+    hep.histplot(hists_toplot,stack=True,label=labels_toplot,histtype='fill',ax=ax1)
+    hep.histplot(histStore['data'],ax=ax1,label='Data',color='black',histtype='errorbar')
     ax1.legend(loc=0)
     ax1.semilogy()
     ax1.grid(alpha=0.1,color='k')

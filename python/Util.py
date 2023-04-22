@@ -3,7 +3,16 @@ import ROOT
 import numpy as np
 
 lumiMap={'2018':'58','2017':'41.5','2016':'36.3' , '2016PreVFP':'19.5','2016PostVFP':'16.8','run2':'137.61'}
-backgroundStackList=['gJet20To40','ggBox2Bjet','ggBox1Bjet','gJet40ToInf','ggBox','bkg']
+backgroundStackList=[
+        'ttgg',
+        'ttgj',
+        'ttjj',
+        'gJet40ToInf',
+        'gJet20To40',
+        'ggBox2Bjet',
+        'ggBox1Bjet',
+        'ggBox',
+        'bkg']
 
 def wei_cov(x, y, w):
     """Weighted Covariance"""

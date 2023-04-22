@@ -16,7 +16,6 @@ import prettytable
 
 hep.style.use("CMS")
 data_blind='CMS_hgg_mass < 115 || CMS_hgg_mass > 135.0'
-sigRegionCut='CMS_hgg_mass >= 115 && CMS_hgg_mass <= 135.0'
 
 def main():
  
@@ -26,7 +25,6 @@ def main():
     parser.add_argument('-y',"--year", help="Year",default='2018')
     parser.add_argument("-o","--dest", help="destination To Use", default='workarea/results/plots/tmp/' )
     parser.add_argument("-c","--cuts", help="list of cuts to be applied", default=None )
-    parser.add_argument("--cutstr", help="additional cutsrting to be applied", default=None )
     parser.add_argument('-t',"--transformData", help="trnsoform data using IronTransformer ",default=False,action='store_true')
     parser.add_argument("--doSR", help="Do Signal Region",default=False,action='store_true')
     args = parser.parse_args()
@@ -35,31 +33,16 @@ def main():
     inputFile  = args.inputFile
     saveOutput = True
     cutsToApply=[]
-    cutsKey=[]
-    cutIdx=0
-    txt=[]
     if args.cuts:
         with open(args.cuts,'r') as f:
-            txt_=f.readlines()
-            for l in txt_:
-                txt.append(l[:-1])
-    cutStrs=[]
-    if args.cutstr:
-        items=args.cutstr.split("][")
-        txt+=items
-    for l in txt:
-        if l[0]=='#':
-            continue
-        key='cut '+str(cutIdx)
-        cut=l.split(',')[0]
-        if ',' in l :
-            key=l.split(',')[1]
-        cutsToApply.append(cut)
-        cutsKey.append(key)
-        cutIdx+=1
-    print("Cuts Being applied : ")
-    for cut in cutsToApply:
-        print("\t -> ",cut)
+            txt=f.readlines()
+            for l in txt:
+                if l[0]=='#':
+                    continue
+                cutsToApply.append(l[:-1])
+        print("Cuts Being applied : ")
+        for cut in cutsToApply:
+            print("\t -> ",cut)
 
     prefixBase=args.dest
     outDict={}
@@ -80,6 +63,7 @@ def main():
     
     if 'all' not in args.year:
         yearsToProcess=[]
+        
         for yr in args.year.split(","):
             if yr not in yearsToProcess_all:
                 print(yr," not in catalogue. Skipping !! ")
@@ -108,26 +92,21 @@ def main():
         except:
             print(yr)
         treeName = "trees/ggHHH_125_13TeV"
-        rdataFrames[yr]['sig']['ggHHH']= ROOT.RDataFrame(treeName, fileName).Filter(sigRegionCut)
-        for cut,cutKey in zip(cutsToApply,cutsKey):
-            rdataFrames[yr]['sig']['ggHHH'] = rdataFrames[yr]['sig']['ggHHH'].Filter(cut,cutKey)
+        rdataFrames[yr]['sig']['ggHHH']= ROOT.RDataFrame(treeName, fileName).Filter(blind)
+        for cut in cutsToApply:
+            rdataFrames[yr]['sig']['ggHHH'] = rdataFrames[yr]['sig']['ggHHH'].Filter(cut)
         
         print("Registering datset : ggHHH , ",yr," with tree",treeName)
         print("\t\t ",fileName)   
-        allCutsReport = rdataFrames[yr]['sig']['ggHHH'].Report()
-        allCutsReport.Print()          
-        
         ky=list(fileDict[yr]['data'].keys())[0]
         fileName=fileDict[yr]['data'][ky]
         treeName = "trees/Data_13TeV_TrippleHTag_0"
         rdataFrames[yr]['data']['data']= ROOT.RDataFrame(treeName, fileName).Filter(data_blind).Filter(blind)
-        for cut,cutKey in zip(cutsToApply,cutsKey):
-            rdataFrames[yr]['data']['data'] = rdataFrames[yr]['data']['data'].Filter(cut,cutKey)
+        for cut in cutsToApply:
+            rdataFrames[yr]['data']['data'] = rdataFrames[yr]['data']['data'].Filter(cut)
             
         print("Registering datset : data , ",yr," with tree",treeName)
         print("\t\t ",fileName)   
-        allCutsReport = rdataFrames[yr]['data']['data'].Report()
-        allCutsReport.Print()          
         
         rdataFrames[yr]['bkg']={}
         treeName = "trees/bkg_13TeV_TrippleHTag_0"
@@ -138,15 +117,13 @@ def main():
                 print()
                 continue
             fileName = fileDict[yr]['bkg'][bkg]
-            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(sigRegionCut)
-            for cut,cutKey in zip(cutsToApply,cutsKey):
-                rdataFrames[yr]['bkg'][bkg] = rdataFrames[yr]['bkg'][bkg].Filter(cut,cutKey)
+            rdataFrames[yr]['bkg'][bkg]=ROOT.RDataFrame(treeName, fileName).Filter(blind)
+            for cut in cutsToApply:
+                rdataFrames[yr]['bkg'][bkg] = rdataFrames[yr]['bkg'][bkg].Filter(cut)
             
             print("Registering datset : ",bkg," , ",yr," with tree",treeName)
             print("\t\t ",fileName)   
-            
-            allCutsReport = rdataFrames[yr]['bkg'][bkg].Report()
-            allCutsReport.Print()          
+                       
     
     varsToGet=['weight_bdt','weight_binned','weight_v0','lumi','genRecoCategory']
     varsToGet+=[
@@ -203,13 +180,8 @@ def main():
                 idMap['b2']['L'] = varData['quadjet_1_isBtagLoose'] >0.2
                 idMap['b3']['L'] = varData['quadjet_2_isBtagLoose'] >0.2
                 idMap['b4']['L'] = varData['quadjet_3_isBtagLoose'] >0.2
-                idMap['b1']['X'] = varData['quadjet_0_isBtagLoose'] >-10.2
-                idMap['b2']['X'] = varData['quadjet_1_isBtagLoose'] >-10.2
-                idMap['b3']['X'] = varData['quadjet_2_isBtagLoose'] >-10.2
-                idMap['b4']['X'] = varData['quadjet_3_isBtagLoose'] >-10.2
-                
                 vals=[]
-                keyMap=[]
+
                 for keyStr in allprds:
                     mask=np.ones(idMap['b1'][keyStr[0]].shape[0],dtype=bool)
                     mask=np.logical_and(mask,idMap['b1'][keyStr[0]])
@@ -217,12 +189,9 @@ def main():
                     mask=np.logical_and(mask,idMap['b3'][keyStr[2]])
                     mask=np.logical_and(mask,idMap['b4'][keyStr[3]])
                     vals.append(np.sum(varData['weight_bdt'][mask]))
-                    keyMap.append(keyStr)
                 #print("Selcted numbers : ",vals)
                 norm=np.sum(varData['weight_bdt'])
                 scoreMaps[dset]=np.array(vals).reshape(nKeys,nKeys)
-                keyMap=np.array(keyMap).reshape(nKeys,nKeys)
-                
                 #print(scoreMaps[dset])
                 vals=scoreMaps[dset]/norm
                 #print(scoreMaps[dset])
@@ -234,16 +203,15 @@ def main():
                         outDict[dset]['fractions'][keys[0][i,0]+keys[1][0,j]] = str(np.round( vals[i][j] ,4  ))
                         tabYieldData.add_row( [ keys[0][i,0]+keys[1][0,j] , str(np.round( vals[i][j] ,4  )) ] )
                 ## PLOTING THE FRACTIONS
-                f,ax=plt.subplots(figsize=(14,14))
-                c=ax.matshow(vals,cmap='cool')
+                f,ax=plt.subplots(figsize=(7,7))
+                c=ax.matshow(vals,cmap='Pastel1')
                 for (i, j), z in np.ndenumerate(vals):
                     ax.text(j, i, '{:0.3f}'.format(z), ha='center', va='center',fontsize=10)
                 ax.set_xticks(np.arange(nKeys)+0.5,np.arange(nKeys)+0.5,minor=True,color='w',fontsize=0.1)
                 ax.set_yticks(np.arange(nKeys)+0.5,np.arange(nKeys)+0.5,minor=True,color='w',fontsize=0.1)
                 ax.set_xticks(np.arange(nKeys),labels=keys[0][:,0],fontsize=12)
                 ax.set_yticks(np.arange(nKeys),labels=keys[1][0,:],fontsize=12)
-                ax.set_xlabel(dset+'H2')
-                ax.set_xlabel(dset+'H1')
+                ax.set_xlabel(dset)
                 ax.grid(which='minor')
                 ax2 = f.add_axes([ax.get_position().x1+0.005,ax.get_position().y0,0.02,ax.get_position().height])
                 plt.colorbar(c,cax=ax2)
@@ -252,8 +220,8 @@ def main():
                 plt.close(f)
                
                 ## PLOTING THE FRACTIONS
-                f,ax=plt.subplots(figsize=(14,14))
-                c=ax.matshow(scoreMaps[dset],cmap='cool')
+                f,ax=plt.subplots(figsize=(7,7))
+                c=ax.matshow(scoreMaps[dset],cmap='Pastel1')
                 for (i, j), z in np.ndenumerate(scoreMaps[dset]):
                     ax.text(j, i, '{:0.3f}'.format(z), ha='center', va='center',fontsize=10)
                 ax.set_xticks(np.arange(nKeys)+0.5,np.arange(nKeys)+0.5,minor=True,color='w',fontsize=0.1)
@@ -270,18 +238,18 @@ def main():
                 plt.close(f)
             #print(tabYieldData)
 
+        f,axSet=plt.subplots(1,2,figsize=(12,6))
 
         for i,dset in enumerate(['data','bkg']):
-            f,ax=plt.subplots(1,1,figsize=(15,15))
-            #significance = scoreMaps['sig']*1/np.sqrt(scoreMaps['sig'] + scoreMaps[dset] )
-            significance = scoreMaps['sig']*1/np.sqrt(1e-9 + scoreMaps[dset] )
+            ax=axSet[i]
+            significance = scoreMaps['sig']*1e3/np.sqrt(scoreMaps['sig'] + scoreMaps[dset] )
             outDict[dset]['significance']={}
             tabYieldData=ptab.PrettyTable(['cut','significance'] ) 
             for i in range(vals.shape[0]):
                 for j in range(vals.shape[0]):
                     outDict[dset]['significance'][keys[0][i,0]+keys[1][0,j]] = str(np.round( significance[i][j] , 4))
                     tabYieldData.add_row( [ keys[0][i,0]+keys[1][0,j] , str(np.round( significance[i][j] ,4  )) ] )
-            c=ax.matshow(significance,cmap='cool')
+            c=ax.matshow(significance,cmap='Pastel1')
             
             for (i, j), z in np.ndenumerate(significance):
                 ax.text(j, i, '{:0.3f}'.format(z), ha='center', va='center',fontsize=10)
@@ -293,13 +261,13 @@ def main():
             ax2 = f.add_axes([ax.get_position().x1+0.005,ax.get_position().y0,0.02,ax.get_position().height])
             plt.colorbar(c,cax=ax2)
             ax2.set_yticks([])
-            #print(tabYieldData)
-            f.savefig(saveBase+'/btagSignificance_'+dset+'.png',bbox_inches='tight')
+            print(tabYieldData)
+        f.savefig(saveBase+'/btagSignificance_'+dset+'.png',bbox_inches='tight')
         print("Output saved at : ",saveBase)
         foutname=saveBase+'/'+'pu_modelYields.json'
         with open(foutname, 'w') as f:
             json.dump(outDict,f,indent=4)
-
 if __name__=='__main__':
     main( )
+
 

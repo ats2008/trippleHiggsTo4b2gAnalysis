@@ -83,20 +83,21 @@ def main():
 
     outDict={}
     inputFileSource={}
-    if not inputFileSource:
+    if not fsrc:
         if not isTest:
             setsToProcess=['test','train']
             if args.doSlim:
-                inputFileSource['train'] = 'workarea/data/bdtNtuples/v9p0/slim_train/filelist.json'
-                inputFileSource['test']  = 'workarea/data/bdtNtuples/v9p0/slim_train/filelist.json'
+                inputFileSource['train'] = 'workarea/data/analysisNtuples/v9p0/slim_train/filelist.json'
+                inputFileSource['test']  = 'workarea/data/analysisNtuples/v9p0/slim_train/filelist.json'
             else:
-                inputFileSource['train'] = 'workarea/data/bdtNtuples/v9p0/train/filelist.json'
-                inputFileSource['test']  = 'workarea/data/bdtNtuples/v9p0/test/filelist.json'
+                inputFileSource['train'] = 'workarea/data/analysisNtuples/v9p0/train/filelist.json'
+                inputFileSource['test']  = 'workarea/data/analysisNtuples/v9p0/test/filelist.json'
         else:
             setsToProcess=['test','train']
             inputFileSource['test']  = 'workarea/data/bdtNtuples/v9p0/test/filelist.json'
             inputFileSource['train'] = 'workarea/data/bdtNtuples/v9p0/train/filelist.json'
     else:
+        setsToProcess=['test','train']
         inputFileSource['train'] = fsrc.split(',')[0]
         inputFileSource['test']  = fsrc.split(',')[1]
 
@@ -124,7 +125,7 @@ def main():
     prefixBase=args.dest
 
     ## YEARS TO PROCESS
-    yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','run2']
+    yearsToProcess_all=['2018','2017','2016PreVFP','2016PostVFP','run2','2016']
     yearsToProcess=[]
     if '*' in args.year:
         yearsToProcess=yearsToProcess_all
@@ -140,7 +141,10 @@ def main():
                    'ggBox2Bjet', 
                    'ggBox', 
                    'gJet20To40',
-                   'gJet40ToInf'
+                   'gJet40ToInf',
+                   'ttgg',
+                   'ttgj',
+                   'ttjj'
                  ]
     
     
@@ -175,6 +179,7 @@ def main():
             for cut in cutsToApply:
                 rdataFrames[yr]['sig']['ggHHH'] = rdataFrames[yr]['sig']['ggHHH'].Filter(cut)
             print("Registering datset : ggHHH , ",yr," with tree",treeName)
+            print("\t : ",fileName)
             
             ky=list(fileDict[yr]['data'].keys())[0]
             fileName=fileDict[yr]['data'][ky]
@@ -183,6 +188,7 @@ def main():
             for cut in cutsToApply:
                 rdataFrames[yr]['data']['data'] = rdataFrames[yr]['data']['data'].Filter(cut)
             print("Registering datset : data , ",yr," with tree",treeName)
+            print("\t : ",fileName)
             
             rdataFrames[yr]['bkg']={}
             treeName = "trees/bkg_13TeV_TrippleHTag_0"
@@ -197,6 +203,7 @@ def main():
                 for cut in cutsToApply:
                     rdataFrames[yr]['bkg'][bkg] = rdataFrames[yr]['bkg'][bkg].Filter(cut)
                 print("Registering datset : ",bkg," , ",yr," with tree",treeName)
+                print("\t : ",fileName)
         rdataFramesGlobal[setX]=rdataFrames
     
     # reading the vars from file    
@@ -247,17 +254,35 @@ def main():
                 xMC=np.stack([dataStore[yr]['bkg'][ky][k] for k in varForModel])
                 print("\t\t bkg : ",ky)
                 if isFirst:
-                    data['bkg']['x']=xMC
-                    data['bkg']['weight']=dataStore[yr]['bkg'][ky]['weight_bdt'] #*dataStore[yr]['bkg'][ky]['lumi']
-                    data['bkg']['cat']=dataStore[yr]['bkg'][ky]['genRecoCategory']
-                    data['bkg']['year']=dataStore[yr]['bkg'][ky]['year']
+                    w=dataStore[yr]['bkg'][ky]['weight_bdt']
+                    if sum(w < 0) > 0 :
+                        print("\t ** Negative weight  found in sample ",ky)
+                        print("\t        Number of events wiyh -ve weights  ",sum(w  < 0)," / ",len(w)," and totalling a weight of ",np.sum(w[w<0])," / ",np.sum(w))
+                    mask = w >= 0 
+                    if sum(w[mask] < 0) < 1 :
+                        print("\t        Negative weights removed from  sample ",ky)
+                    else:
+                        print("\t        Negative weights are all not replaced ",ky)
+
+                    data['bkg']['x']=xMC[:,mask]
+                    data['bkg']['weight']= w[mask]
+                    data['bkg']['cat']=dataStore[yr]['bkg'][ky]['genRecoCategory'][mask]
+                    data['bkg']['year']=dataStore[yr]['bkg'][ky]['year'][mask]
                     isFirst=False
                 else:
-                    data['bkg']['x']=np.concatenate( [data['bkg']['x'],xMC ] , axis=-1)
                     w=dataStore[yr]['bkg'][ky]['weight_bdt']
-                    data['bkg']['weight']=np.concatenate( [data['bkg']['weight'],w ] ,axis=-1)
-                    data['bkg']['cat']=np.concatenate( [data['bkg']['cat'],dataStore[yr]['bkg'][ky]['genRecoCategory'] ] ,axis=-1)
-                    data['bkg']['year']=np.concatenate( [data['bkg']['year'],dataStore[yr]['bkg'][ky]['year'] ] ,axis=-1)
+                    if sum(w < 0) > 0 :
+                        print("\t ** Negative weight  found in sample ",ky)
+                        print("\t        Number of events wiyh -ve weights  ",sum(w  < 0)," / ",len(w)," and totalling a weight of ",np.sum(w[w<0])," / ",np.sum(w))
+                    mask = w >= 0 
+                    if sum(w[mask] < 0) < 1 :
+                        print("\t        Negative weight  removed from  sample ",ky)
+                    else:
+                        print("\t        Negative weights are all not replaced ",ky)
+                    data['bkg']['x']=np.concatenate( [data['bkg']['x'],xMC[:,mask] ] , axis=-1)
+                    data['bkg']['weight']=np.concatenate( [data['bkg']['weight'],w[mask] ] ,axis=-1)
+                    data['bkg']['cat']=np.concatenate( [data['bkg']['cat'],dataStore[yr]['bkg'][ky]['genRecoCategory'][mask] ] ,axis=-1)
+                    data['bkg']['year']=np.concatenate( [data['bkg']['year'],dataStore[yr]['bkg'][ky]['year'][mask] ] ,axis=-1)
             nBkg=data['bkg']['x'].shape[1]
             nSigMax=None
             if evtNormalize :
@@ -325,21 +350,23 @@ def main():
             plt.close()
             
 
-            xVals=np.arange(-0.5,4.5,1)
+            xVals=np.arange(-0.5,5.5,1)
             for typ in data:
                 c,b=np.histogram(data[typ]['year'],bins=xVals)
                 b=0.5*(b[:-1]+b[1:])
                 plt.bar(b,c,color='b',fill=False)
-                plt.xticks(b,['2016PreVFP','2016PostVFP','2017','2018'])
+                plt.xticks(b,['2016PreVFP','2016PostVFP','2017','2018','2016'])
                 hep.cms.label('Work in Progress',year=yr,com=13,fontsize=20)
                 plt.ylabel('Events')
                 plt.savefig(saveBase+'/statsPerYearNumbers_'+typ+'_'+setX+'.png')
                 plt.close()
             for typ in data:
+                print(typ)
+                print( f"{data[typ]['year'].shape=}" ,f"{data[typ]['weight'].shape=}"  )
                 c,b=np.histogram(data[typ]['year'],weights=data[typ]['weight'],bins=xVals)
                 b=0.5*(b[:-1]+b[1:])
                 plt.bar(b,c,color='b',fill=False)
-                plt.xticks(b,['2016PreVFP','2016PostVFP','2017','2018'])
+                plt.xticks(b,['2016PreVFP','2016PostVFP','2017','2018','2016'])
                 hep.cms.label('Work in Progress',year=yr,com=13,fontsize=20)
                 plt.ylabel('Events')
                 print("Making : ",saveBase+'/statsPerYearWeights_'+typ+'_'+setX+'.png')
@@ -349,18 +376,18 @@ def main():
             
             # Making dataset in category test/train/ other
             X=np.concatenate([data['sig']['x'],data['bkg']['x']],axis=-1).T
-            W=np.concatenate([data['sig']['weight']/np.sum(data['sig']['weight']),
-                              data['bkg']['weight']/np.sum(data['bkg']['weight'])],
-                              axis=-1)
-
             Y=np.concatenate([np.ones( data['sig']['x'].shape[1]),
                               np.zeros(data['bkg']['x'].shape[1])
                              ],
                              axis=-1)
+            W=np.concatenate([data['sig']['weight']/np.sum(data['sig']['weight']),
+                              data['bkg']['weight']/np.sum(data['bkg']['weight'])],
+                              axis=-1)
+
             C=np.concatenate([data['sig']['cat'],data['bkg']['cat']],axis=-1)
             Year=np.concatenate([data['sig']['year'],data['bkg']['year']],axis=-1)
                              
-            X_shuffled, Y_shuffled, W_shuffled , C_shuffled, Year_shuffled = sklearn.utils.shuffle(X, Y, W , C, Year , random_state=42+ridx) ; ridx+=1
+            X_shuffled, Y_shuffled, W_shuffled , C_shuffled, Year_shuffled = sklearn.utils.shuffle(X, Y, W , C, Year , random_state = 42+ridx ) ; ridx+=1
             catMisc = data['sig']['cat']==1
             catARec = data['sig']['cat']==2
             cat1Mis = data['sig']['cat']==3
@@ -492,7 +519,7 @@ def main():
         
         print(dataSets.keys())
         for setX in setsToProcess:
-            print("\t Processing set : ",setX," for MVA Scores / TPT-FPR plots")
+            print("\t Processing set : ",setX," for MVA Scores / TPR-FPR plots")
             for ext in ['','Data']:
                 setX=setX+ext
                 outDict[setX]={}
@@ -502,6 +529,7 @@ def main():
                 y_true[ y_true < 0.2 ]= 0
                 y_true[ y_true > 0.2 ]= 1
                 y_pred=clf.predict_proba(dataSets[setX]['x'])
+
                 nCls=y_pred.shape[1]
                 for k in range(y_pred.shape[1]):
                     rocAUC=metrics.roc_auc_score(y_true,y_pred[:,k],sample_weight=dataSets[setX]['w'])
@@ -511,6 +539,19 @@ def main():
                     #outDictROC[setX]['mva_'+str(k)+'_tpr']=[ float(i) for i in results[setX]['mva_'+str(k)+'_rocCurve'][1] ]
                     #outDictROC[setX]['mva_'+str(k)+'_thr']=[ float(i) for i in results[setX]['mva_'+str(k)+'_rocCurve'][2] ]
                 
+                if exportWeights:
+                    outFname = saveBase+'/'+setX+'_outputTree.root'
+                    outputFile=urt.recreate(outFname)
+                    dataSets[setX]['ypred'] =  y_pred
+                    #print( [ky for ky in dataSets[setX] ] )
+                    for ky in dataSets[setX] :
+                        print()
+                        print(ky , dataSets[setX][ky])
+                        print()
+                    outputFile['bdtExport']={ ky : dataSets[setX][ky] for ky in ['cat','w','y','ypred']}
+                    print('\t Exported to  :  ',outFname)
+                    outputFile.close()
+
                 fname=saveBase+'/mva_scores_'+setX+'_split.png'
                 clsUtil.plot_mvaScores(y_pred,dataSets[setX]['w'] , dataSets[setX]['cat'],fname=fname,year=yr)
                 fname=saveBase+'/tprVsFpr_'+setX+'.png'
