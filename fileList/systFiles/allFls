@@ -1,0 +1,25 @@
+set -x
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_RR-17Jul2018_v2/ggHH                 > Era2016_RR-17Jul2018_v2_ggHH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_RR-17Jul2018_v2/vbfHH                > Era2016_RR-17Jul2018_v2_vbfHH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPostVFP_v1_Summer19UL/GluGluH  > Era2016_legacyPostVFP_v1_Summer19UL_GluGluH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPostVFP_v1_Summer19UL/VBF      > Era2016_legacyPostVFP_v1_Summer19UL_VBF.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPostVFP_v1_Summer19UL/VH       > Era2016_legacyPostVFP_v1_Summer19UL_VH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPostVFP_v1_Summer19UL/ttH      > Era2016_legacyPostVFP_v1_Summer19UL_ttH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPreVFP_v1_Summer20UL/GluGluH   > Era2016_legacyPreVFP_v1_Summer20UL_GluGluH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPreVFP_v1_Summer20UL/VBF       > Era2016_legacyPreVFP_v1_Summer20UL_VBF.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPreVFP_v1_Summer20UL/VH        > Era2016_legacyPreVFP_v1_Summer20UL_VH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2016_legacyPreVFP_v1_Summer20UL/ttH       > Era2016_legacyPreVFP_v1_Summer20UL_ttH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2017_RR-31Mar2018_v2/ggHH                 > Era2017_RR-31Mar2018_v2_ggHH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2017_RR-31Mar2018_v2/vbfHH                > Era2017_RR-31Mar2018_v2_vbfHH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2017_legacy_v1_Summer19UL/GluGluH         > Era2017_legacy_v1_Summer19UL_GluGluH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2017_legacy_v1_Summer19UL/VBF             > Era2017_legacy_v1_Summer19UL_VBF.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2017_legacy_v1_Summer19UL/VH              > Era2017_legacy_v1_Summer19UL_VH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2017_legacy_v1_Summer19UL/ttH             > Era2017_legacy_v1_Summer19UL_ttH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2018_RR-17Sep2018_v2/ggHH                 > Era2018_RR-17Sep2018_v2_ggHH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/Era2018_RR-17Sep2018_v2/vbfHH                > Era2018_RR-17Sep2018_v2_vbfHH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/RunIISummer20UL18/GluGluH                    > RunIISummer20UL18_GluGluH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/RunIISummer20UL18/VBF                        > RunIISummer20UL18_VBF.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/RunIISummer20UL18/VH                         > RunIISummer20UL18_VH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/RunIISummer20UL18/ggHHH                      > RunIISummer20UL18_ggHHH.fls
+xrdfst2 ls -u /cms/store/user/athachay/trippleHiggs/analysis/flashggNtuplesWithSystematics/RunIISummer20UL18/ttH                        > RunIISummer20UL18_ttH.fls
+set +x
