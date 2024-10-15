@@ -85,7 +85,7 @@ print("      tag : ",tag)
 print("      jobType : ",jobType)
 print("")
 Fnames=open(FileSource,'r')
-sourceFileList=Fnames.readlines()
+sourceFileList=(''.join(Fnames.readlines())).splitlines()
 Fnames.close()
 print("Number avilable files = ",len(sourceFileList))
 
@@ -156,7 +156,8 @@ for ii in range(NJOBS):
     cfgFile=open(dirName+'/'+cfgFileName,'w')
     tmp=''
     for j in range(FILES_PER_JOB):
-      tmp+=sourceFileList.pop(0)[:-1]+"\n"
+      tmp +=  sourceFileList.pop(0)+'\n'
+    tmp = tmp
     tmp=configurationTxt.replace("@@FNAMES",tmp[:-1])
     tmp=tmp.replace("@@TAG",tag)
     tmp=tmp.replace("@@IDX",str(i))
@@ -186,7 +187,10 @@ if maxMeterialize >=0:
     condorScript.write("queue filename matching ("+head+"/*/*.sh)\n")
     
 print()
-print(" Number of jobs made : ", njobs)
+print(" Number of jobs made : ", njobs )
+
 print(" Number of files left : ", len(sourceFileList) )
 print(" Condor submit file  : ", condorScriptName)
 condorScript.close()
+
+

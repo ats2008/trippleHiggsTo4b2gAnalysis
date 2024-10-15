@@ -157,7 +157,10 @@ void MVATrainer::SetupTMVAOptions()
             //    std::cout<<" j =" <<j<<"\n";
             //}  
     }
-
+  
+  // Setting Event Weight Expression
+  std::cout<<"\n  Setting EventWeightExpression as : "<<eventWeightExpression<<"\n";
+  dataloader->SetWeightExpression(eventWeightExpression);
 
   // cuts can be like :  "VBFJet_mjj > 400 && leadVBF_pt > 40 && subleadVBF_pt > 30 "; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
   // cuts can be like :  "VBFJet_mjj > 400 && leadVBF_pt > 40 && subleadVBF_pt > 30 "; // for example: TCut mycutb = "abs(var1)<0.5";

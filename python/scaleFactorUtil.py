@@ -313,10 +313,26 @@ class bdtScaler:
         results['auc_post'] =  auc( results['roc_post']['fpr'][srt], results['roc_post']['tpr'][srt] )
 
         return results
+    
+    def setTestEvent(self):
+        self.test_vector=self.mc_x[:,:4]
+        self.test_weight=self.predictWeight(self.test_vector)
 
-    def setVarlist(var_list):
-        self.var_list = var_list
+    def getTestEvents(self):    
+        return self.test_vector , self.test_weight
 
+
+    def evalTestEvent(self,returnEval=True):
+        i=0
+        wpred=self.predictWeight(self.test_vector)
+        for row,w,wp in zip(self.test_vector.T , np.round(self.test_weight,3),wpred):
+            i+=1
+            rowp=[ i for i in np.round(row,3) ]
+            print(f"{i=} | {rowp}  ,| real : { w:.3f}  eval : {wp:.3f}")
+        if returnEval:
+            return wpred
+        return None
+    
     def saveModel(self,f):
         if not self.modelInitalized:
             raise Exception("Model defenition is empty ")
@@ -351,7 +367,11 @@ class bdtScaler:
         return self.mc_x,self.mc_w
 
     def getSFForX(self , tofill):
+        #print([i for i in self.var_list])
+        #print("Normalization : ",self.normalizationFactor)
+        #print(tofill['leadingPhoton_pt'])
         x=np.array([ tofill[i] for i in self.var_list]).reshape(-1,1)
+        #print(x)
         return self.predictWeight(x)
 
     def predictWeight(self, x):
@@ -470,4 +490,8 @@ def plotDataMCComparison(var,x_mc,x_data,w_data,w_mc,w_mc_binned,w_mc_bdt,bins=N
         f.savefig(foutname,bbox_inches='tight')
     plt.close(f)
 
-       
+def getBinnedWeight( scaleHist , value_array ):
+    output= [ scaleHist.GetBinContent( scaleHist.FindBin( value_array[i] ) ) for i in range(len(value_array)) ]
+
+    return np.array( output )
+   

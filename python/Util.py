@@ -42,7 +42,7 @@ def deltaR(eta1,phi1,eta2,phi2):
     dphi=np.arccos(np.cos(phi2-phi1))
     return np.sqrt((eta1-eta2)*(eta1-eta2) + dphi*dphi)
 
-def getListOfStringsFromConfigs(cfgTxt,beg,end):
+def getListOfStringsFromConfigs(cfgTxt,beg,end,default=[]):
     isFlist=False
     allFnames=[]
     for l in cfgTxt:
@@ -53,6 +53,7 @@ def getListOfStringsFromConfigs(cfgTxt,beg,end):
             isFlist=False
             continue
         if isFlist:
+            #print("Adding ",beg,"/",end," : ",l[:-1])
             allFnames.append(l[:-1])
     return allFnames
 

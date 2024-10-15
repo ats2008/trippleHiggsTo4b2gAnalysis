@@ -37,11 +37,43 @@
   "mc_2018_ggBox"	       	    :	"/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2018_DiPhotonJetsBox_MGG-80toInf_13TeV-sherpa.fls",
   "mc_2018_gJet20To40"	   	    :	"/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2018_GJet_Pt-20to40_DoubleEMEnriched_MGG-80toInf_TuneCP5_13TeV_Pythia8.fls",
   "mc_2018_gJet40ToInf"	  	    :	"/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2018_GJet_Pt-40toInf_DoubleEMEnriched_MGG-80toInf_TuneCP5_13TeV_Pythia8.fls",
-
   "mc_2016PreVFP_ggHHH"  : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2016PreVFP_HHHTo4B2G_c3_0_d4_0_TuneCP5_13TeV-amcatnlo-pythia8.fls",
   "mc_2016PostVFP_ggHHH"  : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2016PostVFP_HHHTo4B2G_c3_0_d4_0_TuneCP5_13TeV-amcatnlo-pythia8.fls",
   "mc_2017_ggHHH"  : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2017_HHHTo4B2G_c3_0_d4_0_TuneCP5_13TeV-amcatnlo-pythia8.fls",
-  "mc_2018_ggHHH"  : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2018_HHHTo4B2G_c3_0_d4_0_TuneCP5_13TeV-amcatnlo-pythia8.fls"
+  "mc_2018_ggHHH"  : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/centarlProduction/mc_2018_HHHTo4B2G_c3_0_d4_0_TuneCP5_13TeV-amcatnlo-pythia8.fls",
 
+  "mc_2016RR_ttgg" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2016_RR-17Jul2018_v2/TTGG_0Jets_TuneCUETP8M1_13TeV_amcatnlo_madspin_pythia8/TTGG_0Jets_TuneCUETP8M1_13TeV_amcatnlo_madspin_pythia8.fls",
+  "mc_2017RR_ttgg" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2017_RR-31Mar2018_v2/Era2017_RR-31Mar2018_v2_TTGG_0Jets_TuneCP5_13TeV_amcatnlo_madspin_pythia8.fls",
+  "mc_2018RR_ttgg" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2018_RR-17Sep2018_v2/Era2018_RR-17Sep2018_v2_TTGG_0Jets_TuneCP5_13TeV_amcatnlo_madspin_pythia8.fls",
+  
+  "mc_2016RR_ttgj" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2016_RR-17Jul2018_v2/TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8/TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8.fls",
+  "mc_2017RR_ttgj" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2017_RR-31Mar2018_v2/Era2017_RR-31Mar2018_v2_TTGJets_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8.fls",
+  "mc_2018RR_ttgj" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2018_RR-17Sep2018_v2/Era2018_RR-17Sep2018_v2_TTGJets_TuneCP5_13TeV-amcatnloFXFX-madspin-pythia8.fls",
+  
+  "mc_2016RR_ttjj" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2016_RR-17Jul2018_v2/TTJets_TuneCUETP8M2T4_13TeV-amcatnloFXFX-pythia8/TTJets_TuneCUETP8M2T4_13TeV-amcatnloFXFX-pythia8.fls",
+  "mc_2017UL_ttjj" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2017/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8.fls",
+  "mc_2018RR_ttjj" : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2018_RR-17Sep2018_v2/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8.fls",
+
+  
+  "mc_2017RR_ggH"    : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2017_RR-31Mar2018_v2/Era2017_RR-31Mar2018_v2_GluGluHToGG_M-125_13TeV_powheg_pythia8.fls",
+  "mc_2017UL_vbfH"   : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2017/2017_VBFHToGG_M125_TuneCP5_13TeV-amcatnlo-pythia8.fls",
+  "mc_2017RR_vH"     : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2017_RR-31Mar2018_v2/Era2017_RR-31Mar2018_v2_VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8.fls",
+  "mc_2017RR_ttH"    : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2017_RR-31Mar2018_v2/Era2017_RR-31Mar2018_v2_ttHJetToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8.fls",
+  "mc_2017RR_ggHH"   : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2017_RR-31Mar2018_v2/Era2017_RR-31Mar2018_v2_GluGluToHHTo2B2G_node_cHHH1_TuneCP5_PSWeights_13TeV-powheg-pythia8.fls",
+  "mc_2017RR_vbfHH"  : "/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/Era2017_RR-31Mar2018_v2/Era2017_RR-31Mar2018_v2_VBFHHTo2B2G_CV_1_C2V_1_C3_1_dipoleRecoilOn-TuneCP5_PSweights_13TeV-madgraph-pythia8.fls",
+  
+  "mc_2017UL_ttWH"   : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/ntuples/ttWH_UL17.fls",
+  "mc_2017UL_ttHH"   : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/ntuples/ttHH_UL17.fls",
+  "mc_2017UL_WHH"    : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/ntuples/WHH_UL17.fls",
+  "mc_2017UL_ZHH"    : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/fileList/ntuples/ZHH_UL17.fls",
+
+  "mc_2016PreVFP_QCD30To40"  :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2016PreVFP/mc_2016PreVFP_QCD_Pt-30to40_DoubleEMEnriched_MGG-80toInf_TuneCP5_13TeV-pythia8.fls",
+  "mc_2016PreVFP_QCD40ToInf" :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2016PreVFP/mc_2016PreVFP_QCD_Pt-40ToInf_DoubleEMEnriched_MGG-80ToInf_TuneCP5_13TeV-pythia8.fls",
+  "mc_2016PostVFP_QCD30To40"  :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2016PostVFP/mc_2016PostVFP_QCD_Pt-30to40_DoubleEMEnriched_MGG-80toInf_TuneCP5_13TeV-pythia8.fls",
+  "mc_2016PostVFP_QCD40ToInf" :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2016PostVFP/mc_2016PostVFP_QCD_Pt-40ToInf_DoubleEMEnriched_MGG-80ToInf_TuneCP5_13TeV-pythia8.fls",
+  "mc_2017_QCD30To40"  :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2017/mc_2017_QCD_Pt-30to40_DoubleEMEnriched_MGG-80toInf_TuneCP5_13TeV-pythia8.fls",
+  "mc_2017_QCD40ToInf" :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2017/mc_2017_QCD_Pt-40ToInf_DoubleEMEnriched_MGG-80ToInf_TuneCP5_13TeV-pythia8.fls",
+  "mc_2018_QCD30To40"  :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2018/mc_2018_QCD_Pt-30to40_DoubleEMEnriched_MGG-80toInf_TuneCP5_13TeV-pythia8.fls",
+  "mc_2018_QCD40ToInf" :"/grid_mnt/t3storage3/athachay/trippleHiggs/store/analysis/flashggNtuples/mc/2018/mc_2018_QCD_Pt-40ToInf_DoubleEMEnriched_MGG-80ToInf_TuneCP5_13TeV-pythia8.fls"
 }
 

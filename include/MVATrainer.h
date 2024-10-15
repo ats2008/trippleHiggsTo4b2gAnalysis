@@ -183,6 +183,11 @@ void MVATrainer::readParameters(string fname)
                  factoryOptions=field;
                  cout<<" setting factoryOptions = "<<factoryOptions<<"\n";
             }
+            if(field.compare("TestTrainConfig")==0){
+                 getline(strStream, field);
+                 testTrainConfig=field;
+                 cout<<" setting testTrainConfig = "<<testTrainConfig<<"\n";
+            }
             if(field.compare("EventWeightExpression")==0){
                  getline(strStream, field);
                  eventWeightExpression=field;

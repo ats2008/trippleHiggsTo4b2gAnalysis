@@ -110,7 +110,21 @@ bdt_scaler= scaleFactorUtil.bdtScaler()
 
 unblind = doSR
 
-if doPtReWeighting:
+print()
+fname=allFnames[0]
+print('File  : ',fname)
+dataTag,dataId   = hhhUtil.getDataTag(fname)
+dataTag,sampleID = hhhUtil.getDataTag(fname)
+year,yearID     =hhhUtil.getYear(fname)
+if year:
+    lumi=float(utl.lumiMap[year])
+else:
+    lumi=-1
+
+print(f'{dataTag=} {dataId=} {sampleID=} {year=} {yearID=} {lumi=}')
+print()
+#if doPtReWeighting:
+if doPtReWeighting and hhhSelector.hasToRePtWeight( dataTag ):
     hnames=pTReweitingHistName.split(',')
     cats=pTReweitingHistCatagories.split(',')
     catMap={cat:hname for cat,hname in zip(cats,hnames)}
@@ -120,21 +134,24 @@ if doPtReWeighting:
     scaler.setSFHistFromFile(pTReweitingFile,catMap)
 print("")
 
-if doBDTReWeighting:
+#if doBDTReWeighting:
+if doBDTReWeighting and hhhSelector.hasToBDTReWeight( dataTag ):
     result={}
     with open(bdtReweitingFile,'rb') as f:
         print("Loading the BDT Reweighter model  from : ",bdtReweitingFile)
         results = pickle.load(f)
         bdt_scaler_=results['model']
-        bdt_scaler.loadFromScaler(bdt_scaler_)
-        bdt_scaler.var_list = [
-                'leadingPhoton_pt','leadingPhoton_eta',
-                'subleadingPhoton_pt','subleadingPhoton_eta',
-                'pT_h1leadJ' ,'eta_h1leadJ',
-                'pT_h1subleadJ' ,'eta_h1subleadJ',
-                'pT_h2leadJ' ,'eta_h2leadJ',
-                'pT_h2subleadJ' ,'eta_h2subleadJ'
-            ] 
+        bdt_scaler=bdt_scaler_
+        bdt_scaler.evalTestEvent()
+        #bdt_scaler.loadFromScaler(bdt_scaler_)
+        #bdt_scaler.var_list = [
+        #        'leadingPhoton_pt','leadingPhoton_eta',
+        #        'subleadingPhoton_pt','subleadingPhoton_eta',
+        #        'pT_h1leadJ' ,'eta_h1leadJ',
+        #        'pT_h1subleadJ' ,'eta_h1subleadJ',
+        #        'pT_h2leadJ' ,'eta_h2leadJ',
+        #        'pT_h2subleadJ' ,'eta_h2subleadJ'
+        #    ] 
 
 
 maxEvents=-1
@@ -178,7 +195,7 @@ branches=[
      'quadjet_2_deepJetScore', 'quadjet_3_deepJetScore', 'r_HH', 'scalarPtSum4b',
      'scalarPtSum4b2g', 'scalarPtSum4b2g','HggTo4bAbsCosTheta', 'scalarPtSumHHH',
      'h1_dijetSigmaMOverM', 'h2_dijetSigmaMOverM', 'sigmaMOverM',
-     'subleadingPhotonSigOverE', 'sumScore_3j', 'sumScore_4j', 'trihiggs_mass',
+     'subleadingPhotonSigOverE', 'sumScore_3j', 'sumScore_4j', 'sumScore_4j_Pnet','sumScore_3j_Pnet', 'trihiggs_mass',
      'ttH_MET', 'weight','rho','trihiggs_pt',
      "CosThetaH1_hhhF",  "HH4bCosTheta_hhhF",  "HggCosTheta_hhhF",  "HH4bCosThetaLeadJet_hhhF",  "absCosThetaH4bHgg_hhhF",  
      'H1bbCosTheta_hhhF','H2bbCosTheta_hhhF',
@@ -199,6 +216,12 @@ for i in range(4):
     branches.append('quadjet_'+str(i)+'_isTight2017')
     branches.append('quadjet_'+str(i)+'_isTight2018' )
     branches.append('quadjet_'+str(i)+'_particleNetAK4_B')
+    branches.append('quadjet_'+str(i)+'_isPUTight' )
+    branches.append('quadjet_'+str(i)+'_isPUMedium' )
+    branches.append('quadjet_'+str(i)+'_isPULoose' )
+    branches.append('quadjet_'+str(i)+'_isBtagTight' )
+    branches.append('quadjet_'+str(i)+'_isBtagMedium' )
+    branches.append('quadjet_'+str(i)+'_isBtagLoose' )
 branches+=['sumPNetScore_3j' ,'sumPNetScore_4j']
 
 
@@ -235,6 +258,7 @@ th1Store={}
 beg=datetime.datetime.now()
 has_printed=True
 dataTag=""
+countTotal=0
 for fname in allFnames:
     print("Opening file : ",fname)
     simFile = ROOT.TFile(fname,'READ')
@@ -275,6 +299,7 @@ for fname in allFnames:
 
     for i in range(maxEvents_):
         eTree.GetEntry(i)
+        countTotal+=1
         
         isMasked = isData_ and  (eTree.CMS_hgg_mass > 115.0) and (eTree.CMS_hgg_mass < 135.0)
         if isMasked and not unblind:
@@ -302,7 +327,7 @@ for fname in allFnames:
             now=datetime.datetime.now()
             timeSpendSec=np.round((now-beg).total_seconds() , 2)
             timeLeftSec =np.round(1.0*(maxEvents_-i)*timeSpendSec/( i +1e-3),2)
-            print("   Doing i = ",i," / ",maxEvents_)
+            print("   Doing i = ",i," / ",maxEvents_," in file  [  ", countTotal ," total ] ")
             print("      time left : ", str(datetime.timedelta(seconds= timeLeftSec)),
                     " [ time elapsed : ",datetime.timedelta(seconds= timeSpendSec), " s ]")
             print(" gg mass   : ",eTree.CMS_hgg_mass)
@@ -403,6 +428,8 @@ for fname in allFnames:
             #    print(tofill['quadjet_'+str(i)+'_mlScoreY2s']  )
             #    i+=1
         i=0
+        sumScore_3j_Pnet=0.0
+        sumScore_4j_Pnet=0.0
         for idx in quad['fgg_idxs']:
            tofill['quadjet_'+str(i)+'_puJetIdMVA']  = getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA')
            tofill['quadjet_'+str(i)+'_mass']        = getattr(eTree,'jet_'+str( idx )+'_mass')
@@ -415,10 +442,19 @@ for fname in allFnames:
            tofill['quadjet_'+str(i)+'_isTight2017'] = getattr(eTree,'jet_'+str( idx )+'_isTight2017')
            tofill['quadjet_'+str(i)+'_isTight2018'] = getattr(eTree,'jet_'+str( idx )+'_isTight2018')
            tofill['quadjet_'+str(i)+'_particleNetAK4_B'] = getattr(eTree,'jet_'+str( idx )+'_particleNetAK4_B')
+
+           tofill['quadjet_'+str(i)+'_isPULoose' ]     = hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'loose' )
+           tofill['quadjet_'+str(i)+'_isPUMedium']     = hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'medium')
+           tofill['quadjet_'+str(i)+'_isPUTight' ]     = hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'tight' )
+
+           tofill['quadjet_'+str(i)+'_isBtagLoose' ]     = hhhUtil.btagID(getattr(eTree,'jet_'+str( idx )+'_deepJetScore'),'loose' )
+           tofill['quadjet_'+str(i)+'_isBtagMedium']     = hhhUtil.btagID(getattr(eTree,'jet_'+str( idx )+'_deepJetScore'),'medium')
+           tofill['quadjet_'+str(i)+'_isBtagTight' ]     = hhhUtil.btagID(getattr(eTree,'jet_'+str( idx )+'_deepJetScore'),'tight' )
+
            val=max(getattr(eTree,'jet_'+str( idx )+'_particleNetAK4_B'),0.0) ;  
            if i< 3:
-               sumScore_3j+=val
-           sumScore_4j+=val
+               sumScore_3j_Pnet+=val
+           sumScore_4j_Pnet+=val
            i+=1
 
 
@@ -463,6 +499,8 @@ for fname in allFnames:
         tofill['genRecoCategory']=genCat*1.0
         tofill["sumScore_4j"]=sumScore_4j
         tofill["sumScore_3j"]=sumScore_3j
+        tofill["sumScore_4j_Pnet"]=sumScore_4j_Pnet
+        tofill["sumScore_3j_Pnet"]=sumScore_3j_Pnet
         
         quad=allQuads['bJetQuad']
 
@@ -500,8 +538,8 @@ for fname in allFnames:
         scaleFactor_bdt=1.0
         if doBDTReWeighting and hhhSelector.hasToBDTReWeight( dataTag ):
             scaleFactor_bdt=bdt_scaler.getSFForX(tofill)[0]
-        #    print("scaleFactor : ",scaleFactor_bdt)
-            wei_bdt*=scaleFactor_bdt
+            #print("scaleFactor : ",scaleFactor_bdt)
+            wei_bdt=scaleFactor_bdt
         
         wei=wei_bdt
         scaleFactor=scaleFactor_bdt
@@ -517,7 +555,8 @@ for fname in allFnames:
         tofill['year'] =  yearID
         tofill['sample'] =  sampleID
         #print(f"weight : {tofill['weight_v0'] = } {tofill['weight'] = } {tofill['weight_binned'] = } {tofill['weight_bdt'] =}")
-
+        #print()
+        #print()
         for i in outputDataDict:
             outputDataDict[i]=tofill[i]
         arr=array('f', outputDataDict.values())

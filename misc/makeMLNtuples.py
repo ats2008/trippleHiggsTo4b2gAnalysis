@@ -11,7 +11,7 @@ parser.add_argument('-t',"--test", help="Test Job", action='store_true' )
 parser.add_argument('-p',"--printOnly", help="Only Print the commands", action='store_true' )
 parser.add_argument('-n',"--njobs", help="Number of jobs to make",default='-6000')
 parser.add_argument('-e',"--nevts", help="Number of events per job",default='-1')
-parser.add_argument('-v',"--version", help="Vesion of the specific work",default='1p0')
+parser.add_argument('-v',"--version", help="Vesion of the specific work",default='2p0')
 
 args = parser.parse_args()
 
@@ -70,7 +70,7 @@ if onlyPrint :
 allCondorSubFiles=[]
 if jobsToProcess==None:
     jobsToProcess=list( jobDict.keys() )
-jobsToProcess=['data','bkg','sig']
+jobsToProcess=['sig']
 for jobTag in jobsToProcess:
     if njobs > 0:
         jobDict[jobTag]['njobs']=njobs

@@ -4,6 +4,7 @@ import numpy as np
 import itertools as itrTools
 from Util import *
 from trippleHiggsUtils import *
+import trippleHiggsUtils as hhhUtil
 """
 from inspect import currentframe
 
@@ -110,7 +111,7 @@ def getHiggsDauP4s(eTree,pdgId):
         #    print(ii," ) ",np.round(allP4[order[ii]].Pt(),2 ), " | ",end="")
 
     return [allP4[i] for i in order ]
-    
+ 
 def checkGenMatches(eTree,jetIndices):
     idxs=[-1 for i in range(4)]
     genPt=[1e4 for i in range(4)]
@@ -218,6 +219,109 @@ def checkGenMatches(eTree,jetIndices):
             mat2=True
 
     #    print("!!\t\t Drs ",k,l," -- > ",drA,drB,mat2)
+        if mat1 and mat2:
+            isGenMatch=True
+            break
+    return True,isGenMatch,hA_matched,hB_matched
+
+
+
+def checkGenMatchesFGG(eTree,jetIndices):
+    
+    idxs  =[-1 for i in range(4)]
+    genPt =[1e4 for i in range(4)]
+    genEta=[1e4 for i in range(4)]
+    genPhi=[1e4 for i in range(4)]
+    genE  =[1e4 for i in range(4)]
+    genHPt=[-1e4 for i in range(4)]
+
+    jetPt=[]
+    jetEta=[]
+    jetPhi=[]
+    jetMass=[]
+    fggIdx=[]
+    jetBtagScore=[]
+    flav=[]
+    N_JET_MAX=8
+
+    for i in jetIndices:
+        jetPt.append(getattr(eTree,'jet_'+str(i)+'_pt'))
+        jetEta.append(getattr(eTree,'jet_'+str(i)+'_eta'))
+        jetPhi.append(getattr(eTree,'jet_'+str(i)+'_phi'))
+        jetMass.append(getattr(eTree,'jet_'+str(i)+'_mass'))
+        jetBtagScore.append(getattr(eTree , 'jet_'+str(i)+'_deepJetScore') ) 
+        flav.append(getattr(eTree,'jet_'+str(i)+'_flavour'))
+        fggIdx.append(i)
+
+
+    k=0
+    #print("H1  Dau 1" , eTree.gen_H1_dau1_pt ,eTree.gen_H1_dau1_eta  , eTree.gen_H1_dau1_phi ,eTree.gen_H1_dau1_pdgId )
+    #print("H1  Dau 1" , eTree.gen_H1_dau2_pt ,eTree.gen_H1_dau2_eta  , eTree.gen_H1_dau1_phi ,eTree.gen_H1_dau1_pdgId )
+    #print("H2  Dau 2" , eTree.gen_H2_dau1_pt ,eTree.gen_H2_dau1_eta  , eTree.gen_H2_dau1_phi ,eTree.gen_H2_dau1_pdgId )
+    #print("H3  Dau 2" , eTree.gen_H2_dau2_pt ,eTree.gen_H2_dau2_eta  , eTree.gen_H2_dau2_phi ,eTree.gen_H2_dau2_pdgId )
+    #print("H3  Dau 2" , eTree.gen_H3_dau1_pt ,eTree.gen_H3_dau1_eta  , eTree.gen_H3_dau1_phi ,eTree.gen_H3_dau1_pdgId )
+    #print("H3  Dau 2" , eTree.gen_H3_dau2_pt ,eTree.gen_H3_dau2_eta  , eTree.gen_H3_dau2_phi ,eTree.gen_H3_dau2_pdgId )
+
+    if(abs(eTree.gen_H1_dau1_eta) > 2.5 ): return False,False,False,False
+    if(abs(eTree.gen_H1_dau2_eta) > 2.5 ): return False,False,False,False
+    if(abs(eTree.gen_H2_dau1_eta) > 2.5 ): return False,False,False,False
+    if(abs(eTree.gen_H2_dau2_eta) > 2.5 ): return False,False,False,False
+    if(abs(eTree.gen_H3_dau1_eta) > 2.5 ): return False,False,False,False
+    if(abs(eTree.gen_H3_dau2_eta) > 2.5 ): return False,False,False,False
+
+    #for i in range(eTree.nJets):
+    #    print("J : ",i," --> ",eTree.jets_pt[i]*eTree.jets_bJetRegCorr[i] ,eTree.jets_eta[i]  , eTree.jets_phi[i] ," || ", eTree.jets_deepJetScore[i])
+    allDauP4s =  getHiggsDauP4s(eTree,5)
+    
+    for k,p4 in enumerate(allDauP4s):
+        genPt[k] = p4.Pt()
+        genEta[k]= p4.Eta()
+        genPhi[k]= p4.Phi()
+   
+    possiblities  =[
+                      [0,1,2,3],
+                      [1,0,2,3],
+                      [0,1,3,2],
+                      [1,0,3,2],
+                      [2,3,0,1],
+                      [2,3,1,0],
+                      [3,2,0,1],
+                      [3,2,1,0]
+                   ]
+
+    isGenMatch=False
+    hA_matched=False
+    hB_matched=False
+    #for i in range(4):
+    #    print("!! \tGen : ",genEta[i],genPhi[i]," | Reco : ",jetEta[i],jetPhi[i],jetPt[i])
+    for pos in possiblities:
+        i,j,k,l=pos
+        mat1=False
+        mat2=False
+        drA=deltaR(genEta[i],genPhi[i],jetEta[0],jetPhi[0])
+        drB=deltaR(genEta[j],genPhi[j],jetEta[1],jetPhi[1])
+        
+        isPtMatch=False
+        #if abs(jetPt[0]*jetRegCorr[0]/genPt[i] - 1.0) < 0.2 and  abs(jetPt[1]*jetRegCorr[1]/genPt[j] - 1.0) < 0.2 :
+        #    isPtMatch=True
+        isPtMatch=True
+        if(drA < 0.4) and (drB<0.4)  and isPtMatch :
+            hA_matched = True
+            mat1=True
+        #print("!!\t\t Drs ",i,j," -- > ",drA,drB,mat1)
+        
+        drA=deltaR(genEta[k],genPhi[k],jetEta[2],jetPhi[2])
+        drB=deltaR(genEta[l],genPhi[l],jetEta[3],jetPhi[3])
+
+        isPtMatch=False
+        #if abs(jetPt[2]*jetRegCorr[2]/genPt[k] - 1.0) < 0.2 and  abs(jetPt[3]*jetRegCorr[3]/genPt[l] - 1.0) < 0.2 :
+        #    isPtMatch=True
+        isPtMatch=True
+        if(drA < 0.4 and drB<0.4  and isPtMatch):
+            hB_matched = True
+            mat2=True
+
+        #print("!!\t\t Drs ",k,l," -- > ",drA,drB,mat2)
         if mat1 and mat2:
             isGenMatch=True
             break
@@ -515,7 +619,8 @@ def getDiPhotons(eTree):
             result['nDiPhotons']+=1
     return result
 
-def getBJetParisFGG(eTree,mask=[],doMisclassificationCorrection=False):
+
+def getBJetParisChi2FGG(eTree,year,mask=[],doMisclassificationCorrection=False):
     result={'isValid':False , 'allBJetQuads':[],'bJetQuad':[],'nJetQuads':0,'fail':'Pass'}
     X0OverY0=1.05
     jets_pt=[]
@@ -607,6 +712,218 @@ def getBJetParisFGG(eTree,mask=[],doMisclassificationCorrection=False):
                 t=quad_['idxs'][3] ; quad_['idxs'][3]=quad_['idxs'][2] ;quad_['idxs'][2]=t
                 t=combi[3] ; combi[3]=combi[2] ;combi[2]=t
             quad_['fgg_idxs']  = [ jets_fgg_index[ idx ] for idx in quad_['idxs'] ]         
+            
+            idx = quad_['fgg_idxs'][0]
+            reso_j0= getattr(eTree,'jet_'+str( idx )+'_bJetRegRes')
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'tight' ):
+                continue
+            idx = quad_['fgg_idxs'][1]
+            reso_j1= getattr(eTree,'jet_'+str( idx )+'_bJetRegRes')
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'loose' ):
+                continue
+            idx = quad_['fgg_idxs'][2]
+            reso_j2= getattr(eTree,'jet_'+str( idx )+'_bJetRegRes')
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'tight' ):
+                continue
+            idx = quad_['fgg_idxs'][3]
+            reso_j3= getattr(eTree,'jet_'+str( idx )+'_bJetRegRes')
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'loose' ):
+                continue
+
+            correctedLV0=getCorrectedJetP4(jetLVs[combi[0]],1.0)
+            correctedLV1=getCorrectedJetP4(jetLVs[combi[1]],1.0)
+            correctedLV2=getCorrectedJetP4(jetLVs[combi[2]],1.0)
+            correctedLV3=getCorrectedJetP4(jetLVs[combi[3]],1.0)
+            
+            p4_h1_preReg=jetLVs[combi[0]]+jetLVs[combi[1]]
+            p4_h2_preReg=jetLVs[combi[2]]+jetLVs[combi[3]]
+            p4_h1=correctedLV0 + correctedLV1
+            p4_h2=correctedLV2 + correctedLV3
+
+            if p4_h2.Pt() > p4_h1.Pt():
+                t=p4_h1_preReg
+                p4_h1_preReg=p4_h2_preReg
+                p4_h2_preReg=t
+
+                t=p4_h1
+                p4_h1=p4_h2
+                p4_h2=t
+
+            quad_['p4_h1_preReg']=p4_h1_preReg
+            quad_['p4_h2_preReg']=p4_h2_preReg
+            quad_['p4_h1']=p4_h1
+            quad_['p4_h2']=p4_h2
+            quad_['m1_preReg']=p4_h1_preReg.M()
+            quad_['m2_preReg']=p4_h2_preReg.M()
+            quad_['m1']=p4_h1.M()
+            quad_['m2']=p4_h2.M()
+            quad_['mass']=(p4_h1+p4_h2).M()
+            quad_['mass_preReg']=(p4_h1_preReg+p4_h2_preReg).M()
+            quad_['pT']=(p4_h1+p4_h2).Pt()
+            quad_['y']=(p4_h1+p4_h2).Rapidity()
+            quad_['eta']=(p4_h1+p4_h2).Eta()
+            quad_['phi']=(p4_h1+p4_h2).Phi()
+            quad_['r_HH']=np.sqrt( (p4_h1.M() - 125.0)*(p4_h1.M() - 125.0) + 
+                                   (p4_h2.M() - 125.0)*(p4_h2.M() - 125.0))
+            
+            resoH1=hhhUtil.getDijetResolutions( jetLVs[combi[0]] , jetLVs[combi[1]], reso_j0,reso_j1)
+            resoH2=hhhUtil.getDijetResolutions( jetLVs[combi[2]] , jetLVs[combi[3]], reso_j2,reso_j3)
+            M_FIT=125
+            quad_['D_HH']=(quad_['m1'] -125  )**2 / resoH1**2 + (quad_['m2'] -125  )**2 / resoH2**2     
+     #       print("!! D_HH for combi : ",combi," : ",quad_['D_HH']," r_HH : ", quad_['r_HH'])
+            #if quad_['r_HH'] < metric_min:
+            if quad_['D_HH'] < metric_min:
+                metric_min_idx=len(result['allBJetQuads'])
+                metric_min=quad_['D_HH']
+            result['allBJetQuads'].append(quad_)
+            result['isValid']=True
+            result['nJetQuads']+=1
+
+    if doMisclassificationCorrection:
+        idx2ndMin=-1
+        metri2ndMin=1e10
+        for idx in range(len(result['allBJetQuads'])):
+            if idx==metric_min_idx:
+                continue
+            if result['allBJetQuads'][idx]['D_HH'] < metri2ndMin:
+                metri2ndMin=result['allBJetQuads'][idx]['D_HH']
+                idx2ndMin=idx
+        if( idx2ndMin < 0 ):
+            print("Problem !! no second quad !! setting idx2ndMin = metric_min_idx")
+            idx2ndMin=metric_min_idx
+        print("idx2ndMin, metric_min_idx",idx2ndMin,metric_min_idx)
+        if abs(result['allBJetQuads'][idx2ndMin]['D_HH']-result['allBJetQuads'][metric_min_idx]['D_HH']) <30.0:
+            if result['allBJetQuads'][idx2ndMin]['pT'] > result['allBJetQuads'][metric_min_idx]['pT']:
+                metric_min_idx=idx2ndMin
+    if result['isValid']:
+        result['bJetQuad']=result['allBJetQuads'][metric_min_idx]
+    return result           
+
+
+
+
+def getBJetParisFGG(eTree,year,mask=[],doMisclassificationCorrection=False):
+    result={'isValid':False , 'allBJetQuads':[],'bJetQuad':[],'nJetQuads':0,'fail':'Pass'}
+    X0OverY0=1.05
+    jets_pt=[]
+    jets_eta=[]
+    jets_phi=[]
+    jets_mass=[]
+    jets_deepJetScore=[]
+    jets_fgg_index=[]
+    N_JET_MAX=8 
+
+    if len(mask)==0:
+        mask=np.zeros(N_JET_MAX , dtype=bool)
+    for i in range(N_JET_MAX):
+        if (getattr(eTree,'jet_'+str(i)+'_isValid') < 0.25):
+            continue
+        if not mask[i]:
+            continue
+
+        jets_pt.append(getattr(eTree,'jet_'+str(i)+'_pt'))
+        jets_eta.append(getattr(eTree,'jet_'+str(i)+'_eta'))
+        jets_phi.append(getattr(eTree,'jet_'+str(i)+'_phi'))
+        jets_mass.append(getattr(eTree,'jet_'+str(i)+'_mass'))
+        jets_deepJetScore.append( getattr(eTree,'jet_'+str( i )+'_deepJetScore') )
+        jets_fgg_index.append( i  )
+    #jets_pt =np.array(jets_pt)
+    #jets_eta=np.array(jets_eta)
+    #jets_phi=np.array(jets_phi)
+    
+    photons_eta=[ eTree.leadingPhoton_eta ,eTree.subleadingPhoton_eta  ]
+    photons_phi=[ eTree.leadingPhoton_eta ,eTree.subleadingPhoton_phi  ]
+    nJets=len(jets_pt)
+    a=X0OverY0
+    b=np.sqrt(1.0+X0OverY0*X0OverY0)
+    
+    if(nJets < 4 ) : 
+        #print(" REQUIRES ATLEAST 4 JETS FOR MAKING CADIDATES ! pairing failed for event id ",eTree.event, "[ :( ]")
+        result['fail']='nValidJets'
+        return result 
+    
+    
+    jetPts=np.array(jets_pt)
+    jetEta=np.array(jets_eta)
+    jetPhi=np.array(jets_phi)
+    jet_deepJetScore=np.array(jets_deepJetScore)
+    jetScoreOrder=np.argsort(jet_deepJetScore*-1.0)
+    
+    mask = jetPts>0
+
+    #print("\t Score of jets under consideratio n : ",jet_deepJetScore)
+    #print("\t Sorted ordering of jets under consideratio n : ",jetScoreOrder)
+    #print("\t Sorted ordering of jets under consideratio n : ",jet_deepJetScore[jetScoreOrder])
+
+    nMax =  4
+    mask[jetScoreOrder[nMax:]]=False
+    goodJets=np.where(mask)[0]
+    if(len(goodJets) < 4 ): 
+        print("SANITY CHECK FAILS !! att FGG BJet Pair maker ")
+        result['fail']='goodJets'
+        return result
+    allJetCombinations=itrTools.combinations(goodJets,4)
+    jetsIdx=np.arange(0,4,1)
+    jetLVs=[]
+    for i in range(4):
+        jetLVs.append(ROOT.TLorentzVector())
+    possiblilities_=[[0,1,2,3],[0,2,1,3],[0,3,1,2]]
+    
+    jetCobinationScores=[]
+    metric_min=1e9
+    etric_min_idx=-1
+ #   print("Good jets  : ",goodJets)
+    for jetCombination in allJetCombinations:
+        # setting 4 jet values
+ #       print("Doing Jet Combination : ",jetCombination)
+        for j in range(4):
+            ii=jetCombination[j]
+            jetLVs[j].SetPtEtaPhiM(jets_pt[ii],jets_eta[ii],
+                           jets_phi[ii],jets_mass[ii])
+        # scanning combination in 4 jets
+        for combi in possiblilities_:
+#            print("  Permutation  : ",combi)
+            quad_={}
+            quad_['idxs']=[jetCombination[i] for i in combi]
+
+            if jets_pt[quad_['idxs'][0]] < jets_pt[quad_['idxs'][1]]:
+                t=quad_['idxs'][1] ; quad_['idxs'][1]=quad_['idxs'][0] ;quad_['idxs'][0]=t
+                t=combi[1] ; combi[1]=combi[0] ;combi[0]=t
+
+            if jets_pt[quad_['idxs'][2]] < jets_pt[quad_['idxs'][3]]:
+                t=quad_['idxs'][3] ; quad_['idxs'][3]=quad_['idxs'][2] ;quad_['idxs'][2]=t
+                t=combi[3] ; combi[3]=combi[2] ;combi[2]=t
+            quad_['fgg_idxs']  = [ jets_fgg_index[ idx ] for idx in quad_['idxs'] ]         
+            
+            idx = quad_['fgg_idxs'][0]
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'tight' ):
+                continue
+            idx = quad_['fgg_idxs'][1]
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'loose' ):
+                continue
+            idx = quad_['fgg_idxs'][2]
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'tight' ):
+                continue
+            idx = quad_['fgg_idxs'][3]
+            if getattr(eTree,'jet_'+str( idx )+'_isTight') < 0.2 :
+                continue
+            if not hhhUtil.puJetID(getattr(eTree,'jet_'+str( idx )+'_pt'),getattr(eTree,'jet_'+str( idx )+'_puJetIdMVA'),year,'loose' ):
+                continue
+
             correctedLV0=getCorrectedJetP4(jetLVs[combi[0]],1.0)
             correctedLV1=getCorrectedJetP4(jetLVs[combi[1]],1.0)
             correctedLV2=getCorrectedJetP4(jetLVs[combi[2]],1.0)
@@ -667,8 +984,8 @@ def getBJetParisFGG(eTree,mask=[],doMisclassificationCorrection=False):
         if abs(result['allBJetQuads'][idx2ndMin]['D_HH']-result['allBJetQuads'][metric_min_idx]['D_HH']) <30.0:
             if result['allBJetQuads'][idx2ndMin]['pT'] > result['allBJetQuads'][metric_min_idx]['pT']:
                 metric_min_idx=idx2ndMin
-    
-    result['bJetQuad']=result['allBJetQuads'][metric_min_idx]
+    if result['isValid']:
+        result['bJetQuad']=result['allBJetQuads'][metric_min_idx]
     return result           
 
 def getBJetParis_wrapper(eTree,methord='default',**kwargs):
@@ -1251,6 +1568,21 @@ def getSelectedJetCollectionMaskPt(eTree ,jetMask=[],pTMin=25.0):
             jetMask[i]=False
     return jetMask
 
+def getCorrectJetCollection(eTree ,jetMask=[]):
+    if jetMask==[]:
+        for i in range(8):
+            jetMask.append(True)
+    for i in range(1,8):
+        if not jetMask[i]:
+            continue
+        if abs(getattr(eTree,'jet_'+str(i)+'_isValid') )  < 0.5:
+            jetMask[i]=False
+        if getattr(eTree,'jet_'+str(i)+'_eta') == getattr(eTree,'jet_'+str(i-1)+'_eta') :
+            if getattr(eTree,'jet_'+str(i)+'_pt') == getattr(eTree,'jet_'+str(i-1)+'_pt') :
+                jetMask[i]=False
+    return jetMask
+
+
 def getSelectedJetCollectionMaskEta(eTree ,jetMask=[],etaMax=2.5):
     if jetMask==[]:
         for i in range(8):
@@ -1304,15 +1636,15 @@ def vetoOverCountings(nBs,dataTag):
     return False
 
 def hasToRePtWeight(dataTag):
-
-    if dataTag in ["ggJets","ggJets1b","ggJets2b"]:
+    if dataTag in ["ggJets","ggJets1bjet","ggJets2bjet"]:
+    #if dataTag in ["ggJets","ggJets1bjet","ggJets2bjet","gJet20To40","gJet40ToInf"]:
         return True
 
     return False
 
 def hasToBDTReWeight(dataTag):
-
-    if dataTag in ["ggJets","ggJets1b","ggJets2b","gJet20To40","gJet40ToInf"]:
+    #if dataTag in ["ggJets","ggJets1bjet","ggJets2bjet","gJet20To40","gJet40ToInf"]:
+    if dataTag in ["ggJets","ggJets1bjet","ggJets2bjet"]:
         return True
 
     return False

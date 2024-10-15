@@ -13,7 +13,7 @@ parser.add_argument('-n',"--njobs", help="Number of jobs to make",default='-6000
 parser.add_argument('-e',"--nevts", help="Number of events per job",default='-1')
 parser.add_argument('-c',"--cats", help="Categories of jobs to process ",default=None)
 parser.add_argument('-y',"--years", help="Year of jobs to process ",default="*")
-parser.add_argument('-v',"--version", help="Vesion of the specific work",default='3p0')
+parser.add_argument('-v',"--version", help="Vesion of the specific work",default='TEST')
 
 args = parser.parse_args()
 
@@ -40,19 +40,22 @@ print(" cats ",cats)
 print(" years ",years)
 
 if submit2Condor or resubmit2Condor:
-    choice=raw_input("Do you really want to submit the jobs to condor pool ? ")
+    choice=input("Do you really want to submit the jobs to condor pool ? ")
     if 'y' not in choice.lower():
         print("Exiting ! ")
         exit(0)
 
 jobDict={}
-with open('misc/jsons/bdtNtuplizer.json') as f:
+with open('misc/jsons/bdtNtuplizer_v2.json') as f:
     jobDict=json.load(f)
 
 fileListDict={}
-with open('misc/jsons/fileListToUse.json') as f:
+#with open('misc/jsons/fileListToUse.json') as f:
+with open('results/PreSelectedNtuples/fileList_v1p0.json') as f:
 #with open('misc/jsons/fileListPostMLScoreAdditionToUse.json') as f:
-    fileListDict=json.load(f)
+    fileListDict_=json.load(f)
+    #fileListDict={ dset.encode('ascii','replace') : fileListDict_[dset]  for dset in fileListDict_ }
+    fileListDict=fileListDict_
 
 templateCMD="""
 ./misc/condorJobMakerGeneric.py 
@@ -93,7 +96,7 @@ for jobTag in jobsToProcess:
         jobDict[jobTag]['njobs']=njobs
     if maxevents > 0:
         jobDict[jobTag]['maxevents']=maxevents
-    #print(jobDict[jobTag])
+    print(jobDict[jobTag])
     cmd=templateCMD.replace("@@EXE",jobDict[jobTag]['exe'])
     cmd=cmd.replace(  "@@CFG_TPL"        ,jobDict[jobTag]['cfg'])
     cmd=cmd.replace(  "@@SCRIPT_TPL"     ,jobDict[jobTag]['script'])
@@ -102,6 +105,7 @@ for jobTag in jobsToProcess:
     cmd=cmd.replace(  "@@FILES_PER_JOB"        ,str(jobDict[jobTag]['files_per_job']))
     cmd=cmd.replace(  "@@MAXEVENTS"        , str(jobDict[jobTag]['maxevents']) )
     cmd=cmd.replace(  "@@MAX_METERIALIZE"        , str(jobDict[jobTag]['max_meterialize']) )
+
     cfgExtra='""'
     for key in jobDict[jobTag]:
         if '@@' in key:
@@ -116,7 +120,7 @@ for jobTag in jobsToProcess:
                     break
             if not hasYear:
                 continue
-        dset=dset.encode('ascii','replace')
+        #dset=dset.encode('ascii','replace')
         if dset in fileListDict:
             flist=fileListDict[dset]
         else :

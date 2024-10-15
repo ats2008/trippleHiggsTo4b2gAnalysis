@@ -9,76 +9,145 @@ from Util import *
 import warnings
 import trippleHiggsSelector as hhhSelector
 N_JET_MAX=8
+
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 def btagID( deepJetScore,TYPE='loose' ):
 
-    if TYPE=='tight' and  deepJetScore  > 0.7346:
+    if TYPE=='tight' and  deepJetScore  > 0.7264 :
         return True;
-    if TYPE=='medium' and  deepJetScore  > 0.3098:
+    if TYPE=='medium' and  deepJetScore  >  0.2770 :
         return True;
-    if TYPE=='loose' and  deepJetScore  > 0.0594:
+    if TYPE=='loose' and  deepJetScore  >      0.0494  :
         return True;
 
     return False    
 
 
-def puJetID(pT,mvaScore,TYPE='loose'):
+def puJetID(pT,mvaScore,year,TYPE='loose'):
     
     if TYPE=='loose':
-        return puJetIDLoose(pT,mvaScore)
+        return puJetIDLoose(pT,mvaScore,year)
 
     if TYPE=='tight':
-        return puJetIDTight(pT,mvaScore)
+        return puJetIDTight(pT,mvaScore,year)
 
     if TYPE=='medium':
-        return puJetIDMedium(pT,mvaScore)
+        return puJetIDMedium(pT,mvaScore,year)
 
-def	puJetIDLoose(pT,mvaScore):
-	if pT > 50.0:
-		return True
-	if pT < 10.0:
-		return False
-	elif pT < 20.0:
-		return mvaScore > -0.95
-	elif pT < 30.0:
-		return mvaScore > -0.90
-	elif pT < 40.0:
-		return mvaScore > -0.71
-	elif pT < 50.0:
-		return mvaScore > -0.40
-	return True
+def puJetIDLoose(pT,mvaScore,year):
+    if pT > 50.0:
+        return True
+    if pT < 10.0:
+        return False
+    if year=='2018':
+        if pT < 20.0:
+            return mvaScore > -0.95
+        elif pT < 30.0:
+            return mvaScore > -0.88
+        elif pT < 40.0:
+            return mvaScore > -0.63
+        elif pT < 50.0:
+            return mvaScore > -0.19
+        return True
+    if year=='2017':
+        if pT < 20.0:
+            return mvaScore > -0.95
+        elif pT < 30.0:
+            return mvaScore > -0.88
+        elif pT < 40.0:
+            return mvaScore > -0.63
+        elif pT < 50.0:
+            return mvaScore > -0.19
+        return True
+    if '2016' in year:
+        if pT < 20.0:
+            return mvaScore > -0.95
+        elif pT < 30.0:
+            return mvaScore > -0.90
+        elif pT < 40.0:
+            return mvaScore > -0.71
+        elif pT < 50.0:
+            return mvaScore > -0.42
+        return True
 
-def	puJetIDMedium(pT,mvaScore):
-	if pT > 50.0:
-		return True
-	if pT < 10.0:
-		return False
-	elif pT < 20.0:
-		return mvaScore > 0.20
-	elif pT < 30.0:
-		return mvaScore > 0.62
-	elif pT < 40.0:
-		return mvaScore > 0.86
-	elif pT < 50.0:
-		return mvaScore > 0.93
-	return True
 
-def	puJetIDTight(pT,mvaScore):
-	if pT > 50.0:
-		return True
-	if pT < 10.0:
-		return False
-	elif pT < 20.0:
-		return mvaScore > 0.71
-	elif pT < 30.0:
-		return mvaScore > 0.87
-	elif pT < 40.0:
-		return mvaScore > 0.94
-	elif pT < 50.0:
-		return mvaScore > 0.97
-	return True
+
+def    puJetIDMedium(pT,mvaScore,year):
+    if pT > 50.0:
+        return True
+    if pT < 10.0:
+        return False
+    if year=='2018':
+        if pT < 20.0:
+            return mvaScore > 0.26
+        elif pT < 30.0:
+            return mvaScore > 0.68
+        elif pT < 40.0:
+            return mvaScore > 0.90
+        elif pT < 50.0:
+            return mvaScore > 0.96
+        return True
+    if year=='2017':
+        if pT < 20.0:
+            return mvaScore > 0.26
+        elif pT < 30.0:
+            return mvaScore > 0.68
+        elif pT < 40.0:
+            return mvaScore > 0.90
+        elif pT < 50.0:
+            return mvaScore > 0.96
+        return True
+    if '2016' in year:
+        if pT < 20.0:
+            return mvaScore > 0.20
+        elif pT < 30.0:
+            return mvaScore > 0.62
+        elif pT < 40.0:
+            return mvaScore > 0.86
+        elif pT < 50.0:
+            return mvaScore > 0.93
+        return True
+
+def    puJetIDTight(pT,mvaScore,year):
+    if pT > 50.0:
+        return True
+    if pT < 10.0:
+        return False
+    if year=='2018':
+        if pT < 20.0:
+            return mvaScore > 0.77
+        elif pT < 30.0:
+            return mvaScore > 0.90
+        elif pT < 40.0:
+            return mvaScore > 0.96
+        elif pT < 50.0:
+            return mvaScore > 0.98
+        return True
+    if year=='2017':
+        if pT < 20.0:
+            return mvaScore > 0.77
+        elif pT < 30.0:
+            return mvaScore > 0.90
+        elif pT < 40.0:
+            return mvaScore > 0.96
+        elif pT < 50.0:
+            return mvaScore > 0.98
+        return True
+    if '2016' in year:
+        if pT < 20.0:
+            return mvaScore > 0.71
+        elif pT < 30.0:
+            return mvaScore > 0.87
+        elif pT < 40.0:
+            return mvaScore > 0.94
+        elif pT < 50.0:
+            return mvaScore > 0.97
+        return True
+
+    return False
+
           
 def getPtDependentScaleFactor(name="scaleFactor",dataHist=None,mcHists=None,binEdges=None,def_scaleFactor=0.0):
     mcHistSum=mcHists[0].Clone()
@@ -259,6 +328,10 @@ def getOtherDerivedVariables(eTree,LVStore,quad):
     varDict['h1bb_mass'] = LVStore['H1bbLV'].M() 
     varDict['h2bb_mass'] = LVStore['H2bbLV'].M() 
     
+    varDict['hh_mass'] = ( LVStore['H1bbLV']+LVStore['H2bbLV'] ).M() 
+    varDict['hh_pt']   = ( LVStore['H1bbLV']+LVStore['H2bbLV'] ).Pt() 
+    varDict['hh_eta']  = ( LVStore['H1bbLV']+LVStore['H2bbLV'] ).Eta() 
+    varDict['hh_phi']  = ( LVStore['H1bbLV']+LVStore['H2bbLV'] ).Phi() 
 
     varDict["HH4bCosThetaLeadJet"]    =  abs(np.cos( LVStore['HH4bLV'].Angle(LVStore['j1LV'].Vect())))
     varDict["absCosThetaH4bHgg"]    =  abs(np.cos( (LVStore['H1bbLV'] + LVStore['H2bbLV']).Angle(LVStore['HggLV'].Vect())))
@@ -836,7 +909,7 @@ def getLVStore( eTree ):
  
     return LVStore
 
-def getDijetResolutions(eTree , LVStore):
+def getDijetResolutionsFromLV(eTree , LVStore):
  
     dijet1SigmaMOverM = np.sqrt(pow(eTree.h1LeadingJet_bRegNNResolution,2)*pow( LVStore['j1LV'].M()*LVStore['j1LV'].M() +  LVStore['j1LV'].Dot(LVStore['j2LV']),2)  +
                                          pow(eTree.h1SubleadingJet_bRegNNResolution,2)*pow( LVStore['j2LV'].M()*LVStore['j2LV'].M()+ LVStore['j1LV'].Dot(LVStore['j2LV']),2))/pow(eTree.M1jj,2)
@@ -844,6 +917,14 @@ def getDijetResolutions(eTree , LVStore):
                                          pow(eTree.h2SubleadingJet_bRegNNResolution,2)*pow( LVStore['k2LV'].M()*LVStore['k2LV'].M()+ LVStore['k1LV'].Dot(LVStore['k2LV']),2))/pow(eTree.M2jj,2)
     
     return dijet1SigmaMOverM,diket2SigmaMOverM;
+
+def getDijetResolutions( p4_j1 , p4_j2, reso_j1,reso_j2):
+ 
+    dijet1SigmaMOverM = np.sqrt(pow(reso_j1,2)*pow( p4_j1.M()*p4_j1.M() +  p4_j1.Dot(p4_j2),2)  +
+                                         pow(reso_j2,2)*pow( p4_j2.M()*p4_j2.M()+ p4_j1.Dot(p4_j2),2))/pow((p4_j1+p4_j2).M() ,2)
+    
+    return dijet1SigmaMOverM;
+
 
 def fillFlashggVars(histStore,eTree,LVStore,wei=None):
     if wei ==None:
@@ -1347,17 +1428,15 @@ def getDataTag(fname):
     txt=fname.lower()
     dataType='data',-1
     if 'diphotonjetsbox1bjet' in txt:
-        dataType=('ggJets1b',1)
+        dataType=('ggJets1bjet',1)
     elif 'diphotonjetsbox2bjet' in txt:
-        dataType=('ggJets2b',2)
+        dataType=('ggJets2bjet',2)
     elif 'diphotonjetsbox' in txt:
         dataType=('ggJets',0)
     elif 'gjet_pt-40toinf' in txt:
         dataType=('gJet40ToInf',3)
     elif 'gjet_pt-20to40' in txt:
         dataType=('gJet20To40',4)
-    elif 'HHHTo4B2G_c3_0_d4_0' in txt:
-        dataType=('HHHTo4B2G_c3_0_d4_0',5)
     elif 'ggbox2bjet' in txt:
         dataType=('ggJets1bjet',1)
     elif 'ggbox1bjet' in txt:
@@ -1368,12 +1447,33 @@ def getDataTag(fname):
         dataType=('gJet40ToInf',3)
     elif 'gjet20to40' in txt:
         dataType=('gJet20To40',4)
+    elif 'ttgg' in txt:
+        dataType=('ttgg',6)
+    elif 'ttgj' in txt:
+        dataType=('ttgj',7)
+    elif 'ttj' in txt:
+        dataType=('ttjj',8)
+    elif 'HHHTo4B2G_c3_0_d4_0' in txt:
+        dataType=('HHHTo4B2G_c3_0_d4_0',5)
     elif 'gghhh' in txt:
         dataType=('HHHTo4B2G_c3_0_d4_0',5)
 
-
-
     return dataType
+
+def getProc(fname):
+    _alltags=['ggZTo2BHHTo2B2G', 'c3_m1p5_d4_m0p5', 'WToQQHHTo2B2G',
+       'ZToBBHHTo2B2G', 'ttWToQQHTo2G', 'ggHH_kl2p45', 'gJet40ToInf',
+       'c3_19_d4_19', 'c3_m1_d4_m1', 'ggHH_kl5p0', 'ggHH_kl0p0',
+       'QCD40ToInf', 'c3_m1_d4_0', 'ggBox1Bjet', 'ggBox2Bjet',
+       'gJet20To40', 'c3_0_d4_m1', 'c3_0_d4_99', 'c3_2_d4_m1',
+       'c3_4_d4_9', 'QCD30To40', 'c3_1_d4_0', 'c3_1_d4_2', 'ggHHH',
+       'ggBox', 'vbfHH', 'ttGG','TTGG', 'ttJJ', 'ggHH', 'ttGJ', 'ttHH', 'vbfH',
+       'bbh', 'ggH', 'ttH', 'vH',"data_"]
+    for tg in _alltags:
+        if tg in fname:
+            return tg.replace("data_","data")
+    print("Proc name not found for ",fname)
+    raise Exception
 
 def getYear(fname):
     txt=fname.lower()
@@ -1385,24 +1485,39 @@ def getYear(fname):
     if '2017' in txt:
         year='2017'
         return year,2
-    if '2016postvfp' in txt:
-        year='2016PostVFP'
-        return year,1
-    if '2016prevfp' in txt:
-        year='2016PreVFP'
-        return year,0
     if 'ul18' in txt:
         year='2018'
         return year,3
     if 'ul17' in txt:
         year='2017'
         return year,2
-    if 'ul16postvfp' in txt:
+    if '16pre' in txt:
+        year='2016PreVFP'
+        return year,0
+    if '16post' in txt:
+        year='2016PostVFP'
+        return year,1
+    if ('16' in txt) and ( 'pre' in txt ) :
+        year='2016PreVFP'
+        return year,0
+    if ('16' in txt) and ( 'post' in txt ) :
+        year='2016PostVFP'
+        return year,1
+    if '2016postvfp' in txt:
         year='2016PostVFP'
         return year,1
     if 'ul16prevfp' in txt:
         year='2016PreVFP'
         return year,0
+    if '2016prevfp' in txt:
+        year='2016PreVFP'
+        return year,0
+    if 'ul16postvfp' in txt:
+        year='2016PostVFP'
+        return year,1
+    if '2016' in txt:
+        year='2016'
+        return year,4
     if hasit>1:
         print("Ambegeous year ! for file  : ",fname," [ currently tagged as ",year," ]")
     return year
@@ -1419,6 +1534,3 @@ def getNBsFromQuad(eTree,quad):
         bCount+=1
 
     return bCount
-
-
-

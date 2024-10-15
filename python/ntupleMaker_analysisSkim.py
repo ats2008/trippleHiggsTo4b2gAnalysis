@@ -131,9 +131,7 @@ print("len(branches) : " , len(branches))
 MVAWeightFile=getValueFromConfigs(cfgTxt,"MVAWeightFile",default="")
 MVABranches=getListOfStringsFromConfigs(cfgTxt,"#MVAVARLIST_BEG","#MVAVARLIST_END")
 MVASpecBranches=getListOfStringsFromConfigs(cfgTxt,"#SPECTATORLIST_BEG","#SPECTATORLIST_END")
-
 nonResonantMVA=TMVAModel()
-#print(MVAWeightFile, MVABranches , MVASpecBranches)
 nonResonantMVA.setupTMVAModel("aMVA", MVAWeightFile , MVABranches , MVASpecBranches )
 
 tthMVAWeightFile=getValueFromConfigs(cfgTxt,"tthMVAWeightFile",default="")

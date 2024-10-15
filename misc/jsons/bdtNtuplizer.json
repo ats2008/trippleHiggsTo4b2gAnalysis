@@ -2,11 +2,11 @@
     "sig": {
         "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_forBDT.py ", 
         "jobType" :"bdtNtuples",
-        "script": "misc/runPython.tpl.sh", 
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
         "cfg": "misc/cfg/bdtNtuplizer_sig.tpl.cfg", 
         "destn": "results/bdtNtuples/", 
         "files_per_job": 1, 
-        "maxevents": "5000", 
+        "maxevents": "2000", 
         "datasets": [  
             "mc_2016PreVFP_ggHHH",
             "mc_2016PostVFP_ggHHH",
@@ -14,12 +14,12 @@
             "mc_2018_ggHHH"
         ], 
         "max_meterialize": 250, 
-        "njobs": 10000
+        "njobs": 100
     },
     "bkg": {
         "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_forBDT.py", 
         "jobType" :"bdtNtuples",
-        "script": "misc/runPython.tpl.sh", 
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
         "cfg": "misc/cfg/bdtNtuplizer_bkg.tpl.cfg", 
         "destn": "results/bdtNtuples/", 
         "files_per_job": 1, 
@@ -74,7 +74,7 @@
     "data": {
         "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_forBDT.py", 
         "jobType" :"bdtNtuples",
-        "script": "misc/runPython.tpl.sh", 
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
         "cfg": "misc/cfg/bdtNtuplizer_data.tpl.cfg", 
         "destn": "results/bdtNtuples/", 
         "files_per_job": 1, 

@@ -7,8 +7,13 @@ cd @@DIRNAME
 set +x
 eval `scramv1 runtime -sh`
 set -x
-TMPDIR=`mktemp -d`
-cd $TMPDIR
+if [[ -z "${_CONDOR_SCRATCH_DIR}" ]]; then
+    _CONDOR_SCRATCH_DIR=`mktemp -d`
+    echo _CONDOR_SCRATCH_DIR was not set, setting it to $_CONDOR_SCRATCH_DIR
+else
+    echo CONDOR_SCRATCH_DIR is $_CONDOR_SCRATCH_DIR
+fi
+cd _CONDOR_SCRATCH_DIR
 cp @@DIRNAME/@@CFGFILENAME .
 mv @@RUNSCRIPT @@RUNSCRIPT.busy 
 python @@EXECUTABLE @@CFGFILENAME

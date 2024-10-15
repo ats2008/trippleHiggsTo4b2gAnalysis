@@ -35,7 +35,6 @@ if(maxEvtsSuperSeeder > 0):
 print("maxevents : ",maxEvents)
 
 histStore = getRecoHistos()
-
 histStore['jetIDStudy']= getHHHJethistos()
 histStore['jetIDSelectedQuad']= getHHHJethistos()
 
