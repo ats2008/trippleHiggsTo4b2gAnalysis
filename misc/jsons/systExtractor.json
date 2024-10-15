@@ -1,0 +1,13 @@
+{
+    "all": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/extractSystematics.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_nano_extractor.tpl.sh", 
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "ggHHH_2016Pre_SM"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    }
+}

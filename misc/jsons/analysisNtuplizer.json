@@ -1,0 +1,211 @@
+{
+    "sig": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py ", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_sig.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+    "bkg": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_bkg.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            "mc_2016PostVFP_ggBox1Bjet" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PostVFP_ggBox2Bjet" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PostVFP_ggBox"      : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_ggBox1Bjet"  : "@@YEAR:2016PreVFP" ,
+            "mc_2016PreVFP_ggBox2Bjet"  : "@@YEAR:2016PreVFP" ,
+            "mc_2016PreVFP_ggBox"       : "@@YEAR:2016PreVFP" , 
+            "mc_2017_ggBox1Bjet"        : "@@YEAR:2017" ,
+            "mc_2017_ggBox2Bjet"        : "@@YEAR:2017" ,
+            "mc_2017_ggBox"             : "@@YEAR:2017" ,
+            "mc_2018_ggBox1Bjet"        : "@@YEAR:2018" ,
+            "mc_2018_ggBox2Bjet"        : "@@YEAR:2018" ,
+            "mc_2018_ggBox"             : "@@YEAR:2018" ,
+            "mc_2016PostVFP_gJet20To40" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PostVFP_gJet40ToInf": "@@YEAR:2016PostVFP",
+            "mc_2016PreVFP_gJet20To40"  : "@@YEAR:2016PreVFP" ,
+            "mc_2016PreVFP_gJet40ToInf" : "@@YEAR:2016PreVFP" ,
+            "mc_2017_gJet20To40"        : "@@YEAR:2017" ,
+            "mc_2017_gJet40ToInf"       : "@@YEAR:2017" ,
+            "mc_2018_gJet20To40"        : "@@YEAR:2018" ,
+            "mc_2018_gJet40ToInf"       : "@@YEAR:2018" 
+          }, 
+          "datasets":[
+            "mc_2016PostVFP_ggBox1Bjet",
+            "mc_2016PostVFP_ggBox2Bjet",
+            "mc_2016PostVFP_ggBox",
+            "mc_2016PreVFP_ggBox1Bjet",
+            "mc_2016PreVFP_ggBox2Bjet",
+            "mc_2016PreVFP_ggBox",
+            "mc_2017_ggBox1Bjet",
+            "mc_2017_ggBox2Bjet",
+            "mc_2017_ggBox",
+            "mc_2018_ggBox1Bjet",
+            "mc_2018_ggBox2Bjet",
+            "mc_2018_ggBox",
+            "mc_2016PostVFP_gJet20To40",
+            "mc_2016PostVFP_gJet40ToInf",
+            "mc_2016PreVFP_gJet20To40",
+            "mc_2016PreVFP_gJet40ToInf",
+            "mc_2017_gJet20To40",
+            "mc_2017_gJet40ToInf",
+            "mc_2018_gJet20To40",
+            "mc_2018_gJet40ToInf"
+         ],
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+    "qcd": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_bkg.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            "mc_2016PostVFP_QCD30To40" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_QCD30To40"  : "@@YEAR:2016PreVFP" ,
+            "mc_2017_QCD30To40"        : "@@YEAR:2017" ,
+            "mc_2018_QCD30To40"        : "@@YEAR:2018" ,
+            "mc_2016PostVFP_QCD40ToInf" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_QCD40ToInf"  : "@@YEAR:2016PreVFP" ,
+            "mc_2017_QCD40ToInf"        : "@@YEAR:2017" ,
+            "mc_2018_QCD40ToInf"        : "@@YEAR:2018" 
+          }, 
+          "datasets":[
+            "mc_2016PostVFP_QCD30To40",
+            "mc_2016PreVFP_QCD30To40",
+            "mc_2017_QCD30To40",
+            "mc_2018_QCD30To40",
+            "mc_2016PostVFP_QCD40ToInf",
+            "mc_2016PreVFP_QCD40ToInf",
+            "mc_2017_QCD40ToInf",
+            "mc_2018_QCD40ToInf"
+         ],
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+
+    "ttX": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_bkg.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            "mc_2016RR_ttgg"   : "@@YEAR:2016RR" ,
+            "mc_2017RR_ttgg"   : "@@YEAR:2017RR" ,
+            "mc_2018RR_ttgg"   : "@@YEAR:2018RR" ,
+
+            "mc_UL16Post_ttgj" : "@@YEAR:2016PostVFP",
+            "mc_UL16Post_ttjj" : "@@YEAR:2016PostVFP",
+            "mc_UL16Pre_ttgj"  : "@@YEAR:2016PreVFP",
+            "mc_UL16Pre_ttjj"  : "@@YEAR:2016PreVFP",
+            "mc_UL17_ttgj"     : "@@YEAR:2017",
+            "mc_UL17_ttjj"     : "@@YEAR:2017",
+            "mc_UL18_ttgj"     : "@@YEAR:2018", 
+            "mc_UL18_ttjj"     : "@@YEAR:2018" 
+          }, 
+          "datasets":[
+            "mc_2016RR_ttgg"   ,   
+            "mc_2017RR_ttgg"   ,
+            "mc_2018RR_ttgg"   ,
+            "mc_UL16Post_ttgj" ,
+            "mc_UL16Post_ttjj" ,
+            "mc_UL16Pre_ttgj"  ,
+            "mc_UL16Pre_ttjj"  ,
+            "mc_UL17_ttgj"     ,
+            "mc_UL17_ttjj"     ,
+            "mc_UL18_ttgj"     ,
+            "mc_UL18_ttjj"    
+         ],
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+    "singleH": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_bkg.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 5, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            "mc_2017RR_ggH"        : "@@YEAR:2017RR" ,
+            "mc_2017UL_vbfH"       : "@@YEAR:2017" ,
+            "mc_2017RR_vH"         : "@@YEAR:2017RR" ,
+            "mc_2017RR_ttH"        : "@@YEAR:2017RR" ,
+            "mc_2017UL_ttWH"       : "@@YEAR:2017" 
+          }, 
+          "datasets":[
+            "mc_2017RR_ggH",
+            "mc_2017UL_vbfH",
+            "mc_2017RR_vH",
+            "mc_2017RR_ttH",
+            "mc_2017UL_ttWH"
+         ],
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+    "doubleH": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_bkg.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 5, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            "mc_2017RR_ggHH"        : "@@YEAR:2017RR" ,
+            "mc_2017RR_vbfHH"       : "@@YEAR:2017RR" ,
+            "mc_2017UL_WHH"         : "@@YEAR:2017" ,
+            "mc_2017UL_ZHH"         : "@@YEAR:2017" ,
+            "mc_2017UL_ttHH"        : "@@YEAR:2017" 
+          }, 
+          "datasets":[
+            "mc_2017RR_ggHH",
+            "mc_2017RR_vbfHH",
+            "mc_2017UL_WHH",
+            "mc_2017UL_ZHH",
+            "mc_2017UL_ttHH"
+         ],
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+    "data": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_data.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 5, 
+        "maxevents": "-1", 
+        "datasets": [  
+                "data_2016PreVFP",
+                "data_2016PostVFP",
+                "data_2017",
+                "data_2018"
+          ], 
+        "max_meterialize": 250, 
+        "njobs": 10000
+    }
+}

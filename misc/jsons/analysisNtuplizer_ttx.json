@@ -1,0 +1,35 @@
+{
+    "ttX": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py", 
+        "jobType" :"analysisNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_ttx.tpl.cfg", 
+        "destn": "results/analysisNtuples/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            
+            "mc_UL16Post_ttGJ" : "@@YEAR:2016PostVFP" ,
+            "mc_UL16Pre_ttGJ"  : "@@YEAR:2016PreVFP" ,
+            "mc_UL17_ttGJ"     : "@@YEAR:2017" ,
+            "mc_UL18_ttGJ"     : "@@YEAR:2018" ,
+            "mc_UL16Post_ttJJ" : "@@YEAR:2016PostVFP" ,
+            "mc_UL16Pre_ttJJ"  : "@@YEAR:2016PreVFP" ,
+            "mc_UL17_ttJJ"     : "@@YEAR:2017" ,
+            "mc_UL18_ttJJ"     : "@@YEAR:2018" 
+          }, 
+          "datasets":[
+            "mc_UL16Post_ttGJ",
+            "mc_UL16Post_ttJJ",
+            "mc_UL16Pre_ttGJ", 
+            "mc_UL16Pre_ttJJ", 
+            "mc_UL17_ttGJ",    
+            "mc_UL17_ttJJ",    
+            "mc_UL18_ttGJ",    
+            "mc_UL18_ttJJ"    
+         ],
+        "max_meterialize": 250, 
+        "njobs": 30000
+    }
+
+}

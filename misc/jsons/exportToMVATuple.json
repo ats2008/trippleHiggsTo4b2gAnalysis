@@ -1,0 +1,168 @@
+{
+    "bkg": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    }, 
+    "ttX": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+    "qcd": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+    "data": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+    "sig": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+  "singleH": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "mvaTags" : [
+            "mva_vsPeakingBDT_vsTTH_v27p1"
+        ],
+        "mvaFiles" : [
+            "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/hhhVsResonant/9Jan2024/model.pkl"
+        ],
+
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+  "doubleH": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "mvaTags" : [
+            "mva_vsPeakingBDT_vsTTH_v27p1"
+        ],
+        "mvaFiles" : [
+            "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/hhhVsResonant/9Jan2024/model.pkl"
+        ],
+
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+    "kappaScan": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/exportMVAsSingleFile.py ", 
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mvaTuple_sig.tpl.cfg", 
+        "cuts" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cuts/Preselection_apr11_v8.cuts",
+        "cats" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/cats/cats_apr24_v5.cuts",
+        "scales" : "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/scales_v2_run2Scaled.json",
+        "mvaTags" : [
+            "mva_vsPeakingBDT_vsTTH_v27p1"
+        ],
+        "mvaFiles" : [
+            "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/data/hhhVsResonant/9Jan2024/model.pkl"
+        ],
+
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PreVFP_ggHHH",
+            "mc_2016PostVFP_ggHHH",
+            "mc_2017_ggHHH",
+            "mc_2018_ggHHH"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    }
+
+}

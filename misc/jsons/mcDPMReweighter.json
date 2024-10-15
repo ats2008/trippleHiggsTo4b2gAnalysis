@@ -1,0 +1,19 @@
+{
+    "sig": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/treeReweighter.py", 
+        "jobType" :"DPMReweighter",
+        "script": "misc/runPython_env_pyAnalysis2_v3.tpl.sh", 
+        "cfg": "misc/cfg/mcDPMCleaner.tpl.cfg", 
+        "destn": "results/mcDPMCleaner/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "datasets": [  
+          "mc_UL18_ggHHH"      
+        ], 
+        "cfgExtras": {  
+           "mc_UL18_ggHHH"      : "@@YEAR:2018|@@SCALE:1.3921" 
+          }, 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    }
+}

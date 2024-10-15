@@ -1,0 +1,19 @@
+{
+
+    "sig_syst": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/ntuple_updateSupressionBDT.py ", 
+        "jobType" :"analysisSystNtuples",
+        "script": "misc/runPython_env_pyAnalysis2.tpl.sh", 
+        "cfg": "misc/cfg/analysisNtuplizer_sig.tpl.cfg", 
+        "destn": "results/analysisSystNtuples/", 
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+           "sig_2018_nominal"
+        ], 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    }
+
+
+}

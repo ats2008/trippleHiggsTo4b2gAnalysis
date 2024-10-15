@@ -1,0 +1,140 @@
+{
+    "sig": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/jetDistributionStudy.py ", 
+        "jobType" :"jetStudyNtuples",
+        "script": "misc/runPython_env_pyAnalysis2_v2.tpl.sh", 
+        "cfg": "misc/cfg/jetDistributionStudy_sig.tpl.cfg", 
+        "destn": "results/jetStudyNtuples/", 
+        "files_per_job": 1, 
+        "maxevents": "-1", 
+        "datasets": [  
+            "mc_2016PostVFP_ggHHH",
+            "mc_2016PreVFP_ggHHH" ,
+            "mc_2017_ggHHH"       ,
+            "mc_2018_ggHHH"       
+        ], 
+        "cfgExtras": {  
+            "mc_2016PostVFP_ggHHH" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_ggHHH"  : "@@YEAR:2016PreVFP" ,
+            "mc_2017_ggHHH"        : "@@YEAR:2017" ,
+            "mc_2018_ggHHH"        : "@@YEAR:2018" 
+          }, 
+        "max_meterialize": 250, 
+        "njobs": 100000
+    },
+
+    "bkg": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/jetDistributionStudy.py", 
+        "jobType" :"jetStudyNtuples",
+        "script": "misc/runPython_env_pyAnalysis2_v2.tpl.sh", 
+        "cfg": "misc/cfg/jetDistributionStudy_bkg.tpl.cfg", 
+        "destn": "results/jetStudyNtuples/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+          "datasets":[
+            "mc_2016PostVFP_ggBox",
+            "mc_2016PreVFP_ggBox",
+            "mc_2017_ggBox",
+            "mc_2018_ggBox",
+            "mc_2016PostVFP_gJet",
+            "mc_2016PreVFP_gJet",
+            "mc_2017_gJet",
+            "mc_2018_gJet"
+         ],
+        "cfgExtras": {  
+            "mc_2016PostVFP_ggBox"      : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_ggBox"       : "@@YEAR:2016PreVFP" , 
+            "mc_2017_ggBox"             : "@@YEAR:2017" ,
+            "mc_2018_ggBox"             : "@@YEAR:2018" ,
+            "mc_2016PostVFP_gJet" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_gJet"  : "@@YEAR:2016PreVFP" ,
+            "mc_2017_gJet"        : "@@YEAR:2017" ,
+            "mc_2018_gJet"        : "@@YEAR:2018" 
+          },
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+    "qcd": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/jetDistributionStudy.py", 
+        "jobType" :"jetStudyNtuples",
+        "script": "misc/runPython_env_pyAnalysis2_v2.tpl.sh", 
+        "cfg": "misc/cfg/jetDistributionStudy_bkg.tpl.cfg", 
+        "destn": "results/jetStudyNtuples/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            "mc_2016PostVFP_QCD" : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_QCD"  : "@@YEAR:2016PreVFP" ,
+            "mc_2017_QCD"        : "@@YEAR:2017" ,
+            "mc_2018_QCD"        : "@@YEAR:2018" 
+          }, 
+          "datasets":[
+            "mc_2016PostVFP_QCD",
+            "mc_2016PreVFP_QCD",
+            "mc_2017_QCD",
+            "mc_2018_QCD"
+         ],
+        "cfgExtras": {  
+            "mc_2016PostVFP_QCD"      : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_QCD"       : "@@YEAR:2016PreVFP" , 
+            "mc_2017_QCD"             : "@@YEAR:2017" ,
+            "mc_2018_QCD"             : "@@YEAR:2018" 
+          },
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+
+    "ttX": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/jetDistributionStudy.py", 
+        "jobType" :"jetStudyNtuples",
+        "script": "misc/runPython_env_pyAnalysis2_v2.tpl.sh", 
+        "cfg": "misc/cfg/jetDistributionStudy_bkg.tpl.cfg", 
+        "destn": "results/jetStudyNtuples/", 
+        "files_per_job": 10, 
+        "maxevents": "-1", 
+        "cfgExtras": {  
+            "mc_2016PreVFP_ttX"   : "@@YEAR:2016" ,
+            "mc_2016PostVFP_ttX"  : "@@YEAR:2016" ,
+            "mc_2017_ttX"   : "@@YEAR:2017" ,
+            "mc_2018_ttX"   : "@@YEAR:2018" 
+          }, 
+          "datasets":[
+            "mc_2016PreVFP_ttX",
+            "mc_2016PostVFP_ttX",
+            "mc_2017_ttX",
+            "mc_2018_ttX"
+         ],
+        "cfgExtras": {  
+            "mc_2016PostVFP_ttX"      : "@@YEAR:2016PostVFP" ,
+            "mc_2016PreVFP_ttX"       : "@@YEAR:2016PreVFP" , 
+            "mc_2017_ttX"             : "@@YEAR:2017" ,
+            "mc_2018_ttX"             : "@@YEAR:2018" 
+          },
+        "max_meterialize": 250, 
+        "njobs": 30000
+    },
+    "data": {
+        "exe": "/grid_mnt/t3storage3/athachay/trippleHiggs/hhhTo4b2g/flashgg/CMSSW_10_6_29/analysis/python/jetDistributionStudy.py", 
+        "jobType" :"jetStudyNtuples",
+        "script": "misc/runPython_env_pyAnalysis2_v2.tpl.sh", 
+        "cfg": "misc/cfg/jetDistributionStudy_data.tpl.cfg", 
+        "destn": "results/jetStudyNtuples/", 
+        "files_per_job": 5, 
+        "maxevents": "-1", 
+        "datasets": [  
+                "data_2016PreVFP",
+                "data_2016PostVFP",
+                "data_2017",
+                "data_2018"
+          ], 
+        "cfgExtras": {  
+            "daya_2016PostVFP"      : "@@YEAR:2016PostVFP" ,
+            "daya_2016PreVFP"       : "@@YEAR:2016PreVFP" , 
+            "daya_2017"             : "@@YEAR:2017" ,
+            "daya_2018"             : "@@YEAR:2018" 
+          },
+        "max_meterialize": 250, 
+        "njobs": 10000
+    }
+
+}
